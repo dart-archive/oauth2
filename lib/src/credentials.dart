@@ -69,6 +69,23 @@ class Credentials {
        this.scopes,
        this.expiration]);
 
+  /// Construct credentials from the access token response from an
+  /// authorization server. This response format is common across several
+  /// different components of the OAuth2 flow.
+  ///
+  /// If [startTime] is omitted, it defaults to the current time.
+  ///
+  /// If [tokenEndpoint] is omitted, it will be extracted from [response].
+  factory Credentials.fromAccessTokenResponse(
+      http.Response response,
+      {DateTime startTime,
+       Uri tokenEndpoint,
+       List<String> scopes}) {
+    if(startTime == null) startTime = new DateTime.now();
+    if(tokenEndpoint == null) tokenEndpoint = response.request.url;
+    return handleAccessTokenResponse(response, tokenEndpoint, startTime, scopes);
+  }
+
   /// Loads a set of credentials from a JSON-serialized form. Throws
   /// [FormatException] if the JSON is incorrectly formatted.
   factory Credentials.fromJson(String json) {
