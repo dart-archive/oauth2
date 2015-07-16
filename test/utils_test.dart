@@ -5,7 +5,7 @@
 library utils_test;
 
 import 'package:oauth2/src/utils.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('AuthenticateHeader', () {
