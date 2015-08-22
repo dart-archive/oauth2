@@ -1,12 +1,6 @@
 # Don't commit hidden files or directories unless whitelisted
 .*
 
-# Include gitignore
-!.gitignore
-
-# Include .test_config
-!.test_config
-
 # Don’t commit the following directories created by pub.
 build/
 packages
@@ -16,6 +10,12 @@ packages
 *.js_
 *.js.deps
 *.js.map
+
+# Include gitignore
+!.gitignore
+
+# Include .test_config
+!.test_config
 
 # Include when developing application packages.
 pubspec.lock
