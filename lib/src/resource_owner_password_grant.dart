@@ -12,17 +12,17 @@ import 'client.dart';
 import 'handle_access_token_response.dart';
 import 'utils.dart';
 
-/// Implementation of the [resource owner password grant] for oauth 2.
+/// Implementation of the [resource owner password grant] (http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-4.3) for oauth 2.
 ///
-/// [resource owner password grant]: http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-4.1
 
 /// Returns a fully-authorized [Client] if authorization is successful.
 ///
-/// The client can provide a [clientId] and [clientSecret] for confidential access as required by the server either
-/// by basic authentication (default and recommended by the spec) or as additional query parameters [useBasicAuth]: false.
+/// The client can provide a [clientId] and [clientSecret] for authenticating itself  as required by the server. The
+/// default authentication is basic authentication as recommended by the spec. This can be overridden to be passed as
+/// query parameters by passing [useBasicAuth]: false.
 ///
-/// Specific scopes can be requests vis [scopes], but is not required.  The server may choose to grant less scopes than
-/// actually requested.  The actual scopes granted are returned in [Client.credentials.scopes].
+/// Specific scopes can be requested vis [scopes], but is not required.  The server may choose to grant less scopes than
+/// actually requested.  The actual scopes granted are returned in [Credentials] property of the [Client].
 ///
 Future<Client> resourceOwnerPasswordGrant(
     Uri authorizationEndpoint, String username, String password,
