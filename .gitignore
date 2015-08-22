@@ -1,9 +1,15 @@
+# Don't commit hidden files or directories unless whitelisted
+.*
+
+# Include gitignore
+!.gitignore
+
+# Include .test_config
+!.test_config
+
 # Don’t commit the following directories created by pub.
-.buildlog
-.pub/
 build/
 packages
-.packages
 
 # Or the files created by dart2js.
 *.dart.js
