@@ -56,7 +56,7 @@ void main() {
           clientId: 'client', clientSecret: 'secret');
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
-    }, timeout: new Timeout(new Duration(seconds: 1000)));
+    }, timeout: new Timeout(new Duration(seconds: 1)));
 
     test('builds correct request when using query parameters for client',
         () async {
@@ -78,7 +78,7 @@ void main() {
           clientId: 'client', clientSecret: 'secret', useBasicAuth: false);
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
-    }, timeout: new Timeout(new Duration(seconds: 1000)));
+    }, timeout: new Timeout(new Duration(seconds: 1)));
 
 
     test('builds correct request using scope',
@@ -100,7 +100,7 @@ void main() {
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
 
-    }, timeout: new Timeout(new Duration(seconds: 1000)));
+    }, timeout: new Timeout(new Duration(seconds: 1)));
 
     tearDown(() {
       server.close();
