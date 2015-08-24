@@ -146,47 +146,44 @@ class Credentials {
       String identifier,
       String secret,
       {List<String> newScopes,
-       http.Client httpClient}) {
+       http.Client httpClient}) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes;
     if (scopes == null) scopes = <String>[];
     if (httpClient == null) httpClient = new http.Client();
 
     var startTime = new DateTime.now();
-    return async.then((_) {
-      if (refreshToken == null) {
-        throw new StateError("Can't refresh credentials without a refresh "
-            "token.");
-      } else if (tokenEndpoint == null) {
-        throw new StateError("Can't refresh credentials without a token "
-            "endpoint.");
-      }
+    if (refreshToken == null) {
+      throw new StateError("Can't refresh credentials without a refresh "
+          "token.");
+    } else if (tokenEndpoint == null) {
+      throw new StateError("Can't refresh credentials without a token "
+          "endpoint.");
+    }
 
-      var fields = {
-        "grant_type": "refresh_token",
-        "refresh_token": refreshToken,
-        // TODO(nweiz): the spec recommends that HTTP basic auth be used in
-        // preference to form parameters, but Google doesn't support that.
-        // Should it be configurable?
-        "client_id": identifier,
-        "client_secret": secret
-      };
-      if (!scopes.isEmpty) fields["scope"] = scopes.join(' ');
+    var fields = {
+      "grant_type": "refresh_token",
+      "refresh_token": refreshToken,
+      // TODO(nweiz): the spec recommends that HTTP basic auth be used in
+      // preference to form parameters, but Google doesn't support that.
+      // Should it be configurable?
+      "client_id": identifier,
+      "client_secret": secret
+    };
+    if (!scopes.isEmpty) fields["scope"] = scopes.join(' ');
 
-      return httpClient.post(tokenEndpoint, body: fields);
-    }).then((response) {
-      return handleAccessTokenResponse(
+    var response = await httpClient.post(tokenEndpoint, body: fields);
+    var credentials = await handleAccessTokenResponse(
           response, tokenEndpoint, startTime, scopes);
-    }).then((credentials) {
-      // The authorization server may issue a new refresh token. If it doesn't,
-      // we should re-use the one we already have.
-      if (credentials.refreshToken != null) return credentials;
-      return new Credentials(
-          credentials.accessToken,
-          this.refreshToken,
-          credentials.tokenEndpoint,
-          credentials.scopes,
-          credentials.expiration);
-    });
+
+    // The authorization server may issue a new refresh token. If it doesn't,
+    // we should re-use the one we already have.
+    if (credentials.refreshToken != null) return credentials;
+    return new Credentials(
+        credentials.accessToken,
+        this.refreshToken,
+        credentials.tokenEndpoint,
+        credentials.scopes,
+        credentials.expiration);
   }
 }

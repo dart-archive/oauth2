@@ -80,37 +80,34 @@ class Client extends http.BaseClient {
   /// Sends an HTTP request with OAuth2 authorization credentials attached. This
   /// will also automatically refresh this client's [Credentials] before sending
   /// the request if necessary.
-  Future<http.StreamedResponse> send(http.BaseRequest request) {
-    return async.then((_) {
-      if (!credentials.isExpired) return new Future.value();
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    if (credentials.isExpired) {
       if (!credentials.canRefresh) throw new ExpirationException(credentials);
-      return refreshCredentials();
-    }).then((_) {
-      request.headers['authorization'] = "Bearer ${credentials.accessToken}";
-      return _httpClient.send(request);
-    }).then((response) {
-      if (response.statusCode != 401 ||
-          !response.headers.containsKey('www-authenticate')) {
-        return response;
-      }
+      await refreshCredentials();
+    }
 
-      var authenticate;
-      try {
-        authenticate = new AuthenticateHeader.parse(
-            response.headers['www-authenticate']);
-      } on FormatException catch (e) {
-        return response;
-      }
+    request.headers['authorization'] = "Bearer ${credentials.accessToken}";
+    var response = await _httpClient.send(request);
 
-      if (authenticate.scheme != 'bearer') return response;
+    if (response.statusCode != 401) return response;
+    if (!response.headers.containsKey('www-authenticate')) return response;
 
-      var params = authenticate.parameters;
-      if (!params.containsKey('error')) return response;
+    var authenticate;
+    try {
+      authenticate = new AuthenticateHeader.parse(
+          response.headers['www-authenticate']);
+    } on FormatException catch (e) {
+      return response;
+    }
 
-      throw new AuthorizationException(
-          params['error'], params['error_description'],
-          params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
-    });
+    if (authenticate.scheme != 'bearer') return response;
+
+    var params = authenticate.parameters;
+    if (!params.containsKey('error')) return response;
+
+    throw new AuthorizationException(
+        params['error'], params['error_description'],
+        params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
   }
 
   /// Explicitly refreshes this client's credentials. Returns this client.
@@ -122,20 +119,18 @@ class Client extends http.BaseClient {
   /// You may request different scopes than the default by passing in
   /// [newScopes]. These must be a subset of the scopes in the
   /// [Credentials.scopes] field of [Client.credentials].
-  Future<Client> refreshCredentials([List<String> newScopes]) {
-    return async.then((_) {
-      if (!credentials.canRefresh) {
-        var prefix = "OAuth credentials";
-        if (credentials.isExpired) prefix = "$prefix have expired and";
-        throw new StateError("$prefix can't be refreshed.");
-      }
+  Future<Client> refreshCredentials([List<String> newScopes]) async {
+    if (!credentials.canRefresh) {
+      var prefix = "OAuth credentials";
+      if (credentials.isExpired) prefix = "$prefix have expired and";
+      throw new StateError("$prefix can't be refreshed.");
+    }
 
-      return credentials.refresh(identifier, secret,
-          newScopes: newScopes, httpClient: _httpClient);
-    }).then((credentials) {
-      _credentials = credentials;
-      return this;
-    });
+    _credentials = await credentials.refresh(
+        identifier, secret,
+        newScopes: newScopes, httpClient: _httpClient);
+
+    return this;
   }
 
   /// Closes this client and its underlying HTTP client.

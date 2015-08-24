@@ -56,7 +56,7 @@ void main() {
         throwsStateError);
   });
 
-  test("can refresh with a refresh token and a token endpoint", () {
+  test("can refresh with a refresh token and a token endpoint", () async {
     var credentials = new oauth2.Credentials(
         'access token', 'refresh token', tokenEndpoint, ['scope1', 'scope2']);
     expect(credentials.canRefresh, true);
@@ -80,14 +80,13 @@ void main() {
     });
 
 
-    expect(credentials.refresh('identifier', 'secret', httpClient: httpClient)
-        .then((credentials) {
-      expect(credentials.accessToken, equals('new access token'));
-      expect(credentials.refreshToken, equals('new refresh token'));
-    }), completes);
+    credentials = await credentials.refresh('identifier', 'secret',
+        httpClient: httpClient);
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('new refresh token'));
   });
 
-  test("uses the old refresh token if a new one isn't provided", () {
+  test("uses the old refresh token if a new one isn't provided", () async {
     var credentials = new oauth2.Credentials(
         'access token', 'refresh token', tokenEndpoint);
     expect(credentials.canRefresh, true);
@@ -109,11 +108,10 @@ void main() {
     });
 
 
-    expect(credentials.refresh('identifier', 'secret', httpClient: httpClient)
-        .then((credentials) {
-      expect(credentials.accessToken, equals('new access token'));
-      expect(credentials.refreshToken, equals('refresh token'));
-    }), completes);
+    credentials = await credentials.refresh('identifier', 'secret',
+        httpClient: httpClient);
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('refresh token'));
   });
 
   group("fromJson", () {

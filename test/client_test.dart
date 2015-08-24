@@ -39,7 +39,7 @@ void main() {
     });
 
     test("that can be refreshed refreshes the credentials and sends the "
-        "request", () {
+        "request", () async {
       var expiration = new DateTime.now().subtract(new Duration(hours: 1));
       var credentials = new oauth2.Credentials(
           'access token', 'refresh token', tokenEndpoint, [], expiration);
@@ -64,9 +64,8 @@ void main() {
         return new Future.value(new http.Response('good job', 200));
       });
 
-      expect(client.read(requestUri).then((_) {
-        expect(client.credentials.accessToken, equals('new access token'));
-      }), completes);
+      await client.read(requestUri);
+      expect(client.credentials.accessToken, equals('new access token'));
     });
   });
 
@@ -89,7 +88,7 @@ void main() {
       expect(client.read(requestUri), completion(equals('good job')));
     });
 
-    test("can manually refresh the credentials", () {
+    test("can manually refresh the credentials", () async {
       var credentials = new oauth2.Credentials(
           'access token', 'refresh token', tokenEndpoint);
       var client = new oauth2.Client('identifier', 'secret', credentials,
@@ -104,9 +103,8 @@ void main() {
         }), 200, headers: {'content-type': 'application/json'}));
       });
 
-      expect(client.refreshCredentials().then((_) {
-        expect(client.credentials.accessToken, equals('new access token'));
-      }), completes);
+      await client.refreshCredentials();
+      expect(client.credentials.accessToken, equals('new access token'));
     });
 
     test("without a refresh token can't manually refresh the credentials", () {
@@ -141,7 +139,7 @@ void main() {
           throwsA(new isInstanceOf<oauth2.AuthorizationException>()));
     });
 
-    test('passes through a 401 response without www-authenticate', () {
+    test('passes through a 401 response without www-authenticate', () async {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client('identifier', 'secret', credentials,
           httpClient: httpClient);
@@ -155,12 +153,11 @@ void main() {
         return new Future.value(new http.Response('bad job', 401));
       });
 
-      expect(
-          client.get(requestUri).then((response) => response.statusCode),
-          completion(equals(401)));
+      expect((await client.get(requestUri)).statusCode, equals(401));
     });
 
-    test('passes through a 401 response with invalid www-authenticate', () {
+    test('passes through a 401 response with invalid www-authenticate',
+        () async {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client('identifier', 'secret', credentials,
           httpClient: httpClient);
@@ -177,12 +174,11 @@ void main() {
                 headers: {'www-authenticate': authenticate}));
       });
 
-      expect(
-          client.get(requestUri).then((response) => response.statusCode),
-          completion(equals(401)));
+      expect((await client.get(requestUri)).statusCode, equals(401));
     });
 
-    test('passes through a 401 response with non-bearer www-authenticate', () {
+    test('passes through a 401 response with non-bearer www-authenticate',
+        () async {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client('identifier', 'secret', credentials,
           httpClient: httpClient);
@@ -197,12 +193,11 @@ void main() {
                 headers: {'www-authenticate': 'Digest'}));
       });
 
-      expect(
-          client.get(requestUri).then((response) => response.statusCode),
-          completion(equals(401)));
+      expect((await client.get(requestUri)).statusCode, equals(401));
     });
 
-    test('passes through a 401 response with non-OAuth2 www-authenticate', () {
+    test('passes through a 401 response with non-OAuth2 www-authenticate',
+        () async {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client('identifier', 'secret', credentials,
           httpClient: httpClient);
@@ -217,9 +212,7 @@ void main() {
                 headers: {'www-authenticate': 'Bearer'}));
       });
 
-      expect(
-          client.get(requestUri).then((response) => response.statusCode),
-          completion(equals(401)));
+      expect((await client.get(requestUri)).statusCode, equals(401));
     });
   });
 }

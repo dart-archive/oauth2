@@ -96,12 +96,12 @@ class AuthorizationCodeGrant {
   /// [httpClient] is used for all HTTP requests made by this grant, as well as
   /// those of the [Client] is constructs.
   AuthorizationCodeGrant(
-      this.identifier,
-      this.secret,
-      this.authorizationEndpoint,
-      this.tokenEndpoint,
-      {http.Client httpClient})
-    : _httpClient = httpClient == null ? new http.Client() : httpClient;
+          this.identifier,
+          this.secret,
+          this.authorizationEndpoint,
+          this.tokenEndpoint,
+          {http.Client httpClient})
+      : _httpClient = httpClient == null ? new http.Client() : httpClient;
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client. The resource owner will then be redirected to
@@ -157,42 +157,41 @@ class AuthorizationCodeGrant {
   /// [FormatError] if the `state` parameter doesn't match the original value.
   ///
   /// Throws [AuthorizationException] if the authorization fails.
-  Future<Client> handleAuthorizationResponse(Map<String, String> parameters) {
-    return async.then((_) {
-      if (_state == _INITIAL_STATE) {
-        throw new StateError(
-            'The authorization URL has not yet been generated.');
-      } else if (_state == _FINISHED_STATE) {
-        throw new StateError(
-            'The authorization code has already been received.');
-      }
-      _state = _FINISHED_STATE;
+  Future<Client> handleAuthorizationResponse(Map<String, String> parameters)
+      async {
+    if (_state == _INITIAL_STATE) {
+      throw new StateError(
+          'The authorization URL has not yet been generated.');
+    } else if (_state == _FINISHED_STATE) {
+      throw new StateError(
+          'The authorization code has already been received.');
+    }
+    _state = _FINISHED_STATE;
 
-      if (_stateString != null) {
-        if (!parameters.containsKey('state')) {
-          throw new FormatException('Invalid OAuth response for '
-              '"$authorizationEndpoint": parameter "state" expected to be '
-              '"$_stateString", was missing.');
-        } else if (parameters['state'] != _stateString) {
-          throw new FormatException('Invalid OAuth response for '
-              '"$authorizationEndpoint": parameter "state" expected to be '
-              '"$_stateString", was "${parameters['state']}".');
-        }
-      }
-
-      if (parameters.containsKey('error')) {
-        var description = parameters['error_description'];
-        var uriString = parameters['error_uri'];
-        var uri = uriString == null ? null : Uri.parse(uriString);
-        throw new AuthorizationException(parameters['error'], description, uri);
-      } else if (!parameters.containsKey('code')) {
+    if (_stateString != null) {
+      if (!parameters.containsKey('state')) {
         throw new FormatException('Invalid OAuth response for '
-            '"$authorizationEndpoint": did not contain required parameter '
-            '"code".');
+            '"$authorizationEndpoint": parameter "state" expected to be '
+            '"$_stateString", was missing.');
+      } else if (parameters['state'] != _stateString) {
+        throw new FormatException('Invalid OAuth response for '
+            '"$authorizationEndpoint": parameter "state" expected to be '
+            '"$_stateString", was "${parameters['state']}".');
       }
+    }
 
-      return _handleAuthorizationCode(parameters['code']);
-    });
+    if (parameters.containsKey('error')) {
+      var description = parameters['error_description'];
+      var uriString = parameters['error_uri'];
+      var uri = uriString == null ? null : Uri.parse(uriString);
+      throw new AuthorizationException(parameters['error'], description, uri);
+    } else if (!parameters.containsKey('code')) {
+      throw new FormatException('Invalid OAuth response for '
+          '"$authorizationEndpoint": did not contain required parameter '
+          '"code".');
+    }
+
+    return await _handleAuthorizationCode(parameters['code']);
   }
 
   /// Processes an authorization code directly. Usually
@@ -209,26 +208,24 @@ class AuthorizationCodeGrant {
   /// responses while retrieving credentials.
   ///
   /// Throws [AuthorizationException] if the authorization fails.
-  Future<Client> handleAuthorizationCode(String authorizationCode) {
-    return async.then((_) {
-      if (_state == _INITIAL_STATE) {
-        throw new StateError(
-            'The authorization URL has not yet been generated.');
-      } else if (_state == _FINISHED_STATE) {
-        throw new StateError(
-            'The authorization code has already been received.');
-      }
-      _state = _FINISHED_STATE;
+  Future<Client> handleAuthorizationCode(String authorizationCode) async {
+    if (_state == _INITIAL_STATE) {
+      throw new StateError(
+          'The authorization URL has not yet been generated.');
+    } else if (_state == _FINISHED_STATE) {
+      throw new StateError(
+          'The authorization code has already been received.');
+    }
+    _state = _FINISHED_STATE;
 
-      return _handleAuthorizationCode(authorizationCode);
-    });
+    return await _handleAuthorizationCode(authorizationCode);
   }
 
   /// This works just like [handleAuthorizationCode], except it doesn't validate
   /// the state beforehand.
-  Future<Client> _handleAuthorizationCode(String authorizationCode) {
+  Future<Client> _handleAuthorizationCode(String authorizationCode) async {
     var startTime = new DateTime.now();
-    return _httpClient.post(this.tokenEndpoint, body: {
+    var response = await _httpClient.post(this.tokenEndpoint, body: {
       "grant_type": "authorization_code",
       "code": authorizationCode,
       "redirect_uri": this._redirectEndpoint.toString(),
@@ -237,12 +234,12 @@ class AuthorizationCodeGrant {
       // it be configurable?
       "client_id": this.identifier,
       "client_secret": this.secret
-    }).then((response) {
-      var credentials = handleAccessTokenResponse(
-          response, tokenEndpoint, startTime, _scopes);
-      return new Client(
-          this.identifier, this.secret, credentials, httpClient: _httpClient);
     });
+
+    var credentials = handleAccessTokenResponse(
+        response, tokenEndpoint, startTime, _scopes);
+    return new Client(
+        this.identifier, this.secret, credentials, httpClient: _httpClient);
   }
 
   /// Closes the grant and frees its resources.
