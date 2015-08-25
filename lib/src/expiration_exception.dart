@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library expiration_exception;
+library oauth2.expiration_exception;
 
 import 'credentials.dart';
 
@@ -16,5 +16,5 @@ class ExpirationException implements Exception {
 
   /// Provides a string description of the ExpirationException.
   String toString() =>
-    "OAuth2 credentials have expired and can't be refreshed.";
+      "OAuth2 credentials have expired and can't be refreshed.";
 }

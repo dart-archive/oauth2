@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library credentials;
+library oauth2.credentials;
 
 import 'dart:async';
 import 'dart:convert';
@@ -10,11 +10,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'handle_access_token_response.dart';
-import 'utils.dart';
 
 /// Credentials that prove that a client is allowed to access a resource on the
-/// resource owner's behalf. These credentials are long-lasting and can be
-/// safely persisted across multiple runs of the program.
+/// resource owner's behalf.
+///
+/// These credentials are long-lasting and can be safely persisted across
+/// multiple runs of the program.
 ///
 /// Many authorization servers will attach an expiration date to a set of
 /// credentials, along with a token that can be used to refresh the credentials
@@ -30,26 +31,34 @@ class Credentials {
   final String accessToken;
 
   /// The token that is sent to the authorization server to refresh the
-  /// credentials. This is optional.
+  /// credentials.
+  ///
+  /// This may be `null`, indicating that the credentials can't be refreshed.
   final String refreshToken;
 
   /// The URL of the authorization server endpoint that's used to refresh the
-  /// credentials. This is optional.
+  /// credentials.
+  ///
+  /// This may be `null`, indicating that the credentials can't be refreshed.
   final Uri tokenEndpoint;
 
   /// The specific permissions being requested from the authorization server.
+  ///
   /// The scope strings are specific to the authorization server and may be
   /// found in its documentation.
   final List<String> scopes;
 
-  /// The date at which these credentials will expire. This is likely to be a
-  /// few seconds earlier than the server's idea of the expiration date.
+  /// The date at which these credentials will expire.
+  ///
+  /// This is likely to be a few seconds earlier than the server's idea of the
+  /// expiration date.
   final DateTime expiration;
 
-  /// Whether or not these credentials have expired. Note that it's possible the
-  /// credentials will expire shortly after this is called. However, since the
-  /// client's expiration date is kept a few seconds earlier than the server's,
-  /// there should be enough leeway to rely on this.
+  /// Whether or not these credentials have expired.
+  ///
+  /// Note that it's possible the credentials will expire shortly after this is
+  /// called. However, since the client's expiration date is kept a few seconds
+  /// earlier than the server's, there should be enough leeway to rely on this.
   bool get isExpired => expiration != null &&
       new DateTime.now().isAfter(expiration);
 
@@ -69,10 +78,11 @@ class Credentials {
        this.scopes,
        this.expiration]);
 
-  /// Loads a set of credentials from a JSON-serialized form. Throws
-  /// [FormatException] if the JSON is incorrectly formatted.
+  /// Loads a set of credentials from a JSON-serialized form.
+  ///
+  /// Throws a [FormatException] if the JSON is incorrectly formatted.
   factory Credentials.fromJson(String json) {
-    void validate(bool condition, String message) {
+    validate(condition, message) {
       if (condition) return;
       throw new FormatException(
           "Failed to load credentials: $message.\n\n$json");
@@ -81,7 +91,7 @@ class Credentials {
     var parsed;
     try {
       parsed = JSON.decode(json);
-    } on FormatException catch (e) {
+    } on FormatException catch (_) {
       validate(false, 'invalid JSON');
     }
 
@@ -122,9 +132,10 @@ class Credentials {
         expiration);
   }
 
-  /// Serializes a set of credentials to JSON. Nothing is guaranteed about the
-  /// output except that it's valid JSON and compatible with
-  /// [Credentials.toJson].
+  /// Serializes a set of credentials to JSON.
+  ///
+  /// Nothing is guaranteed about the output except that it's valid JSON and
+  /// compatible with [Credentials.toJson].
   String toJson() => JSON.encode({
     'accessToken': accessToken,
     'refreshToken': refreshToken,
@@ -133,8 +144,10 @@ class Credentials {
     'expiration': expiration == null ? null : expiration.millisecondsSinceEpoch
   });
 
-  /// Returns a new set of refreshed credentials. See [Client.identifier] and
-  /// [Client.secret] for explanations of those parameters.
+  /// Returns a new set of refreshed credentials.
+  ///
+  /// See [Client.identifier] and [Client.secret] for explanations of those
+  /// parameters.
   ///
   /// You may request different scopes than the default by passing in
   /// [newScopes]. These must be a subset of [scopes].

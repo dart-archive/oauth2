@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library client_test;
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -17,16 +15,11 @@ final Uri requestUri = Uri.parse("http://example.com/resource");
 
 final Uri tokenEndpoint = Uri.parse('http://example.com/token');
 
-ExpectClient httpClient;
-
-void createHttpClient() {
-  httpClient = new ExpectClient();
-}
-
 void main() {
-  group('with expired credentials', () {
-    setUp(createHttpClient);
+  var httpClient;
+  setUp(() => httpClient = new ExpectClient());
 
+  group('with expired credentials', () {
     test("that can't be refreshed throws an ExpirationException on send", () {
       var expiration = new DateTime.now().subtract(new Duration(hours: 1));
       var credentials = new oauth2.Credentials(
@@ -70,8 +63,6 @@ void main() {
   });
 
   group('with valid credentials', () {
-    setUp(createHttpClient);
-
     test("sends a request with bearer authorization", () {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client('identifier', 'secret', credentials,
@@ -117,8 +108,6 @@ void main() {
   });
 
   group('with invalid credentials', () {
-    setUp(createHttpClient);
-
     test('throws an AuthorizationException for a 401 response', () {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client('identifier', 'secret', credentials,

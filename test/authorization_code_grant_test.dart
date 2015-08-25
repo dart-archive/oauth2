@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library authorization_code_grant_test;
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -15,24 +13,20 @@ import 'utils.dart';
 
 final redirectUrl = Uri.parse('http://example.com/redirect');
 
-ExpectClient client;
-
-oauth2.AuthorizationCodeGrant grant;
-
-void createGrant() {
-  client = new ExpectClient();
-  grant = new oauth2.AuthorizationCodeGrant(
-      'identifier',
-      'secret',
-      Uri.parse('https://example.com/authorization'),
-      Uri.parse('https://example.com/token'),
-      httpClient: client);
-}
-
 void main() {
-  group('.getAuthorizationUrl', () {
-    setUp(createGrant);
+  var client;
+  var grant;
+  setUp(() {
+    client = new ExpectClient();
+    grant = new oauth2.AuthorizationCodeGrant(
+        'identifier',
+        'secret',
+        Uri.parse('https://example.com/authorization'),
+        Uri.parse('https://example.com/token'),
+        httpClient: client);
+  });
 
+  group('.getAuthorizationUrl', () {
     test('builds the correct URL', () {
       expect(grant.getAuthorizationUrl(redirectUrl).toString(),
           equals('https://example.com/authorization'
@@ -87,8 +81,6 @@ void main() {
   });
 
   group('.handleAuthorizationResponse', () {
-    setUp(createGrant);
-
     test("can't be called before .getAuthorizationUrl", () {
       expect(grant.handleAuthorizationResponse({}), throwsStateError);
     });
@@ -153,8 +145,6 @@ void main() {
   });
 
   group('.handleAuthorizationCode', () {
-    setUp(createGrant);
-
     test("can't be called before .getAuthorizationUrl", () {
       expect(grant.handleAuthorizationCode('auth code'), throwsStateError);
     });

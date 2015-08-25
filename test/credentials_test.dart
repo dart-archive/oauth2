@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library credentials_test;
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -15,9 +13,8 @@ import 'utils.dart';
 
 final Uri tokenEndpoint = Uri.parse('http://example.com/token');
 
-ExpectClient httpClient;
-
 void main() {
+  var httpClient;
   setUp(() => httpClient = new ExpectClient());
 
   test('is not expired if no expiration exists', () {

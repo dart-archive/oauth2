@@ -2,20 +2,26 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library authorization_exception;
+library oauth2.authorization_exception;
 
 /// An exception raised when OAuth2 authorization fails.
 class AuthorizationException implements Exception {
-  /// The name of the error. Possible names are enumerated in [the spec][].
+  /// The name of the error.
+  ///
+  /// Possible names are enumerated in [the spec][].
   ///
   /// [the spec]: http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-5.2
   final String error;
 
-  /// The description of the error, provided by the server. Defaults to null.
+  /// The description of the error, provided by the server.
+  ///
+  /// May be `null` if the server provided no description.
   final String description;
 
-  /// A URI for a page that describes the error in more detail, provided by the
-  /// server. Defaults to null.
+  /// A URL for a page that describes the error in more detail, provided by the
+  /// server.
+  ///
+  /// May be `null` if the server provided no URL.
   final Uri uri;
 
   /// Creates an AuthorizationException.

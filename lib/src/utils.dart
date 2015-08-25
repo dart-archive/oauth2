@@ -2,57 +2,18 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library utils;
-
-import 'dart:async';
+library oauth2.utils;
 
 /// Adds additional query parameters to [url], overwriting the original
 /// parameters if a name conflict occurs.
-Uri addQueryParameters(Uri url, Map<String, String> parameters) {
-  var queryMap = queryToMap(url.query);
-  queryMap.addAll(parameters);
-  return url.resolve("?${mapToQuery(queryMap)}");
-}
-
-/// Convert a URL query string (or `application/x-www-form-urlencoded` body)
-/// into a [Map] from parameter names to values.
-Map<String, String> queryToMap(String queryList) {
-  var map = {};
-  for (var pair in queryList.split("&")) {
-    var split = split1(pair, "=");
-    if (split.isEmpty) continue;
-    var key = urlDecode(split[0]);
-    var value = split.length > 1 ? urlDecode(split[1]) : "";
-    map[key] = value;
-  }
-  return map;
-}
-
-/// Convert a [Map] from parameter names to values to a URL query string.
-String mapToQuery(Map<String, String> map) {
-  var pairs = <List<String>>[];
-  map.forEach((key, value) {
-    key = Uri.encodeQueryComponent(key);
-    value = (value == null || value.isEmpty)
-            ? null
-            : Uri.encodeQueryComponent(value);
-    pairs.add([key, value]);
-  });
-  return pairs.map((pair) {
-    if (pair[1] == null) return pair[0];
-    return "${pair[0]}=${pair[1]}";
-  }).join("&");
-}
-
-/// Decode a URL-encoded string. Unlike [Uri.decodeComponent], this includes
-/// replacing `+` with ` `.
-String urlDecode(String encoded) =>
-  Uri.decodeComponent(encoded.replaceAll("+", " "));
+Uri addQueryParameters(Uri url, Map<String, String> parameters) => url.replace(
+    queryParameters: new Map.from(url.queryParameters)..addAll(parameters));
 
 /// Like [String.split], but only splits on the first occurrence of the pattern.
+///
 /// This will always return a list of two elements or fewer.
 List<String> split1(String toSplit, String pattern) {
-  if (toSplit.isEmpty) return <String>[];
+  if (toSplit.isEmpty) return [];
 
   var index = toSplit.indexOf(pattern);
   if (index == -1) return [toSplit];

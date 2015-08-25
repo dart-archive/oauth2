@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library handle_access_token_response;
+library oauth2.handle_access_token_response;
 
 import 'dart:convert';
 
@@ -12,14 +12,17 @@ import 'package:http_parser/http_parser.dart';
 import 'credentials.dart';
 import 'authorization_exception.dart';
 
-/// The amount of time, in seconds, to add as a "grace period" for credential
-/// expiration. This allows credential expiration checks to remain valid for a
-/// reasonable amount of time.
-const _EXPIRATION_GRACE = 10;
+/// The amount of time to add as a "grace period" for credential expiration.
+///
+/// This allows credential expiration checks to remain valid for a reasonable
+/// amount of time.
+const _expirationGrace = const Duration(seconds: 10);
 
 /// Handles a response from the authorization server that contains an access
-/// token. This response format is common across several different components of
-/// the OAuth2 flow.
+/// token.
+///
+/// This response format is common across several different components of the
+/// OAuth2 flow.
 Credentials handleAccessTokenResponse(
     http.Response response,
     Uri tokenEndpoint,
@@ -27,8 +30,8 @@ Credentials handleAccessTokenResponse(
     List<String> scopes) {
   if (response.statusCode != 200) _handleErrorResponse(response, tokenEndpoint);
 
-  void validate(bool condition, String message) =>
-    _validate(response, tokenEndpoint, condition, message);
+  validate(condition, message) =>
+      _validate(response, tokenEndpoint, condition, message);
 
   var contentType = response.headers['content-type'];
   if (contentType != null) contentType = new MediaType.parse(contentType);
@@ -43,7 +46,7 @@ Credentials handleAccessTokenResponse(
   var parameters;
   try {
     parameters = JSON.decode(response.body);
-  } on FormatException catch (e) {
+  } on FormatException catch (_) {
     validate(false, 'invalid JSON');
   }
 
@@ -74,7 +77,7 @@ Credentials handleAccessTokenResponse(
   if (scope != null) scopes = scope.split(" ");
 
   var expiration = expiresIn == null ? null :
-      startTime.add(new Duration(seconds: expiresIn - _EXPIRATION_GRACE));
+      startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
 
   return new Credentials(
       parameters['access_token'],
@@ -87,8 +90,8 @@ Credentials handleAccessTokenResponse(
 /// Throws the appropriate exception for an error response from the
 /// authorization server.
 void _handleErrorResponse(http.Response response, Uri tokenEndpoint) {
-  void validate(bool condition, String message) =>
-    _validate(response, tokenEndpoint, condition, message);
+  validate(condition, message) =>
+      _validate(response, tokenEndpoint, condition, message);
 
   // OAuth2 mandates a 400 or 401 response code for access token error
   // responses. If it's not a 400 reponse, the server is either broken or
@@ -110,7 +113,7 @@ void _handleErrorResponse(http.Response response, Uri tokenEndpoint) {
   var parameters;
   try {
     parameters = JSON.decode(response.body);
-  } on FormatException catch (e) {
+  } on FormatException catch (_) {
     validate(false, 'invalid JSON');
   }
 
