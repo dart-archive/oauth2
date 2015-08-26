@@ -5,11 +5,13 @@
 library oauth2.credentials;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
 import 'handle_access_token_response.dart';
+import 'utils.dart';
 
 /// Credentials that prove that a client is allowed to access a resource on the
 /// resource owner's behalf.
@@ -72,11 +74,15 @@ class Credentials {
   /// [AuthorizationCodeGrant]. Alternately, it may be loaded from a serialized
   /// form via [Credentials.fromJson].
   Credentials(
-      this.accessToken,
-      [this.refreshToken,
-       this.tokenEndpoint,
-       this.scopes,
-       this.expiration]);
+          this.accessToken,
+          {this.refreshToken,
+          this.tokenEndpoint,
+          Iterable<String> scopes,
+          this.expiration})
+      : scopes = new UnmodifiableListView(
+            // Explicitly type-annotate the list literal to work around
+            // sdk#24202.
+            scopes == null ? <String>[] : scopes.toList());
 
   /// Loads a set of credentials from a JSON-serialized form.
   ///
@@ -126,10 +132,10 @@ class Credentials {
 
     return new Credentials(
         parsed['accessToken'],
-        parsed['refreshToken'],
-        tokenEndpoint,
-        scopes,
-        expiration);
+        refreshToken: parsed['refreshToken'],
+        tokenEndpoint: tokenEndpoint,
+        scopes: scopes,
+        expiration: expiration);
   }
 
   /// Serializes a set of credentials to JSON.
@@ -152,18 +158,24 @@ class Credentials {
   /// You may request different scopes than the default by passing in
   /// [newScopes]. These must be a subset of [scopes].
   ///
-  /// This will throw a [StateError] if these credentials can't be refreshed, an
+  /// This throws an [ArgumentError] if [secret] is passed without [identifier],
+  /// a [StateError] if these credentials can't be refreshed, an
   /// [AuthorizationException] if refreshing the credentials fails, or a
   /// [FormatError] if the authorization server returns invalid responses.
   Future<Credentials> refresh(
-      String identifier,
+      {String identifier,
       String secret,
-      {List<String> newScopes,
-       http.Client httpClient}) async {
+      Iterable<String> newScopes,
+      bool basicAuth: true,
+      http.Client httpClient}) async {
     var scopes = this.scopes;
-    if (newScopes != null) scopes = newScopes;
-    if (scopes == null) scopes = <String>[];
+    if (newScopes != null) scopes = newScopes.toList();
+    if (scopes == null) scopes = [];
     if (httpClient == null) httpClient = new http.Client();
+
+    if (identifier == null && secret != null) {
+      throw new ArgumentError("secret may not be passed without identifier.");
+    }
 
     var startTime = new DateTime.now();
     if (refreshToken == null) {
@@ -174,29 +186,34 @@ class Credentials {
           "endpoint.");
     }
 
-    var fields = {
-      "grant_type": "refresh_token",
-      "refresh_token": refreshToken,
-      // TODO(nweiz): the spec recommends that HTTP basic auth be used in
-      // preference to form parameters, but Google doesn't support that.
-      // Should it be configurable?
-      "client_id": identifier,
-      "client_secret": secret
-    };
-    if (!scopes.isEmpty) fields["scope"] = scopes.join(' ');
+    var headers = {};
 
-    var response = await httpClient.post(tokenEndpoint, body: fields);
+    var body = {
+      "grant_type": "refresh_token",
+      "refresh_token": refreshToken
+    };
+    if (!scopes.isEmpty) body["scope"] = scopes.join(' ');
+
+    if (basicAuth && secret != null) {
+      headers["Authorization"] = basicAuthHeader(identifier, secret);
+    } else {
+      if (identifier != null) body["client_id"] = identifier;
+      if (secret != null) body["client_secret"] = secret;
+    }
+
+    var response = await httpClient.post(tokenEndpoint,
+        headers: headers, body: body);
     var credentials = await handleAccessTokenResponse(
-          response, tokenEndpoint, startTime, scopes);
+        response, tokenEndpoint, startTime, scopes);
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.
     if (credentials.refreshToken != null) return credentials;
     return new Credentials(
         credentials.accessToken,
-        this.refreshToken,
-        credentials.tokenEndpoint,
-        credentials.scopes,
-        credentials.expiration);
+        refreshToken: this.refreshToken,
+        tokenEndpoint: credentials.tokenEndpoint,
+        scopes: credentials.scopes,
+        expiration: credentials.expiration);
   }
 }

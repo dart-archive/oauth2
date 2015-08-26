@@ -69,6 +69,9 @@ class Client extends http.BaseClient {
   Credentials get credentials => _credentials;
   Credentials _credentials;
 
+  /// Whether to use HTTP Basic authentication for authorizing the client.
+  final bool _basicAuth;
+
   /// The underlying HTTP client.
   http.Client _httpClient;
 
@@ -79,12 +82,16 @@ class Client extends http.BaseClient {
   ///
   /// [httpClient] is the underlying client that this forwards requests to after
   /// adding authorization credentials to them.
-  Client(
-      this.identifier,
-      this.secret,
-      this._credentials,
-      {http.Client httpClient})
-    : _httpClient = httpClient == null ? new http.Client() : httpClient;
+  ///
+  /// Thrwos an [ArgumentError] if [secret] is passed without [identifier].
+  Client(this._credentials, {this.identifier, this.secret,
+          bool basicAuth: true, http.Client httpClient})
+      : _basicAuth = basicAuth,
+        _httpClient = httpClient == null ? new http.Client() : httpClient {
+    if (identifier == null && secret != null) {
+      throw new ArgumentError("secret may not be passed without identifier.");
+    }
+  }
 
   /// Sends an HTTP request with OAuth2 authorization credentials attached.
   ///
@@ -137,8 +144,11 @@ class Client extends http.BaseClient {
     }
 
     _credentials = await credentials.refresh(
-        identifier, secret,
-        newScopes: newScopes, httpClient: _httpClient);
+        identifier: identifier,
+        secret: secret,
+        newScopes: newScopes,
+        basicAuth: _basicAuth,
+        httpClient: _httpClient);
 
     return this;
   }
