@@ -23,8 +23,10 @@ void main() {
     test("that can't be refreshed throws an ExpirationException on send", () {
       var expiration = new DateTime.now().subtract(new Duration(hours: 1));
       var credentials = new oauth2.Credentials(
-          'access token', null, null, [], expiration);
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+          'access token', expiration: expiration);
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret', 
           httpClient: httpClient);
 
       expect(client.get(requestUri),
@@ -35,8 +37,13 @@ void main() {
         "request", () async {
       var expiration = new DateTime.now().subtract(new Duration(hours: 1));
       var credentials = new oauth2.Credentials(
-          'access token', 'refresh token', tokenEndpoint, [], expiration);
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+          'access token',
+          refreshToken: 'refresh token',
+          tokenEndpoint: tokenEndpoint,
+          expiration: expiration);
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
           httpClient: httpClient);
 
       httpClient.expectRequest((request) {
@@ -65,7 +72,9 @@ void main() {
   group('with valid credentials', () {
     test("sends a request with bearer authorization", () {
       var credentials = new oauth2.Credentials('access token');
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
           httpClient: httpClient);
 
       httpClient.expectRequest((request) {
@@ -81,8 +90,12 @@ void main() {
 
     test("can manually refresh the credentials", () async {
       var credentials = new oauth2.Credentials(
-          'access token', 'refresh token', tokenEndpoint);
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+          'access token',
+          refreshToken: 'refresh token',
+          tokenEndpoint: tokenEndpoint);
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
           httpClient: httpClient);
 
       httpClient.expectRequest((request) {
@@ -100,7 +113,9 @@ void main() {
 
     test("without a refresh token can't manually refresh the credentials", () {
       var credentials = new oauth2.Credentials('access token');
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
           httpClient: httpClient);
 
       expect(client.refreshCredentials(), throwsA(isStateError));
@@ -110,7 +125,9 @@ void main() {
   group('with invalid credentials', () {
     test('throws an AuthorizationException for a 401 response', () {
       var credentials = new oauth2.Credentials('access token');
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
           httpClient: httpClient);
 
       httpClient.expectRequest((request) {
@@ -130,7 +147,9 @@ void main() {
 
     test('passes through a 401 response without www-authenticate', () async {
       var credentials = new oauth2.Credentials('access token');
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
           httpClient: httpClient);
 
       httpClient.expectRequest((request) {
@@ -148,7 +167,9 @@ void main() {
     test('passes through a 401 response with invalid www-authenticate',
         () async {
       var credentials = new oauth2.Credentials('access token');
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
           httpClient: httpClient);
 
       httpClient.expectRequest((request) {
@@ -157,8 +178,8 @@ void main() {
         expect(request.headers['authorization'],
             equals('Bearer access token'));
 
-        var authenticate = 'Bearer error="invalid_token", error_description='
-          '"Something is terribly wrong.", ';
+        var authenticate = 'Bearer error="invalid_token" error_description='
+          '"Something is terribly wrong."';
         return new Future.value(new http.Response('bad job', 401,
                 headers: {'www-authenticate': authenticate}));
       });
@@ -169,7 +190,9 @@ void main() {
     test('passes through a 401 response with non-bearer www-authenticate',
         () async {
       var credentials = new oauth2.Credentials('access token');
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
           httpClient: httpClient);
 
       httpClient.expectRequest((request) {
@@ -188,7 +211,9 @@ void main() {
     test('passes through a 401 response with non-OAuth2 www-authenticate',
         () async {
       var credentials = new oauth2.Credentials('access token');
-      var client = new oauth2.Client('identifier', 'secret', credentials,
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
           httpClient: httpClient);
 
       httpClient.expectRequest((request) {

@@ -68,6 +68,9 @@ class AuthorizationCodeGrant {
   /// documentation.
   final Uri tokenEndpoint;
 
+  /// Whether to use HTTP Basic authentication for authorizing the client.
+  final bool _basicAuth;
+
   /// The HTTP client used to make HTTP requests.
   http.Client _httpClient;
 
@@ -87,15 +90,23 @@ class AuthorizationCodeGrant {
 
   /// Creates a new grant.
   ///
+  /// If [basicAuth] is `true` (the default), the client credentials are sent to
+  /// the server using using HTTP Basic authentication as defined in [RFC 2617].
+  /// Otherwise, they're included in the request body. Note that the latter form
+  /// is not recommended by the OAuth 2.0 spec, and should only be used if the
+  /// server doesn't support Basic authentication.
+  ///
+  /// [RFC 2617]: https://tools.ietf.org/html/rfc2617
+  ///
   /// [httpClient] is used for all HTTP requests made by this grant, as well as
   /// those of the [Client] is constructs.
   AuthorizationCodeGrant(
           this.identifier,
-          this.secret,
           this.authorizationEndpoint,
           this.tokenEndpoint,
-          {http.Client httpClient})
-      : _httpClient = httpClient == null ? new http.Client() : httpClient;
+          {this.secret, bool basicAuth: true, http.Client httpClient})
+      : _basicAuth = basicAuth,
+        _httpClient = httpClient == null ? new http.Client() : httpClient;
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
@@ -116,12 +127,18 @@ class AuthorizationCodeGrant {
   /// query parameters provided to the redirect URL.
   ///
   /// It is a [StateError] to call this more than once.
-  Uri getAuthorizationUrl(Uri redirect,
-      {List<String> scopes: const <String>[], String state}) {
+  Uri getAuthorizationUrl(Uri redirect, {Iterable<String> scopes,
+      String state}) {
     if (_state != _State.initial) {
       throw new StateError('The authorization URL has already been generated.');
     }
     _state = _State.awaitingResponse;
+
+    if (scopes == null) {
+      scopes = [];
+    } else {
+      scopes = scopes.toList();
+    }
 
     this._redirectEndpoint = redirect;
     this._scopes = scopes;
@@ -224,21 +241,35 @@ class AuthorizationCodeGrant {
   /// the state beforehand.
   Future<Client> _handleAuthorizationCode(String authorizationCode) async {
     var startTime = new DateTime.now();
-    var response = await _httpClient.post(this.tokenEndpoint, body: {
+
+    var headers = {};
+
+    var body = {
       "grant_type": "authorization_code",
       "code": authorizationCode,
-      "redirect_uri": this._redirectEndpoint.toString(),
-      // TODO(nweiz): the spec recommends that HTTP basic auth be used in
-      // preference to form parameters, but Google doesn't support that. Should
-      // it be configurable?
-      "client_id": this.identifier,
-      "client_secret": this.secret
-    });
+      "redirect_uri": this._redirectEndpoint.toString()
+    };
+
+    if (_basicAuth && secret != null) {
+      headers["Authorization"] = basicAuthHeader(identifier, secret);
+    } else {
+      // The ID is required for this request any time basic auth isn't being
+      // used, even if there's no actual client authentication to be done.
+      body["client_id"] = identifier;
+      if (secret != null) body["client_secret"] = secret;
+    }
+
+    var response = await _httpClient.post(this.tokenEndpoint,
+        headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, _scopes);
     return new Client(
-        this.identifier, this.secret, credentials, httpClient: _httpClient);
+        credentials,
+        identifier: this.identifier,
+        secret: this.secret,
+        basicAuth: _basicAuth,
+        httpClient: _httpClient);
   }
 
   /// Closes the grant and frees its resources.

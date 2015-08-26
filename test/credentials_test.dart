@@ -25,37 +25,82 @@ void main() {
   test('is not expired if the expiration is in the future', () {
     var expiration = new DateTime.now().add(new Duration(hours: 1));
     var credentials = new oauth2.Credentials(
-        'access token', null, null, null, expiration);
+        'access token', expiration: expiration);
     expect(credentials.isExpired, isFalse);
   });
 
   test('is expired if the expiration is in the past', () {
     var expiration = new DateTime.now().subtract(new Duration(hours: 1));
     var credentials = new oauth2.Credentials(
-        'access token', null, null, null, expiration);
+        'access token', expiration: expiration);
     expect(credentials.isExpired, isTrue);
   });
 
   test("can't refresh without a refresh token", () {
     var credentials = new oauth2.Credentials(
-        'access token', null, tokenEndpoint);
+        'access token', tokenEndpoint: tokenEndpoint);
     expect(credentials.canRefresh, false);
 
-    expect(credentials.refresh('identifier', 'secret', httpClient: httpClient),
+    expect(credentials.refresh(
+            identifier: 'identifier',
+            secret: 'secret',
+            httpClient: httpClient),
         throwsStateError);
   });
 
   test("can't refresh without a token endpoint", () {
-    var credentials = new oauth2.Credentials('access token', 'refresh token');
+    var credentials = new oauth2.Credentials(
+        'access token', refreshToken: 'refresh token');
     expect(credentials.canRefresh, false);
 
-    expect(credentials.refresh('identifier', 'secret', httpClient: httpClient),
+    expect(credentials.refresh(
+            identifier: 'identifier',
+            secret: 'secret',
+            httpClient: httpClient),
         throwsStateError);
   });
 
   test("can refresh with a refresh token and a token endpoint", () async {
     var credentials = new oauth2.Credentials(
-        'access token', 'refresh token', tokenEndpoint, ['scope1', 'scope2']);
+        'access token',
+        refreshToken: 'refresh token',
+        tokenEndpoint: tokenEndpoint,
+        scopes: ['scope1', 'scope2']);
+    expect(credentials.canRefresh, true);
+
+    httpClient.expectRequest((request) {
+      expect(request.method, equals('POST'));
+      expect(request.url.toString(), equals(tokenEndpoint.toString()));
+      expect(request.bodyFields, equals({
+        "grant_type": "refresh_token",
+        "refresh_token": "refresh token",
+        "scope": "scope1 scope2"
+      }));
+      expect(request.headers, containsPair(
+          "Authorization",
+          "Basic aWQlQzMlQUJudCVDNCVBQmZpZXI6cyVDMyVBQmNyZXQ="));
+
+      return new Future.value(new http.Response(JSON.encode({
+        'access_token': 'new access token',
+        'token_type': 'bearer',
+        'refresh_token': 'new refresh token'
+      }), 200, headers: {'content-type': 'application/json'}));
+    });
+
+    credentials = await credentials.refresh(
+        identifier: 'idëntīfier',
+        secret: 'sëcret',
+        httpClient: httpClient);
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('new refresh token'));
+  });
+
+  test("can refresh without a client secret", () async {
+    var credentials = new oauth2.Credentials(
+        'access token',
+        refreshToken: 'refresh token',
+        tokenEndpoint: tokenEndpoint,
+        scopes: ['scope1', 'scope2']);
     expect(credentials.canRefresh, true);
 
     httpClient.expectRequest((request) {
@@ -65,8 +110,7 @@ void main() {
         "grant_type": "refresh_token",
         "refresh_token": "refresh token",
         "scope": "scope1 scope2",
-        "client_id": "identifier",
-        "client_secret": "secret"
+        "client_id": "identifier"
       }));
 
       return new Future.value(new http.Response(JSON.encode({
@@ -77,15 +121,19 @@ void main() {
     });
 
 
-    credentials = await credentials.refresh('identifier', 'secret',
+    credentials = await credentials.refresh(
+        identifier: 'identifier',
         httpClient: httpClient);
     expect(credentials.accessToken, equals('new access token'));
     expect(credentials.refreshToken, equals('new refresh token'));
   });
 
-  test("uses the old refresh token if a new one isn't provided", () async {
+  test("can refresh without client authentication", () async {
     var credentials = new oauth2.Credentials(
-        'access token', 'refresh token', tokenEndpoint);
+        'access token',
+        refreshToken: 'refresh token',
+        tokenEndpoint: tokenEndpoint,
+        scopes: ['scope1', 'scope2']);
     expect(credentials.canRefresh, true);
 
     httpClient.expectRequest((request) {
@@ -94,9 +142,39 @@ void main() {
       expect(request.bodyFields, equals({
         "grant_type": "refresh_token",
         "refresh_token": "refresh token",
-        "client_id": "identifier",
-        "client_secret": "secret"
+        "scope": "scope1 scope2"
       }));
+
+      return new Future.value(new http.Response(JSON.encode({
+        'access_token': 'new access token',
+        'token_type': 'bearer',
+        'refresh_token': 'new refresh token'
+      }), 200, headers: {'content-type': 'application/json'}));
+    });
+
+
+    credentials = await credentials.refresh(httpClient: httpClient);
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('new refresh token'));
+  });
+
+  test("uses the old refresh token if a new one isn't provided", () async {
+    var credentials = new oauth2.Credentials(
+        'access token',
+        refreshToken: 'refresh token',
+        tokenEndpoint: tokenEndpoint);
+    expect(credentials.canRefresh, true);
+
+    httpClient.expectRequest((request) {
+      expect(request.method, equals('POST'));
+      expect(request.url.toString(), equals(tokenEndpoint.toString()));
+      expect(request.bodyFields, equals({
+        "grant_type": "refresh_token",
+        "refresh_token": "refresh token"
+      }));
+      expect(request.headers, containsPair(
+          "Authorization",
+          "Basic aWQlQzMlQUJudCVDNCVBQmZpZXI6cyVDMyVBQmNyZXQ="));
 
       return new Future.value(new http.Response(JSON.encode({
         'access_token': 'new access token',
@@ -105,10 +183,47 @@ void main() {
     });
 
 
-    credentials = await credentials.refresh('identifier', 'secret',
+    credentials = await credentials.refresh(
+        identifier: 'idëntīfier',
+        secret: 'sëcret',
         httpClient: httpClient);
     expect(credentials.accessToken, equals('new access token'));
     expect(credentials.refreshToken, equals('refresh token'));
+  });
+
+  test("uses form-field authentication if basicAuth is false", () async {
+    var credentials = new oauth2.Credentials(
+        'access token',
+        refreshToken: 'refresh token',
+        tokenEndpoint: tokenEndpoint,
+        scopes: ['scope1', 'scope2']);
+    expect(credentials.canRefresh, true);
+
+    httpClient.expectRequest((request) {
+      expect(request.method, equals('POST'));
+      expect(request.url.toString(), equals(tokenEndpoint.toString()));
+      expect(request.bodyFields, equals({
+        "grant_type": "refresh_token",
+        "refresh_token": "refresh token",
+        "scope": "scope1 scope2",
+        "client_id": "idëntīfier",
+        "client_secret": "sëcret"
+      }));
+
+      return new Future.value(new http.Response(JSON.encode({
+        'access_token': 'new access token',
+        'token_type': 'bearer',
+        'refresh_token': 'new refresh token'
+      }), 200, headers: {'content-type': 'application/json'}));
+    });
+
+    credentials = await credentials.refresh(
+        identifier: 'idëntīfier',
+        secret: 'sëcret',
+        basicAuth: false,
+        httpClient: httpClient);
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('new refresh token'));
   });
 
   group("fromJson", () {
@@ -118,8 +233,11 @@ void main() {
     test("should load the same credentials from toJson", () {
       var expiration = new DateTime.now().subtract(new Duration(hours: 1));
       var credentials = new oauth2.Credentials(
-          'access token', 'refresh token', tokenEndpoint, ['scope1', 'scope2'],
-          expiration);
+          'access token',
+          refreshToken: 'refresh token',
+          tokenEndpoint: tokenEndpoint,
+          scopes: ['scope1', 'scope2'],
+          expiration: expiration);
       var reloaded = new oauth2.Credentials.fromJson(credentials.toJson());
 
       expect(reloaded.accessToken, equals(credentials.accessToken));

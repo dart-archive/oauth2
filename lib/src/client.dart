@@ -7,6 +7,7 @@ library oauth2.client;
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'authorization_exception.dart';
 import 'credentials.dart';
@@ -69,6 +70,9 @@ class Client extends http.BaseClient {
   Credentials get credentials => _credentials;
   Credentials _credentials;
 
+  /// Whether to use HTTP Basic authentication for authorizing the client.
+  final bool _basicAuth;
+
   /// The underlying HTTP client.
   http.Client _httpClient;
 
@@ -79,12 +83,16 @@ class Client extends http.BaseClient {
   ///
   /// [httpClient] is the underlying client that this forwards requests to after
   /// adding authorization credentials to them.
-  Client(
-      this.identifier,
-      this.secret,
-      this._credentials,
-      {http.Client httpClient})
-    : _httpClient = httpClient == null ? new http.Client() : httpClient;
+  ///
+  /// Throws an [ArgumentError] if [secret] is passed without [identifier].
+  Client(this._credentials, {this.identifier, this.secret,
+          bool basicAuth: true, http.Client httpClient})
+      : _basicAuth = basicAuth,
+        _httpClient = httpClient == null ? new http.Client() : httpClient {
+    if (identifier == null && secret != null) {
+      throw new ArgumentError("secret may not be passed without identifier.");
+    }
+  }
 
   /// Sends an HTTP request with OAuth2 authorization credentials attached.
   ///
@@ -102,17 +110,19 @@ class Client extends http.BaseClient {
     if (response.statusCode != 401) return response;
     if (!response.headers.containsKey('www-authenticate')) return response;
 
-    var authenticate;
+    var challenges;
     try {
-      authenticate = new AuthenticateHeader.parse(
+      challenges = AuthenticationChallenge.parseHeader(
           response.headers['www-authenticate']);
     } on FormatException catch (_) {
       return response;
     }
 
-    if (authenticate.scheme != 'bearer') return response;
+    var challenge = challenges.firstWhere(
+        (challenge) => challenge.scheme == 'bearer', orElse: () => null);
+    if (challenge == null) return response;
 
-    var params = authenticate.parameters;
+    var params = challenge.parameters;
     if (!params.containsKey('error')) return response;
 
     throw new AuthorizationException(
@@ -137,8 +147,11 @@ class Client extends http.BaseClient {
     }
 
     _credentials = await credentials.refresh(
-        identifier, secret,
-        newScopes: newScopes, httpClient: _httpClient);
+        identifier: identifier,
+        secret: secret,
+        newScopes: newScopes,
+        basicAuth: _basicAuth,
+        httpClient: _httpClient);
 
     return this;
   }
