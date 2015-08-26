@@ -178,8 +178,8 @@ void main() {
         expect(request.headers['authorization'],
             equals('Bearer access token'));
 
-        var authenticate = 'Bearer error="invalid_token", error_description='
-          '"Something is terribly wrong.", ';
+        var authenticate = 'Bearer error="invalid_token" error_description='
+          '"Something is terribly wrong."';
         return new Future.value(new http.Response('bad job', 401,
                 headers: {'www-authenticate': authenticate}));
       });
