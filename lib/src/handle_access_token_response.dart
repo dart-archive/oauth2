@@ -81,10 +81,10 @@ Credentials handleAccessTokenResponse(
 
   return new Credentials(
       parameters['access_token'],
-      refreshToken: parameters['refresh_token'],
-      tokenEndpoint: tokenEndpoint,
-      scopes: scopes,
-      expiration: expiration);
+      parameters['refresh_token'],
+      tokenEndpoint,
+      scopes,
+      expiration);
 }
 
 /// Throws the appropriate exception for an error response from the

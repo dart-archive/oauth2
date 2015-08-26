@@ -64,15 +64,13 @@ Future<oauth2.Client> getClient() async {
   if (exists) {
     var credentials = new oauth2.Credentials.fromJson(
         await credentialsFile.readAsString());
-    return new oauth2.Client(credentials,
-        identifier: identifier, secret: secret);
+    return new oauth2.Client(identifier, secret, credentials);
   }
 
   // If we don't have OAuth2 credentials yet, we need to get the resource owner
   // to authorize us. We're assuming here that we're a command-line application.
   var grant = new oauth2.AuthorizationCodeGrant(
-      identifier, authorizationEndpoint, tokenEndpoint,
-      secret: secret);
+      identifier, secret, authorizationEndpoint, tokenEndpoint);
 
   // Redirect the resource owner to the authorization URL. This will be a URL on
   // the authorization server (authorizationEndpoint with some additional query

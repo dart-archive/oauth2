@@ -20,9 +20,9 @@ void main() {
     client = new ExpectClient();
     grant = new oauth2.AuthorizationCodeGrant(
         'identifier',
+        'secret',
         Uri.parse('https://example.com/authorization'),
         Uri.parse('https://example.com/token'),
-        secret: 'secret',
         httpClient: client);
   });
 
@@ -60,9 +60,9 @@ void main() {
     test('merges with existing query parameters', () {
       grant = new oauth2.AuthorizationCodeGrant(
           'identifier',
+          'secret',
           Uri.parse('https://example.com/authorization?query=value'),
           Uri.parse('https://example.com/token'),
-          secret: 'secret',
           httpClient: client);
 
       var authorizationUrl = grant.getAuthorizationUrl(redirectUrl);
@@ -127,11 +127,10 @@ void main() {
         expect(request.bodyFields, equals({
           'grant_type': 'authorization_code',
           'code': 'auth code',
-          'redirect_uri': redirectUrl.toString()
+          'redirect_uri': redirectUrl.toString(),
+          'client_id': 'identifier',
+          'client_secret': 'secret'
         }));
-        expect(request.headers, containsPair(
-            "Authorization",
-            "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
 
         return new Future.value(new http.Response(JSON.encode({
           'access_token': 'access token',
@@ -157,71 +156,6 @@ void main() {
     });
 
     test('sends an authorization code request', () {
-      grant.getAuthorizationUrl(redirectUrl);
-      client.expectRequest((request) {
-        expect(request.method, equals('POST'));
-        expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
-        expect(request.bodyFields, equals({
-          'grant_type': 'authorization_code',
-          'code': 'auth code',
-          'redirect_uri': redirectUrl.toString()
-        }));
-        expect(request.headers, containsPair(
-            "Authorization",
-            "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
-
-        return new Future.value(new http.Response(JSON.encode({
-          'access_token': 'access token',
-          'token_type': 'bearer',
-        }), 200, headers: {'content-type': 'application/json'}));
-      });
-
-      expect(grant.handleAuthorizationCode('auth code'),
-          completion(predicate((client) {
-            expect(client.credentials.accessToken, equals('access token'));
-            return true;
-          })));
-    });
-  });
-
-  group("with basicAuth: false", () {
-    setUp(() {
-      client = new ExpectClient();
-      grant = new oauth2.AuthorizationCodeGrant(
-          'identifier',
-          Uri.parse('https://example.com/authorization'),
-          Uri.parse('https://example.com/token'),
-          secret: 'secret',
-          basicAuth: false,
-          httpClient: client);
-    });
-
-    test('.handleAuthorizationResponse sends an authorization code request',
-        () {
-      grant.getAuthorizationUrl(redirectUrl);
-      client.expectRequest((request) {
-        expect(request.method, equals('POST'));
-        expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
-        expect(request.bodyFields, equals({
-          'grant_type': 'authorization_code',
-          'code': 'auth code',
-          'redirect_uri': redirectUrl.toString(),
-          'client_id': 'identifier',
-          'client_secret': 'secret'
-        }));
-
-        return new Future.value(new http.Response(JSON.encode({
-          'access_token': 'access token',
-          'token_type': 'bearer',
-        }), 200, headers: {'content-type': 'application/json'}));
-      });
-
-      expect(grant.handleAuthorizationResponse({'code': 'auth code'})
-            .then((client) => client.credentials.accessToken),
-          completion(equals('access token')));
-    });
-
-    test('.handleAuthorizationCode sends an authorization code request', () {
       grant.getAuthorizationUrl(redirectUrl);
       client.expectRequest((request) {
         expect(request.method, equals('POST'));
