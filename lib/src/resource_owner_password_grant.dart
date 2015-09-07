@@ -26,18 +26,20 @@ import 'utils.dart';
 ///
 Future<Client> resourceOwnerPasswordGrant(
     Uri authorizationEndpoint, String username, String password,
-    {String clientId, String clientSecret: '', List<String> scopes: const [],
-    bool useBasicAuth: true, http.Client httpClient}) async {
-
+    {String clientId,
+    String clientSecret: '',
+    List<String> scopes: const [],
+    bool useBasicAuth: true,
+    http.Client httpClient}) async {
   var startTime = new DateTime.now();
   var parameters = {"grant_type": "password"};
   var headers = {};
 
-  if(clientId != null){
-    if(useBasicAuth){
+  if (clientId != null) {
+    if (useBasicAuth) {
       headers['authorization'] = 'Basic ' +
-      CryptoUtils.bytesToBase64(UTF8.encode('$clientId:$clientSecret'));
-    }else {
+          CryptoUtils.bytesToBase64(UTF8.encode('$clientId:$clientSecret'));
+    } else {
       parameters['client_id'] = clientId;
       parameters['client_secret'] = clientSecret;
     }
