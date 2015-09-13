@@ -30,9 +30,9 @@ void main() {
         () async {
       expectClient.expectRequest((request) {
         expect(auth, equals(request.headers['authorization']));
-        expect(request.url.queryParameters['grant_type'], equals('password'));
-        expect(request.url.queryParameters['username'], equals('username'));
-        expect(request.url.queryParameters['password'], equals('userpass'));
+        expect(request.bodyFields['grant_type'], equals('password'));
+        expect(request.bodyFields['username'], equals('username'));
+        expect(request.bodyFields['password'], equals('userpass'));
         return new Future.value(new http.Response(SUCCESS, 200,
             headers: {'content-type': 'application/json'}));
       });
@@ -48,11 +48,11 @@ void main() {
     test('builds correct request when using query parameters for client',
         () async {
       expectClient.expectRequest((request) {
-        expect(request.url.queryParameters['grant_type'], equals('password'));
-        expect(request.url.queryParameters['client_id'], equals('client'));
-        expect(request.url.queryParameters['client_secret'], equals('secret'));
-        expect(request.url.queryParameters['username'], equals('username'));
-        expect(request.url.queryParameters['password'], equals('userpass'));
+        expect(request.bodyFields['grant_type'], equals('password'));
+        expect(request.bodyFields['client_id'], equals('client'));
+        expect(request.bodyFields['client_secret'], equals('secret'));
+        expect(request.bodyFields['username'], equals('username'));
+        expect(request.bodyFields['password'], equals('userpass'));
         return new Future.value(new http.Response(SUCCESS, 200,
             headers: {'content-type': 'application/json'}));
       });
@@ -69,10 +69,10 @@ void main() {
 
     test('builds correct request using scope', () async {
       expectClient.expectRequest((request) {
-        expect(request.url.queryParameters['grant_type'], equals('password'));
-        expect(request.url.queryParameters['username'], equals('username'));
-        expect(request.url.queryParameters['password'], equals('userpass'));
-        expect(request.url.queryParameters['scope'], equals('one two'));
+        expect(request.bodyFields['grant_type'], equals('password'));
+        expect(request.bodyFields['username'], equals('username'));
+        expect(request.bodyFields['password'], equals('userpass'));
+        expect(request.bodyFields['scope'], equals('one two'));
         return new Future.value(new http.Response(SUCCESS, 200,
             headers: {'content-type': 'application/json'}));
       });
@@ -88,11 +88,11 @@ void main() {
       var authEndpoint = Uri.parse('https://example.com?query=value');
 
       expectClient.expectRequest((request) {
-        expect(request.url.queryParameters['grant_type'], equals('password'));
-        expect(request.url.queryParameters['client_id'], equals('client'));
-        expect(request.url.queryParameters['client_secret'], equals('secret'));
-        expect(request.url.queryParameters['username'], equals('username'));
-        expect(request.url.queryParameters['password'], equals('userpass'));
+        expect(request.bodyFields['grant_type'], equals('password'));
+        expect(request.bodyFields['client_id'], equals('client'));
+        expect(request.bodyFields['client_secret'], equals('secret'));
+        expect(request.bodyFields['username'], equals('username'));
+        expect(request.bodyFields['password'], equals('userpass'));
         expect(request.url.queryParameters['query'], equals('value'));
         return new Future.value(new http.Response(SUCCESS, 200,
             headers: {'content-type': 'application/json'}));

@@ -27,12 +27,15 @@ import 'utils.dart';
 Future<Client> resourceOwnerPasswordGrant(
     Uri authorizationEndpoint, String username, String password,
     {String clientId,
-    String clientSecret: '',
+    String clientSecret,
     List<String> scopes: const [],
     bool useBasicAuth: true,
     http.Client httpClient}) async {
+
   var startTime = new DateTime.now();
-  var parameters = {"grant_type": "password"};
+
+  var body = {"grant_type": "password", "username": username, "password": password};
+
   var headers = {};
 
   if (clientId != null) {
@@ -40,25 +43,20 @@ Future<Client> resourceOwnerPasswordGrant(
       headers['authorization'] = 'Basic ' +
           CryptoUtils.bytesToBase64(UTF8.encode('$clientId:$clientSecret'));
     } else {
-      parameters['client_id'] = clientId;
-      parameters['client_secret'] = clientSecret;
+      body['client_id'] = clientId;
+      if(clientSecret != null) body['client_secret'] = clientSecret;
     }
   }
 
-  parameters["username"] = username;
-  parameters["password"] = password;
-
-  if (!scopes.isEmpty) parameters['scope'] = scopes.join(' ');
-
-  var url = addQueryParameters(authorizationEndpoint, parameters);
+  if (!scopes.isEmpty) body['scope'] = scopes.join(' ');
 
   if (httpClient == null) {
     httpClient = new http.Client();
   }
 
-  var response = await httpClient.post(url, headers: headers);
+  var response = await httpClient.post(authorizationEndpoint, headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
       response, authorizationEndpoint, startTime, scopes);
-  return new Client(clientId, clientSecret, credentials);
+  return new Client(credentials, identifier: clientId, secret: clientSecret);
 }
