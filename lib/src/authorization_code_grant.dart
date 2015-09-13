@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library authorization_code_grant;
+library oauth2.authorization_code_grant;
 
 import 'dart:async';
 
@@ -13,8 +13,9 @@ import 'authorization_exception.dart';
 import 'handle_access_token_response.dart';
 import 'utils.dart';
 
-/// A class for obtaining credentials via an [authorization code grant][]. This
-/// method of authorization involves sending the resource owner to the
+/// A class for obtaining credentials via an [authorization code grant][].
+///
+/// This method of authorization involves sending the resource owner to the
 /// authorization server where they will authorize the client. They're then
 /// redirected back to your server, along with an authorization code. This is
 /// used to obtain [Credentials] and create a fully-authorized [Client].
@@ -27,32 +28,22 @@ import 'utils.dart';
 ///
 /// [authorization code grant]: http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-4.1
 class AuthorizationCodeGrant {
-  /// An enum value for [_state] indicating that [getAuthorizationUrl] has not
-  /// yet been called for this grant.
-  static const _INITIAL_STATE = 0;
-
-  // An enum value for [_state] indicating that [getAuthorizationUrl] has been
-  // called but neither [handleAuthorizationResponse] nor
-  // [handleAuthorizationCode] has been called.
-  static const _AWAITING_RESPONSE_STATE = 1;
-
-  // An enum value for [_state] indicating that [getAuthorizationUrl] and either
-  // [handleAuthorizationResponse] or [handleAuthorizationCode] have been
-  // called.
-  static const _FINISHED_STATE = 2;
-
-  /// The client identifier for this client. The authorization server will issue
-  /// each client a separate client identifier and secret, which allows the
-  /// server to tell which client is accessing it. Some servers may also have an
-  /// anonymous identifier/secret pair that any client may use.
+  /// The client identifier for this client.
+  ///
+  /// The authorization server will issue each client a separate client
+  /// identifier and secret, which allows the server to tell which client is
+  /// accessing it. Some servers may also have an anonymous identifier/secret
+  /// pair that any client may use.
   ///
   /// This is usually global to the program using this library.
   final String identifier;
 
-  /// The client secret for this client. The authorization server will issue
-  /// each client a separate client identifier and secret, which allows the
-  /// server to tell which client is accessing it. Some servers may also have an
-  /// anonymous identifier/secret pair that any client may use.
+  /// The client secret for this client.
+  ///
+  /// The authorization server will issue each client a separate client
+  /// identifier and secret, which allows the server to tell which client is
+  /// accessing it. Some servers may also have an anonymous identifier/secret
+  /// pair that any client may use.
   ///
   /// This is usually global to the program using this library.
   ///
@@ -64,14 +55,21 @@ class AuthorizationCodeGrant {
 
   /// A URL provided by the authorization server that serves as the base for the
   /// URL that the resource owner will be redirected to to authorize this
-  /// client. This will usually be listed in the authorization server's
-  /// OAuth2 API documentation.
+  /// client.
+  ///
+  /// This will usually be listed in the authorization server's OAuth2 API
+  /// documentation.
   final Uri authorizationEndpoint;
 
   /// A URL provided by the authorization server that this library uses to
-  /// obtain long-lasting credentials. This will usually be listed in the
-  /// authorization server's OAuth2 API documentation.
+  /// obtain long-lasting credentials.
+  ///
+  /// This will usually be listed in the authorization server's OAuth2 API
+  /// documentation.
   final Uri tokenEndpoint;
+
+  /// Whether to use HTTP Basic authentication for authorizing the client.
+  final bool _basicAuth;
 
   /// The HTTP client used to make HTTP requests.
   http.Client _httpClient;
@@ -87,26 +85,35 @@ class AuthorizationCodeGrant {
   /// included in the response query parameters.
   String _stateString;
 
-  /// The current state of the grant object. One of [_INITIAL_STATE],
-  /// [_AWAITING_RESPONSE_STATE], or [_FINISHED_STATE].
-  int _state = _INITIAL_STATE;
+  /// The current state of the grant object.
+  _State _state = _State.initial;
 
   /// Creates a new grant.
+  ///
+  /// If [basicAuth] is `true` (the default), the client credentials are sent to
+  /// the server using using HTTP Basic authentication as defined in [RFC 2617].
+  /// Otherwise, they're included in the request body. Note that the latter form
+  /// is not recommended by the OAuth 2.0 spec, and should only be used if the
+  /// server doesn't support Basic authentication.
+  ///
+  /// [RFC 2617]: https://tools.ietf.org/html/rfc2617
   ///
   /// [httpClient] is used for all HTTP requests made by this grant, as well as
   /// those of the [Client] is constructs.
   AuthorizationCodeGrant(
-      this.identifier,
-      this.secret,
-      this.authorizationEndpoint,
-      this.tokenEndpoint,
-      {http.Client httpClient})
-    : _httpClient = httpClient == null ? new http.Client() : httpClient;
+          this.identifier,
+          this.authorizationEndpoint,
+          this.tokenEndpoint,
+          {this.secret, bool basicAuth: true, http.Client httpClient})
+      : _basicAuth = basicAuth,
+        _httpClient = httpClient == null ? new http.Client() : httpClient;
 
   /// Returns the URL to which the resource owner should be redirected to
-  /// authorize this client. The resource owner will then be redirected to
-  /// [redirect], which should point to a server controlled by the client. This
-  /// redirect will have additional query parameters that should be passed to
+  /// authorize this client.
+  ///
+  /// The resource owner will then be redirected to [redirect], which should
+  /// point to a server controlled by the client. This redirect will have
+  /// additional query parameters that should be passed to
   /// [handleAuthorizationResponse].
   ///
   /// The specific permissions being requested from the authorization server may
@@ -120,12 +127,18 @@ class AuthorizationCodeGrant {
   /// query parameters provided to the redirect URL.
   ///
   /// It is a [StateError] to call this more than once.
-  Uri getAuthorizationUrl(Uri redirect,
-      {List<String> scopes: const <String>[], String state}) {
-    if (_state != _INITIAL_STATE) {
+  Uri getAuthorizationUrl(Uri redirect, {Iterable<String> scopes,
+      String state}) {
+    if (_state != _State.initial) {
       throw new StateError('The authorization URL has already been generated.');
     }
-    _state = _AWAITING_RESPONSE_STATE;
+    _state = _State.awaitingResponse;
+
+    if (scopes == null) {
+      scopes = [];
+    } else {
+      scopes = scopes.toList();
+    }
 
     this._redirectEndpoint = redirect;
     this._scopes = scopes;
@@ -143,9 +156,11 @@ class AuthorizationCodeGrant {
   }
 
   /// Processes the query parameters added to a redirect from the authorization
-  /// server. Note that this "response" is not an HTTP response, but rather the
-  /// data passed to a server controlled by the client as query parameters on
-  /// the redirect URL.
+  /// server.
+  ///
+  /// Note that this "response" is not an HTTP response, but rather the data
+  /// passed to a server controlled by the client as query parameters on the
+  /// redirect URL.
   ///
   /// It is a [StateError] to call this more than once, to call it before
   /// [getAuthorizationUrl] is called, or to call it after
@@ -157,49 +172,49 @@ class AuthorizationCodeGrant {
   /// [FormatError] if the `state` parameter doesn't match the original value.
   ///
   /// Throws [AuthorizationException] if the authorization fails.
-  Future<Client> handleAuthorizationResponse(Map<String, String> parameters) {
-    return async.then((_) {
-      if (_state == _INITIAL_STATE) {
-        throw new StateError(
-            'The authorization URL has not yet been generated.');
-      } else if (_state == _FINISHED_STATE) {
-        throw new StateError(
-            'The authorization code has already been received.');
-      }
-      _state = _FINISHED_STATE;
+  Future<Client> handleAuthorizationResponse(Map<String, String> parameters)
+      async {
+    if (_state == _State.initial) {
+      throw new StateError(
+          'The authorization URL has not yet been generated.');
+    } else if (_state == _State.finished) {
+      throw new StateError(
+          'The authorization code has already been received.');
+    }
+    _state = _State.finished;
 
-      if (_stateString != null) {
-        if (!parameters.containsKey('state')) {
-          throw new FormatException('Invalid OAuth response for '
-              '"$authorizationEndpoint": parameter "state" expected to be '
-              '"$_stateString", was missing.');
-        } else if (parameters['state'] != _stateString) {
-          throw new FormatException('Invalid OAuth response for '
-              '"$authorizationEndpoint": parameter "state" expected to be '
-              '"$_stateString", was "${parameters['state']}".');
-        }
-      }
-
-      if (parameters.containsKey('error')) {
-        var description = parameters['error_description'];
-        var uriString = parameters['error_uri'];
-        var uri = uriString == null ? null : Uri.parse(uriString);
-        throw new AuthorizationException(parameters['error'], description, uri);
-      } else if (!parameters.containsKey('code')) {
+    if (_stateString != null) {
+      if (!parameters.containsKey('state')) {
         throw new FormatException('Invalid OAuth response for '
-            '"$authorizationEndpoint": did not contain required parameter '
-            '"code".');
+            '"$authorizationEndpoint": parameter "state" expected to be '
+            '"$_stateString", was missing.');
+      } else if (parameters['state'] != _stateString) {
+        throw new FormatException('Invalid OAuth response for '
+            '"$authorizationEndpoint": parameter "state" expected to be '
+            '"$_stateString", was "${parameters['state']}".');
       }
+    }
 
-      return _handleAuthorizationCode(parameters['code']);
-    });
+    if (parameters.containsKey('error')) {
+      var description = parameters['error_description'];
+      var uriString = parameters['error_uri'];
+      var uri = uriString == null ? null : Uri.parse(uriString);
+      throw new AuthorizationException(parameters['error'], description, uri);
+    } else if (!parameters.containsKey('code')) {
+      throw new FormatException('Invalid OAuth response for '
+          '"$authorizationEndpoint": did not contain required parameter '
+          '"code".');
+    }
+
+    return await _handleAuthorizationCode(parameters['code']);
   }
 
-  /// Processes an authorization code directly. Usually
-  /// [handleAuthorizationResponse] is preferable to this method, since it
-  /// validates all of the query parameters. However, some authorization servers
-  /// allow the user to copy and paste an authorization code into a command-line
-  /// application, in which case this method must be used.
+  /// Processes an authorization code directly.
+  ///
+  /// Usually [handleAuthorizationResponse] is preferable to this method, since
+  /// it validates all of the query parameters. However, some authorization
+  /// servers allow the user to copy and paste an authorization code into a
+  /// command-line application, in which case this method must be used.
   ///
   /// It is a [StateError] to call this more than once, to call it before
   /// [getAuthorizationUrl] is called, or to call it after
@@ -209,40 +224,52 @@ class AuthorizationCodeGrant {
   /// responses while retrieving credentials.
   ///
   /// Throws [AuthorizationException] if the authorization fails.
-  Future<Client> handleAuthorizationCode(String authorizationCode) {
-    return async.then((_) {
-      if (_state == _INITIAL_STATE) {
-        throw new StateError(
-            'The authorization URL has not yet been generated.');
-      } else if (_state == _FINISHED_STATE) {
-        throw new StateError(
-            'The authorization code has already been received.');
-      }
-      _state = _FINISHED_STATE;
+  Future<Client> handleAuthorizationCode(String authorizationCode) async {
+    if (_state == _State.initial) {
+      throw new StateError(
+          'The authorization URL has not yet been generated.');
+    } else if (_state == _State.finished) {
+      throw new StateError(
+          'The authorization code has already been received.');
+    }
+    _state = _State.finished;
 
-      return _handleAuthorizationCode(authorizationCode);
-    });
+    return await _handleAuthorizationCode(authorizationCode);
   }
 
   /// This works just like [handleAuthorizationCode], except it doesn't validate
   /// the state beforehand.
-  Future<Client> _handleAuthorizationCode(String authorizationCode) {
+  Future<Client> _handleAuthorizationCode(String authorizationCode) async {
     var startTime = new DateTime.now();
-    return _httpClient.post(this.tokenEndpoint, body: {
+
+    var headers = {};
+
+    var body = {
       "grant_type": "authorization_code",
       "code": authorizationCode,
-      "redirect_uri": this._redirectEndpoint.toString(),
-      // TODO(nweiz): the spec recommends that HTTP basic auth be used in
-      // preference to form parameters, but Google doesn't support that. Should
-      // it be configurable?
-      "client_id": this.identifier,
-      "client_secret": this.secret
-    }).then((response) {
-      var credentials = handleAccessTokenResponse(
-          response, tokenEndpoint, startTime, _scopes);
-      return new Client(
-          this.identifier, this.secret, credentials, httpClient: _httpClient);
-    });
+      "redirect_uri": this._redirectEndpoint.toString()
+    };
+
+    if (_basicAuth && secret != null) {
+      headers["Authorization"] = basicAuthHeader(identifier, secret);
+    } else {
+      // The ID is required for this request any time basic auth isn't being
+      // used, even if there's no actual client authentication to be done.
+      body["client_id"] = identifier;
+      if (secret != null) body["client_secret"] = secret;
+    }
+
+    var response = await _httpClient.post(this.tokenEndpoint,
+        headers: headers, body: body);
+
+    var credentials = handleAccessTokenResponse(
+        response, tokenEndpoint, startTime, _scopes);
+    return new Client(
+        credentials,
+        identifier: this.identifier,
+        secret: this.secret,
+        basicAuth: _basicAuth,
+        httpClient: _httpClient);
   }
 
   /// Closes the grant and frees its resources.
@@ -254,4 +281,27 @@ class AuthorizationCodeGrant {
     if (_httpClient != null) _httpClient.close();
     _httpClient = null;
   }
+}
+
+/// States that [AuthorizationCodeGrant] can be in.
+class _State {
+  /// [AuthorizationCodeGrant.getAuthorizationUrl] has not yet been called for
+  /// this grant.
+  static const initial = const _State("initial");
+
+  // [AuthorizationCodeGrant.getAuthorizationUrl] has been called but neither
+  // [AuthorizationCodeGrant.handleAuthorizationResponse] nor
+  // [AuthorizationCodeGrant.handleAuthorizationCode] has been called.
+  static const awaitingResponse = const _State("awaiting response");
+
+  // [AuthorizationCodeGrant.getAuthorizationUrl] and either
+  // [AuthorizationCodeGrant.handleAuthorizationResponse] or
+  // [AuthorizationCodeGrant.handleAuthorizationCode] have been called.
+  static const finished = const _State("finished");
+
+  final String _name;
+
+  const _State(this._name);
+
+  String toString() => _name;
 }

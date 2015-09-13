@@ -2,11 +2,12 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library oauth2_client;
+library oauth2.client;
 
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'authorization_exception.dart';
 import 'credentials.dart';
@@ -15,8 +16,10 @@ import 'utils.dart';
 
 // TODO(nweiz): Add an onCredentialsRefreshed event once we have some event
 // infrastructure.
-/// An OAuth2 client. This acts as a drop-in replacement for an [http.Client],
-/// while sending OAuth2 authorization credentials along with each request.
+/// An OAuth2 client.
+///
+/// This acts as a drop-in replacement for an [http.Client], while sending
+/// OAuth2 authorization credentials along with each request.
 ///
 /// The client also automatically refreshes its credentials if possible. When it
 /// makes a request, if its credentials are expired, it will first refresh them.
@@ -34,18 +37,22 @@ import 'utils.dart';
 /// authorize. At the time of writing, the only authorization method this
 /// library supports is [AuthorizationCodeGrant].
 class Client extends http.BaseClient {
-  /// The client identifier for this client. The authorization server will issue
-  /// each client a separate client identifier and secret, which allows the
-  /// server to tell which client is accessing it. Some servers may also have an
-  /// anonymous identifier/secret pair that any client may use.
+  /// The client identifier for this client.
+  ///
+  /// The authorization server will issue each client a separate client
+  /// identifier and secret, which allows the server to tell which client is
+  /// accessing it. Some servers may also have an anonymous identifier/secret
+  /// pair that any client may use.
   ///
   /// This is usually global to the program using this library.
   final String identifier;
 
-  /// The client secret for this client. The authorization server will issue
-  /// each client a separate client identifier and secret, which allows the
-  /// server to tell which client is accessing it. Some servers may also have an
-  /// anonymous identifier/secret pair that any client may use.
+  /// The client secret for this client.
+  ///
+  /// The authorization server will issue each client a separate client
+  /// identifier and secret, which allows the server to tell which client is
+  /// accessing it. Some servers may also have an anonymous identifier/secret
+  /// pair that any client may use.
   ///
   /// This is usually global to the program using this library.
   ///
@@ -56,61 +63,71 @@ class Client extends http.BaseClient {
   final String secret;
 
   /// The credentials this client uses to prove to the resource server that it's
-  /// authorized. This may change from request to request as the credentials
-  /// expire and the client refreshes them automatically.
+  /// authorized.
+  ///
+  /// This may change from request to request as the credentials expire and the
+  /// client refreshes them automatically.
   Credentials get credentials => _credentials;
   Credentials _credentials;
+
+  /// Whether to use HTTP Basic authentication for authorizing the client.
+  final bool _basicAuth;
 
   /// The underlying HTTP client.
   http.Client _httpClient;
 
-  /// Creates a new client from a pre-existing set of credentials. When
-  /// authorizing a client for the first time, you should use
+  /// Creates a new client from a pre-existing set of credentials.
+  ///
+  /// When authorizing a client for the first time, you should use
   /// [AuthorizationCodeGrant] instead of constructing a [Client] directly.
   ///
   /// [httpClient] is the underlying client that this forwards requests to after
   /// adding authorization credentials to them.
-  Client(
-      this.identifier,
-      this.secret,
-      this._credentials,
-      {http.Client httpClient})
-    : _httpClient = httpClient == null ? new http.Client() : httpClient;
+  ///
+  /// Throws an [ArgumentError] if [secret] is passed without [identifier].
+  Client(this._credentials, {this.identifier, this.secret,
+          bool basicAuth: true, http.Client httpClient})
+      : _basicAuth = basicAuth,
+        _httpClient = httpClient == null ? new http.Client() : httpClient {
+    if (identifier == null && secret != null) {
+      throw new ArgumentError("secret may not be passed without identifier.");
+    }
+  }
 
-  /// Sends an HTTP request with OAuth2 authorization credentials attached. This
-  /// will also automatically refresh this client's [Credentials] before sending
-  /// the request if necessary.
-  Future<http.StreamedResponse> send(http.BaseRequest request) {
-    return async.then((_) {
-      if (!credentials.isExpired) return new Future.value();
+  /// Sends an HTTP request with OAuth2 authorization credentials attached.
+  ///
+  /// This will also automatically refresh this client's [Credentials] before
+  /// sending the request if necessary.
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    if (credentials.isExpired) {
       if (!credentials.canRefresh) throw new ExpirationException(credentials);
-      return refreshCredentials();
-    }).then((_) {
-      request.headers['authorization'] = "Bearer ${credentials.accessToken}";
-      return _httpClient.send(request);
-    }).then((response) {
-      if (response.statusCode != 401 ||
-          !response.headers.containsKey('www-authenticate')) {
-        return response;
-      }
+      await refreshCredentials();
+    }
 
-      var authenticate;
-      try {
-        authenticate = new AuthenticateHeader.parse(
-            response.headers['www-authenticate']);
-      } on FormatException catch (e) {
-        return response;
-      }
+    request.headers['authorization'] = "Bearer ${credentials.accessToken}";
+    var response = await _httpClient.send(request);
 
-      if (authenticate.scheme != 'bearer') return response;
+    if (response.statusCode != 401) return response;
+    if (!response.headers.containsKey('www-authenticate')) return response;
 
-      var params = authenticate.parameters;
-      if (!params.containsKey('error')) return response;
+    var challenges;
+    try {
+      challenges = AuthenticationChallenge.parseHeader(
+          response.headers['www-authenticate']);
+    } on FormatException catch (_) {
+      return response;
+    }
 
-      throw new AuthorizationException(
-          params['error'], params['error_description'],
-          params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
-    });
+    var challenge = challenges.firstWhere(
+        (challenge) => challenge.scheme == 'bearer', orElse: () => null);
+    if (challenge == null) return response;
+
+    var params = challenge.parameters;
+    if (!params.containsKey('error')) return response;
+
+    throw new AuthorizationException(
+        params['error'], params['error_description'],
+        params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
   }
 
   /// Explicitly refreshes this client's credentials. Returns this client.
@@ -122,20 +139,21 @@ class Client extends http.BaseClient {
   /// You may request different scopes than the default by passing in
   /// [newScopes]. These must be a subset of the scopes in the
   /// [Credentials.scopes] field of [Client.credentials].
-  Future<Client> refreshCredentials([List<String> newScopes]) {
-    return async.then((_) {
-      if (!credentials.canRefresh) {
-        var prefix = "OAuth credentials";
-        if (credentials.isExpired) prefix = "$prefix have expired and";
-        throw new StateError("$prefix can't be refreshed.");
-      }
+  Future<Client> refreshCredentials([List<String> newScopes]) async {
+    if (!credentials.canRefresh) {
+      var prefix = "OAuth credentials";
+      if (credentials.isExpired) prefix = "$prefix have expired and";
+      throw new StateError("$prefix can't be refreshed.");
+    }
 
-      return credentials.refresh(identifier, secret,
-          newScopes: newScopes, httpClient: _httpClient);
-    }).then((credentials) {
-      _credentials = credentials;
-      return this;
-    });
+    _credentials = await credentials.refresh(
+        identifier: identifier,
+        secret: secret,
+        newScopes: newScopes,
+        basicAuth: _basicAuth,
+        httpClient: _httpClient);
+
+    return this;
   }
 
   /// Closes this client and its underlying HTTP client.

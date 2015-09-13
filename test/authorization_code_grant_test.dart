@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library authorization_code_grant_test;
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -15,24 +13,20 @@ import 'utils.dart';
 
 final redirectUrl = Uri.parse('http://example.com/redirect');
 
-ExpectClient client;
-
-oauth2.AuthorizationCodeGrant grant;
-
-void createGrant() {
-  client = new ExpectClient();
-  grant = new oauth2.AuthorizationCodeGrant(
-      'identifier',
-      'secret',
-      Uri.parse('https://example.com/authorization'),
-      Uri.parse('https://example.com/token'),
-      httpClient: client);
-}
-
 void main() {
-  group('.getAuthorizationUrl', () {
-    setUp(createGrant);
+  var client;
+  var grant;
+  setUp(() {
+    client = new ExpectClient();
+    grant = new oauth2.AuthorizationCodeGrant(
+        'identifier',
+        Uri.parse('https://example.com/authorization'),
+        Uri.parse('https://example.com/token'),
+        secret: 'secret',
+        httpClient: client);
+  });
 
+  group('.getAuthorizationUrl', () {
     test('builds the correct URL', () {
       expect(grant.getAuthorizationUrl(redirectUrl).toString(),
           equals('https://example.com/authorization'
@@ -66,9 +60,9 @@ void main() {
     test('merges with existing query parameters', () {
       grant = new oauth2.AuthorizationCodeGrant(
           'identifier',
-          'secret',
           Uri.parse('https://example.com/authorization?query=value'),
           Uri.parse('https://example.com/token'),
+          secret: 'secret',
           httpClient: client);
 
       var authorizationUrl = grant.getAuthorizationUrl(redirectUrl);
@@ -87,8 +81,6 @@ void main() {
   });
 
   group('.handleAuthorizationResponse', () {
-    setUp(createGrant);
-
     test("can't be called before .getAuthorizationUrl", () {
       expect(grant.handleAuthorizationResponse({}), throwsStateError);
     });
@@ -135,6 +127,84 @@ void main() {
         expect(request.bodyFields, equals({
           'grant_type': 'authorization_code',
           'code': 'auth code',
+          'redirect_uri': redirectUrl.toString()
+        }));
+        expect(request.headers, containsPair(
+            "Authorization",
+            "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
+
+        return new Future.value(new http.Response(JSON.encode({
+          'access_token': 'access token',
+          'token_type': 'bearer',
+        }), 200, headers: {'content-type': 'application/json'}));
+      });
+
+      expect(grant.handleAuthorizationResponse({'code': 'auth code'})
+            .then((client) => client.credentials.accessToken),
+          completion(equals('access token')));
+    });
+  });
+
+  group('.handleAuthorizationCode', () {
+    test("can't be called before .getAuthorizationUrl", () {
+      expect(grant.handleAuthorizationCode('auth code'), throwsStateError);
+    });
+
+    test("can't be called twice", () {
+      grant.getAuthorizationUrl(redirectUrl);
+      expect(grant.handleAuthorizationCode('auth code'), throwsFormatException);
+      expect(grant.handleAuthorizationCode('auth code'), throwsStateError);
+    });
+
+    test('sends an authorization code request', () {
+      grant.getAuthorizationUrl(redirectUrl);
+      client.expectRequest((request) {
+        expect(request.method, equals('POST'));
+        expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
+        expect(request.bodyFields, equals({
+          'grant_type': 'authorization_code',
+          'code': 'auth code',
+          'redirect_uri': redirectUrl.toString()
+        }));
+        expect(request.headers, containsPair(
+            "Authorization",
+            "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
+
+        return new Future.value(new http.Response(JSON.encode({
+          'access_token': 'access token',
+          'token_type': 'bearer',
+        }), 200, headers: {'content-type': 'application/json'}));
+      });
+
+      expect(grant.handleAuthorizationCode('auth code'),
+          completion(predicate((client) {
+            expect(client.credentials.accessToken, equals('access token'));
+            return true;
+          })));
+    });
+  });
+
+  group("with basicAuth: false", () {
+    setUp(() {
+      client = new ExpectClient();
+      grant = new oauth2.AuthorizationCodeGrant(
+          'identifier',
+          Uri.parse('https://example.com/authorization'),
+          Uri.parse('https://example.com/token'),
+          secret: 'secret',
+          basicAuth: false,
+          httpClient: client);
+    });
+
+    test('.handleAuthorizationResponse sends an authorization code request',
+        () {
+      grant.getAuthorizationUrl(redirectUrl);
+      client.expectRequest((request) {
+        expect(request.method, equals('POST'));
+        expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
+        expect(request.bodyFields, equals({
+          'grant_type': 'authorization_code',
+          'code': 'auth code',
           'redirect_uri': redirectUrl.toString(),
           'client_id': 'identifier',
           'client_secret': 'secret'
@@ -150,22 +220,8 @@ void main() {
             .then((client) => client.credentials.accessToken),
           completion(equals('access token')));
     });
-  });
 
-  group('.handleAuthorizationCode', () {
-    setUp(createGrant);
-
-    test("can't be called before .getAuthorizationUrl", () {
-      expect(grant.handleAuthorizationCode('auth code'), throwsStateError);
-    });
-
-    test("can't be called twice", () {
-      grant.getAuthorizationUrl(redirectUrl);
-      expect(grant.handleAuthorizationCode('auth code'), throwsFormatException);
-      expect(grant.handleAuthorizationCode('auth code'), throwsStateError);
-    });
-
-    test('sends an authorization code request', () {
+    test('.handleAuthorizationCode sends an authorization code request', () {
       grant.getAuthorizationUrl(redirectUrl);
       client.expectRequest((request) {
         expect(request.method, equals('POST'));
