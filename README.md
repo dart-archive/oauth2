@@ -1,3 +1,4 @@
+# overview
 A client library for authenticating with a remote service via OAuth2 on
 behalf of a user, and making authorized HTTP requests with the user's OAuth2
 credentials.
@@ -12,12 +13,16 @@ client has permission to access resources on behalf of the resource owner.
 
 OAuth2 provides several different methods for the client to obtain
 authorization. At the time of writing, this library only supports the
-[AuthorizationCodeGrant][] method, but further methods may be added in the
-future. The following example uses this method to authenticate, and assumes
-that the library is being used by a server-side application.
+[AuthorizationCodeGrant][] and [resourceOwnerPasswordGrant][] methods, but
+further methods may be added in the future. The following example uses this
+method to authenticate, and assumes that the library is being used by a server-side
+application.
 
-[AuthorizationCodeGrant]: https://api.dartlang.org/apidocs/channels/stable/#oauth2/oauth2.AuthorizationCodeGrant
+[AuthorizationCodeGrant]: http://www.dartdocs.org/documentation/oauth2/latest/index.html#oauth2/oauth2.AuthorizationCodeGrant
+[resourceOwnerPasswordGrant]: http://www.dartdocs.org/documentation/oauth2/latest/index.html#oauth2/oauth2.resourceOwnerPasswordGrant
 
+# examples
+## authorization code grant
 ```dart
 import 'dart:io'
 import 'package:oauth2/oauth2.dart' as oauth2;
@@ -106,4 +111,15 @@ main() async {
 
   print(result);
 }
+```
+## resource owner password grant
+
+```
+    // Get a fully authorized client
+   var client = await oauth2.resourceOwnerPasswordGrant(
+          authorizationEndpoint, 'username', 'userpass',
+          clientId: 'client', clientSecret: 'secret');
+   // Interact with server using the authorized client
+   var result =  client.read("http://example.com/protected-resources.txt");
+
 ```
