@@ -23,6 +23,8 @@
 
 ## Non-breaking changes
 
+* Added a `resourceOwnerPasswordGrant` method.
+
 * The `scopes` argument to `AuthorizationCodeGrant.getAuthorizationUrl()` and
   `new Credentials()` and the `newScopes` argument to `Credentials.refresh` now
   take an `Iterable` rather than just a `List`.
