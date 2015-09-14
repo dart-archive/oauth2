@@ -12,7 +12,6 @@ import 'package:http_parser/http_parser.dart';
 import 'authorization_exception.dart';
 import 'credentials.dart';
 import 'expiration_exception.dart';
-import 'utils.dart';
 
 // TODO(nweiz): Add an onCredentialsRefreshed event once we have some event
 // infrastructure.
@@ -79,7 +78,8 @@ class Client extends http.BaseClient {
   /// Creates a new client from a pre-existing set of credentials.
   ///
   /// When authorizing a client for the first time, you should use
-  /// [AuthorizationCodeGrant] instead of constructing a [Client] directly.
+  /// [AuthorizationCodeGrant] or [resourceOwnerPasswordGrant] instead of
+  /// constructing a [Client] directly.
   ///
   /// [httpClient] is the underlying client that this forwards requests to after
   /// adding authorization credentials to them.
