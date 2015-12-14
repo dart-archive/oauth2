@@ -1,3 +1,7 @@
+# 1.0.1
+
+* Support `http_parser` 2.0.0.
+
 # 1.0.0
 
 ## Breaking changes
