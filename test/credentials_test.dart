@@ -231,7 +231,13 @@ void main() {
       new oauth2.Credentials.fromJson(JSON.encode(map));
 
     test("should load the same credentials from toJson", () {
+      // Round the expiration down to milliseconds since epoch, since that's
+      // what the credentials file stores. Otherwise sub-millisecond time gets
+      // in the way.
       var expiration = new DateTime.now().subtract(new Duration(hours: 1));
+      expiration = new DateTime.fromMillisecondsSinceEpoch(
+          expiration.millisecondsSinceEpoch);
+
       var credentials = new oauth2.Credentials(
           'access token',
           refreshToken: 'refresh token',
