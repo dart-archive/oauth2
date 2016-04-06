@@ -44,7 +44,7 @@ Credentials handleAccessTokenResponse(
   var parameters;
   try {
     parameters = JSON.decode(response.body);
-  } on FormatException catch (_) {
+  } on FormatException {
     validate(false, 'invalid JSON');
   }
 
@@ -111,7 +111,7 @@ void _handleErrorResponse(http.Response response, Uri tokenEndpoint) {
   var parameters;
   try {
     parameters = JSON.decode(response.body);
-  } on FormatException catch (_) {
+  } on FormatException {
     validate(false, 'invalid JSON');
   }
 
