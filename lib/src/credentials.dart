@@ -95,7 +95,7 @@ class Credentials {
     var parsed;
     try {
       parsed = JSON.decode(json);
-    } on FormatException catch (_) {
+    } on FormatException {
       validate(false, 'invalid JSON');
     }
 
