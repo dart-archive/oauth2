@@ -240,7 +240,7 @@ class AuthorizationCodeGrant {
   Future<Client> _handleAuthorizationCode(String authorizationCode) async {
     var startTime = new DateTime.now();
 
-    var headers = {};
+    var headers = <String, String>{};
 
     var body = {
       "grant_type": "authorization_code",

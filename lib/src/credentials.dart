@@ -132,7 +132,7 @@ class Credentials {
         parsed['accessToken'],
         refreshToken: parsed['refreshToken'],
         tokenEndpoint: tokenEndpoint,
-        scopes: scopes,
+        scopes: (scopes as List).map((scope) => scope as String),
         expiration: expiration);
   }
 
@@ -184,7 +184,7 @@ class Credentials {
           "endpoint.");
     }
 
-    var headers = {};
+    var headers = <String, String>{};
 
     var body = {
       "grant_type": "refresh_token",

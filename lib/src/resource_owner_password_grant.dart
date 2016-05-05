@@ -45,7 +45,7 @@ Future<Client> resourceOwnerPasswordGrant(
     "password": password
   };
 
-  var headers = {};
+  var headers = <String, String>{};
 
   if (identifier != null) {
     if (basicAuth) {

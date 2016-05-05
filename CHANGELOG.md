@@ -1,3 +1,11 @@
+# 1.0.2
+
+* Fix all strong-mode warnings.
+
+* Support `crypto` 1.0.0.
+
+* Support `http_parser` 3.0.0.
+
 # 1.0.1
 
 * Support `http_parser` 2.0.0.

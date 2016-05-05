@@ -4,8 +4,6 @@
 
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
-
 /// Adds additional query parameters to [url], overwriting the original
 /// parameters if a name conflict occurs.
 Uri addQueryParameters(Uri url, Map<String, String> parameters) => url.replace(
@@ -13,5 +11,5 @@ Uri addQueryParameters(Uri url, Map<String, String> parameters) => url.replace(
 
 String basicAuthHeader(String identifier, String secret) {
   var userPass = Uri.encodeFull(identifier) + ":" + Uri.encodeFull(secret);
-  return "Basic " + CryptoUtils.bytesToBase64(ASCII.encode(userPass));
+  return "Basic " + BASE64.encode(ASCII.encode(userPass));
 }

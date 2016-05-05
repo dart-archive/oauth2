@@ -4,6 +4,7 @@
 
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
@@ -31,8 +32,10 @@ Credentials handleAccessTokenResponse(
   validate(condition, message) =>
       _validate(response, tokenEndpoint, condition, message);
 
-  var contentType = response.headers['content-type'];
-  if (contentType != null) contentType = new MediaType.parse(contentType);
+  var contentTypeString = response.headers['content-type'];
+  var contentType = contentTypeString == null
+      ? null
+      : new MediaType.parse(contentTypeString);
 
   // The spec requires a content-type of application/json, but some endpoints
   // (e.g. Dropbox) serve it as text/javascript instead.
@@ -41,9 +44,12 @@ Credentials handleAccessTokenResponse(
        contentType.mimeType == "text/javascript"),
       'content-type was "$contentType", expected "application/json"');
 
-  var parameters;
+  Map<String, dynamic> parameters;
   try {
-    parameters = JSON.decode(response.body);
+    var untypedParameters = JSON.decode(response.body);
+    validate(untypedParameters is Map,
+        'parameters must be a map, was "$parameters"');
+    parameters = DelegatingMap.typed(untypedParameters);
   } on FormatException {
     validate(false, 'invalid JSON');
   }
@@ -71,7 +77,7 @@ Credentials handleAccessTokenResponse(
         'parameter "$name" was not a string, was "$value"');
   }
 
-  var scope = parameters['scope'];
+  var scope = parameters['scope'] as String;
   if (scope != null) scopes = scope.split(" ");
 
   var expiration = expiresIn == null ? null :
@@ -103,8 +109,11 @@ void _handleErrorResponse(http.Response response, Uri tokenEndpoint) {
         'with status ${response.statusCode}$reason.\n\n${response.body}');
   }
 
-  var contentType = response.headers['content-type'];
-  if (contentType != null) contentType = new MediaType.parse(contentType);
+  var contentTypeString = response.headers['content-type'];
+  var contentType = contentTypeString == null
+      ? null
+      : new MediaType.parse(contentTypeString);
+
   validate(contentType != null && contentType.mimeType == "application/json",
       'content-type was "$contentType", expected "application/json"');
 
