@@ -29,14 +29,13 @@ import 'utils.dart';
 /// [Credentials.scopes] field of [Client.credentials] to see which scopes you
 /// were granted.
 Future<Client> resourceOwnerPasswordGrant(
-    Uri authorizationEndpoint,
-    String username,
-    String password,
+    Uri authorizationEndpoint, String username, String password,
     {String identifier,
     String secret,
     Iterable<String> scopes,
     bool basicAuth: true,
-    http.Client httpClient}) async {
+    http.Client httpClient,
+    String delimiter: ' '}) async {
   var startTime = new DateTime.now();
 
   var body = {
@@ -56,7 +55,7 @@ Future<Client> resourceOwnerPasswordGrant(
     }
   }
 
-  if (scopes != null && !scopes.isEmpty) body['scope'] = scopes.join(' ');
+  if (scopes != null && !scopes.isEmpty) body['scope'] = scopes.join(delimiter);
 
   if (httpClient == null) httpClient = new http.Client();
   var response = await httpClient.post(authorizationEndpoint,

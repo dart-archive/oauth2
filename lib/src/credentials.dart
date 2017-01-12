@@ -59,8 +59,8 @@ class Credentials {
   /// Note that it's possible the credentials will expire shortly after this is
   /// called. However, since the client's expiration date is kept a few seconds
   /// earlier than the server's, there should be enough leeway to rely on this.
-  bool get isExpired => expiration != null &&
-      new DateTime.now().isAfter(expiration);
+  bool get isExpired =>
+      expiration != null && new DateTime.now().isAfter(expiration);
 
   /// Whether it's possible to refresh these credentials.
   bool get canRefresh => refreshToken != null && tokenEndpoint != null;
@@ -71,12 +71,11 @@ class Credentials {
   /// [Client.credentials] after a [Client] is created by
   /// [AuthorizationCodeGrant]. Alternately, it may be loaded from a serialized
   /// form via [Credentials.fromJson].
-  Credentials(
-          this.accessToken,
-          {this.refreshToken,
-          this.tokenEndpoint,
-          Iterable<String> scopes,
-          this.expiration})
+  Credentials(this.accessToken,
+      {this.refreshToken,
+      this.tokenEndpoint,
+      Iterable<String> scopes,
+      this.expiration})
       : scopes = new UnmodifiableListView(
             // Explicitly type-annotate the list literal to work around
             // sdk#24202.
@@ -102,10 +101,10 @@ class Credentials {
     validate(parsed is Map, 'was not a JSON map');
     validate(parsed.containsKey('accessToken'),
         'did not contain required field "accessToken"');
-    validate(parsed['accessToken'] is String,
+    validate(
+        parsed['accessToken'] is String,
         'required field "accessToken" was not a string, was '
         '${parsed["accessToken"]}');
-
 
     for (var stringField in ['refreshToken', 'tokenEndpoint']) {
       var value = parsed[stringField];
@@ -128,8 +127,7 @@ class Credentials {
       expiration = new DateTime.fromMillisecondsSinceEpoch(expiration);
     }
 
-    return new Credentials(
-        parsed['accessToken'],
+    return new Credentials(parsed['accessToken'],
         refreshToken: parsed['refreshToken'],
         tokenEndpoint: tokenEndpoint,
         scopes: (scopes as List).map((scope) => scope as String),
@@ -141,12 +139,14 @@ class Credentials {
   /// Nothing is guaranteed about the output except that it's valid JSON and
   /// compatible with [Credentials.toJson].
   String toJson() => JSON.encode({
-    'accessToken': accessToken,
-    'refreshToken': refreshToken,
-    'tokenEndpoint': tokenEndpoint == null ? null : tokenEndpoint.toString(),
-    'scopes': scopes,
-    'expiration': expiration == null ? null : expiration.millisecondsSinceEpoch
-  });
+        'accessToken': accessToken,
+        'refreshToken': refreshToken,
+        'tokenEndpoint':
+            tokenEndpoint == null ? null : tokenEndpoint.toString(),
+        'scopes': scopes,
+        'expiration':
+            expiration == null ? null : expiration.millisecondsSinceEpoch
+      });
 
   /// Returns a new set of refreshed credentials.
   ///
@@ -165,7 +165,8 @@ class Credentials {
       String secret,
       Iterable<String> newScopes,
       bool basicAuth: true,
-      http.Client httpClient}) async {
+      http.Client httpClient,
+      String delimiter: ' '}) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
     if (scopes == null) scopes = [];
@@ -186,11 +187,8 @@ class Credentials {
 
     var headers = <String, String>{};
 
-    var body = {
-      "grant_type": "refresh_token",
-      "refresh_token": refreshToken
-    };
-    if (!scopes.isEmpty) body["scope"] = scopes.join(' ');
+    var body = {"grant_type": "refresh_token", "refresh_token": refreshToken};
+    if (!scopes.isEmpty) body["scope"] = scopes.join(delimiter);
 
     if (basicAuth && secret != null) {
       headers["Authorization"] = basicAuthHeader(identifier, secret);
@@ -199,16 +197,15 @@ class Credentials {
       if (secret != null) body["client_secret"] = secret;
     }
 
-    var response = await httpClient.post(tokenEndpoint,
-        headers: headers, body: body);
+    var response =
+        await httpClient.post(tokenEndpoint, headers: headers, body: body);
     var credentials = await handleAccessTokenResponse(
         response, tokenEndpoint, startTime, scopes);
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.
     if (credentials.refreshToken != null) return credentials;
-    return new Credentials(
-        credentials.accessToken,
+    return new Credentials(credentials.accessToken,
         refreshToken: this.refreshToken,
         tokenEndpoint: credentials.tokenEndpoint,
         scopes: credentials.scopes,
