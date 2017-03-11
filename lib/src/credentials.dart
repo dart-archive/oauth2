@@ -155,6 +155,8 @@ class Credentials {
   ///
   /// You may request different scopes than the default by passing in
   /// [newScopes]. These must be a subset of [scopes].
+  /// 
+  /// The scope strings will be separated by the provided [delimiter] (default: `' '`).
   ///
   /// This throws an [ArgumentError] if [secret] is passed without [identifier],
   /// a [StateError] if these credentials can't be refreshed, an
@@ -165,7 +167,8 @@ class Credentials {
       String secret,
       Iterable<String> newScopes,
       bool basicAuth: true,
-      http.Client httpClient}) async {
+      http.Client httpClient,
+      String delimiter}) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
     if (scopes == null) scopes = [];
@@ -190,7 +193,7 @@ class Credentials {
       "grant_type": "refresh_token",
       "refresh_token": refreshToken
     };
-    if (!scopes.isEmpty) body["scope"] = scopes.join(' ');
+    if (!scopes.isEmpty) body["scope"] = scopes.join(delimiter ?? ' ');
 
     if (basicAuth && secret != null) {
       headers["Authorization"] = basicAuthHeader(identifier, secret);
@@ -202,7 +205,7 @@ class Credentials {
     var response = await httpClient.post(tokenEndpoint,
         headers: headers, body: body);
     var credentials = await handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, scopes);
+        response, tokenEndpoint, startTime, scopes, delimiter: delimiter ?? ' ');
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.

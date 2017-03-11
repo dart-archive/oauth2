@@ -28,6 +28,8 @@ import 'utils.dart';
 /// may not be granted access to every scope you request; you may check the
 /// [Credentials.scopes] field of [Client.credentials] to see which scopes you
 /// were granted.
+/// 
+/// The scope strings will be separated by the provided [delimiter] (default: `' '`).
 Future<Client> resourceOwnerPasswordGrant(
     Uri authorizationEndpoint,
     String username,
@@ -36,7 +38,8 @@ Future<Client> resourceOwnerPasswordGrant(
     String secret,
     Iterable<String> scopes,
     bool basicAuth: true,
-    http.Client httpClient}) async {
+    http.Client httpClient,
+    String delimiter}) async {
   var startTime = new DateTime.now();
 
   var body = {
@@ -56,13 +59,13 @@ Future<Client> resourceOwnerPasswordGrant(
     }
   }
 
-  if (scopes != null && !scopes.isEmpty) body['scope'] = scopes.join(' ');
+  if (scopes != null && !scopes.isEmpty) body['scope'] = scopes.join(delimiter ?? ' ');
 
   if (httpClient == null) httpClient = new http.Client();
   var response = await httpClient.post(authorizationEndpoint,
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, scopes);
+      response, authorizationEndpoint, startTime, scopes, delimiter: delimiter ?? ' ');
   return new Client(credentials, identifier: identifier, secret: secret);
 }

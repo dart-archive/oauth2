@@ -120,13 +120,15 @@ class AuthorizationCodeGrant {
   /// may not be granted access to every scope you request; you may check the
   /// [Credentials.scopes] field of [Client.credentials] to see which scopes you
   /// were granted.
+  /// 
+  /// The scope strings will be separated by the provided [delimiter] (default: `' '`).
   ///
   /// An opaque [state] string may also be passed that will be present in the
   /// query parameters provided to the redirect URL.
   ///
   /// It is a [StateError] to call this more than once.
   Uri getAuthorizationUrl(Uri redirect, {Iterable<String> scopes,
-      String state}) {
+      String state, String delimiter}) {
     if (_state != _State.initial) {
       throw new StateError('The authorization URL has already been generated.');
     }
@@ -148,7 +150,7 @@ class AuthorizationCodeGrant {
     };
 
     if (state != null) parameters['state'] = state;
-    if (!scopes.isEmpty) parameters['scope'] = scopes.join(' ');
+    if (!scopes.isEmpty) parameters['scope'] = scopes.join(delimiter ?? ' ');
 
     return addQueryParameters(this.authorizationEndpoint, parameters);
   }
