@@ -121,7 +121,9 @@ class AuthorizationCodeGrant {
   /// [Credentials.scopes] field of [Client.credentials] to see which scopes you
   /// were granted.
   /// 
-  /// The scope strings will be separated by the provided [delimiter] (default: `' '`).
+  /// The scope strings will be separated by the provided [delimiter]. This
+  /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
+  /// use non-standard delimiters.
   ///
   /// An opaque [state] string may also be passed that will be present in the
   /// query parameters provided to the redirect URL.
