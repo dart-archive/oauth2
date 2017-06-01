@@ -30,6 +30,11 @@ class Credentials {
   /// of a client.
   final String accessToken;
 
+  /// The scope strings will be separated by the provided [delimiter]. This
+  /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
+  /// use non-standard delimiters.
+  final String delimiter;
+
   /// The token that is sent to the authorization server to refresh the
   /// credentials.
   ///
@@ -76,7 +81,8 @@ class Credentials {
           {this.refreshToken,
           this.tokenEndpoint,
           Iterable<String> scopes,
-          this.expiration})
+          this.expiration,
+          this.delimiter})
       : scopes = new UnmodifiableListView(
             // Explicitly type-annotate the list literal to work around
             // sdk#24202.
@@ -155,8 +161,6 @@ class Credentials {
   ///
   /// You may request different scopes than the default by passing in
   /// [newScopes]. These must be a subset of [scopes].
-  /// 
-  /// The scope strings will be separated by the provided [delimiter] (default: `' '`).
   ///
   /// This throws an [ArgumentError] if [secret] is passed without [identifier],
   /// a [StateError] if these credentials can't be refreshed, an
@@ -167,8 +171,7 @@ class Credentials {
       String secret,
       Iterable<String> newScopes,
       bool basicAuth: true,
-      http.Client httpClient,
-      String delimiter}) async {
+      http.Client httpClient}) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
     if (scopes == null) scopes = [];
