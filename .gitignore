@@ -1,4 +1,4 @@
-# Don’t commit the following directories created by pub.
+﻿# Don’t commit the following directories created by pub.
 .buildlog
 .pub/
 build/
@@ -13,3 +13,6 @@ packages
 
 # Include when developing application packages.
 pubspec.lock
+
+# Ignore WebStorm configuration
+.idea
