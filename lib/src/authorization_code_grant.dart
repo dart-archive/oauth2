@@ -59,6 +59,11 @@ class AuthorizationCodeGrant {
   /// documentation.
   final Uri authorizationEndpoint;
 
+  /// The scope strings will be separated by the provided [delimiter]. This
+  /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
+  /// use non-standard delimiters.
+  final String delimiter;
+
   /// A URL provided by the authorization server that this library uses to
   /// obtain long-lasting credentials.
   ///
@@ -102,7 +107,7 @@ class AuthorizationCodeGrant {
           this.identifier,
           this.authorizationEndpoint,
           this.tokenEndpoint,
-          {this.secret, bool basicAuth: true, http.Client httpClient})
+          {this.secret, this.delimiter, bool basicAuth: true, http.Client httpClient})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient;
 
@@ -120,17 +125,13 @@ class AuthorizationCodeGrant {
   /// may not be granted access to every scope you request; you may check the
   /// [Credentials.scopes] field of [Client.credentials] to see which scopes you
   /// were granted.
-  /// 
-  /// The scope strings will be separated by the provided [delimiter]. This
-  /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
-  /// use non-standard delimiters.
   ///
   /// An opaque [state] string may also be passed that will be present in the
   /// query parameters provided to the redirect URL.
   ///
   /// It is a [StateError] to call this more than once.
   Uri getAuthorizationUrl(Uri redirect, {Iterable<String> scopes,
-      String state, String delimiter}) {
+      String state}) {
     if (_state != _State.initial) {
       throw new StateError('The authorization URL has already been generated.');
     }
