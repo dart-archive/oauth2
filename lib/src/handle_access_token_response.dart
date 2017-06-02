@@ -29,7 +29,7 @@ Credentials handleAccessTokenResponse(
     Uri tokenEndpoint,
     DateTime startTime,
     List<String> scopes,
-    {String delimiter}) {
+    String delimiter) {
   if (response.statusCode != 200) _handleErrorResponse(response, tokenEndpoint);
 
   validate(condition, message) =>

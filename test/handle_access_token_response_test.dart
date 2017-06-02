@@ -16,7 +16,7 @@ final Uri tokenEndpoint = Uri.parse("https://example.com/token");
 final DateTime startTime = new DateTime.now();
 
 oauth2.Credentials handle(http.Response response) =>
-  handleAccessTokenResponse(response, tokenEndpoint, startTime, ["scope"]);
+  handleAccessTokenResponse(response, tokenEndpoint, startTime, ["scope"], ' ');
 
 void main() {
   group('an error response', () {

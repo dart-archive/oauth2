@@ -42,6 +42,7 @@ Future<Client> resourceOwnerPasswordGrant(
     bool basicAuth: true,
     http.Client httpClient,
     String delimiter}) async {
+  delimiter ??= ' ';
   var startTime = new DateTime.now();
 
   var body = {
@@ -61,13 +62,13 @@ Future<Client> resourceOwnerPasswordGrant(
     }
   }
 
-  if (scopes != null && !scopes.isEmpty) body['scope'] = scopes.join(delimiter ?? ' ');
+  if (scopes != null && !scopes.isEmpty) body['scope'] = scopes.join(delimiter);
 
   if (httpClient == null) httpClient = new http.Client();
   var response = await httpClient.post(authorizationEndpoint,
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, scopes, delimiter: delimiter ?? ' ');
+      response, authorizationEndpoint, startTime, scopes, delimiter);
   return new Client(credentials, identifier: identifier, secret: secret);
 }
