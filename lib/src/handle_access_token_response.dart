@@ -81,7 +81,7 @@ Credentials handleAccessTokenResponse(
   }
 
   var scope = parameters['scope'] as String;
-  if (scope != null) scopes = scope.split(delimiter ?? " ");
+  if (scope != null) scopes = scope.split(delimiter);
 
   var expiration = expiresIn == null ? null :
       startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
