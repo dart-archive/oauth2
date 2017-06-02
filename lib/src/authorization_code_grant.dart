@@ -156,7 +156,7 @@ class AuthorizationCodeGrant {
     };
 
     if (state != null) parameters['state'] = state;
-    if (!scopes.isEmpty) parameters['scope'] = scopes.join(_delimiter);
+    if (!scopes.isEmpty) parameters['scope'] = scopes.join(_delimiter ??= ' ');
 
     return addQueryParameters(this.authorizationEndpoint, parameters);
   }
