@@ -1,3 +1,10 @@
+# 1.1.0
+
+* Add a `delimiter` parameter to `new AuthorizationCodeGrant()`, `new
+  Credentials()`, and `resourceOwnerPasswordGrant()`. This controls the
+  delimiter between scopes, which some authorization servers require to be
+  different values than the specified `' '`.
+
 # 1.0.2
 
 * Fix all strong-mode warnings.

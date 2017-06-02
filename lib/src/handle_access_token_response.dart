@@ -22,11 +22,14 @@ const _expirationGrace = const Duration(seconds: 10);
 ///
 /// This response format is common across several different components of the
 /// OAuth2 flow.
+/// 
+/// The scope strings will be separated by the provided [delimiter].
 Credentials handleAccessTokenResponse(
     http.Response response,
     Uri tokenEndpoint,
     DateTime startTime,
-    List<String> scopes) {
+    List<String> scopes,
+    String delimiter) {
   if (response.statusCode != 200) _handleErrorResponse(response, tokenEndpoint);
 
   validate(condition, message) =>
@@ -78,7 +81,7 @@ Credentials handleAccessTokenResponse(
   }
 
   var scope = parameters['scope'] as String;
-  if (scope != null) scopes = scope.split(" ");
+  if (scope != null) scopes = scope.split(delimiter);
 
   var expiration = expiresIn == null ? null :
       startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);

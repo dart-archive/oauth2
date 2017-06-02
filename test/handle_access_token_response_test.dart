@@ -16,7 +16,7 @@ final Uri tokenEndpoint = Uri.parse("https://example.com/token");
 final DateTime startTime = new DateTime.now();
 
 oauth2.Credentials handle(http.Response response) =>
-  handleAccessTokenResponse(response, tokenEndpoint, startTime, ["scope"]);
+  handleAccessTokenResponse(response, tokenEndpoint, startTime, ["scope"], ' ');
 
 void main() {
   group('an error response', () {
@@ -185,6 +185,19 @@ void main() {
     test('with a scope sets the scopes', () {
       var credentials = handleSuccess(scope: "scope1 scope2");
       expect(credentials.scopes, equals(["scope1", "scope2"]));
+    });
+
+    test('with a custom scope delimiter sets the scopes', () {
+      var response = new http.Response(JSON.encode({
+        'access_token': 'access token',
+        'token_type': 'bearer',
+        'expires_in': null,
+        'refresh_token': null,
+        'scope': 'scope1,scope2'
+      }), 200, headers: {'content-type': 'application/json'});
+      var credentials = handleAccessTokenResponse(
+          response, tokenEndpoint, startTime, ['scope'], ',');
+      expect(credentials.scopes, equals(['scope1', 'scope2']));
     });
   });
 }

@@ -95,6 +95,27 @@ void main() {
     expect(credentials.refreshToken, equals('new refresh token'));
   });
 
+  test('sets proper scope string when using custom delimiter', () async {
+    var credentials = new oauth2.Credentials(
+        'access token',
+        refreshToken: 'refresh token',
+        tokenEndpoint: tokenEndpoint,
+        scopes: ['scope1', 'scope2'],
+        delimiter: ',');
+    httpClient.expectRequest((http.Request request) {
+      expect(request.bodyFields['scope'], equals('scope1,scope2'));
+      return new Future.value(new http.Response(JSON.encode({
+        'access_token': 'new access token',
+        'token_type': 'bearer',
+        'refresh_token': 'new refresh token'
+      }), 200, headers: {'content-type': 'application/json'}));
+    });
+    await credentials.refresh(
+        identifier: 'idëntīfier',
+        secret: 'sëcret',
+        httpClient: httpClient);
+  });
+
   test("can refresh without a client secret", () async {
     var credentials = new oauth2.Credentials(
         'access token',

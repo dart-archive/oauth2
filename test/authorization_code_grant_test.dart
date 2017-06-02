@@ -46,6 +46,24 @@ void main() {
               '&scope=scope+other%2Fscope'));
     });
 
+    test('separates scopes with the correct delimiter', () {
+      var grant = new oauth2.AuthorizationCodeGrant(
+          'identifier',
+          Uri.parse('https://example.com/authorization'),
+          Uri.parse('https://example.com/token'),
+          secret: 'secret',
+          httpClient: client,
+          delimiter: '_');
+      var authorizationUrl = grant.getAuthorizationUrl(
+          redirectUrl, scopes: ['scope', 'other/scope']);
+      expect(authorizationUrl.toString(),
+          equals('https://example.com/authorization'
+              '?response_type=code'
+              '&client_id=identifier'
+              '&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'
+              '&scope=scope_other%2Fscope'));
+    });
+
     test('builds the correct URL with state', () {
       var authorizationUrl = grant.getAuthorizationUrl(
           redirectUrl, state: 'state');

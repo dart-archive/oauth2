@@ -69,6 +69,9 @@ class AuthorizationCodeGrant {
   /// Whether to use HTTP Basic authentication for authorizing the client.
   final bool _basicAuth;
 
+  /// A [String] used to separate scopes; defaults to `" "`.
+  String _delimiter;
+
   /// The HTTP client used to make HTTP requests.
   http.Client _httpClient;
 
@@ -98,13 +101,21 @@ class AuthorizationCodeGrant {
   ///
   /// [httpClient] is used for all HTTP requests made by this grant, as well as
   /// those of the [Client] is constructs.
+  ///
+  /// The scope strings will be separated by the provided [delimiter]. This
+  /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
+  /// use non-standard delimiters.
   AuthorizationCodeGrant(
           this.identifier,
           this.authorizationEndpoint,
           this.tokenEndpoint,
-          {this.secret, bool basicAuth: true, http.Client httpClient})
+          {this.secret,
+          String delimiter,
+          bool basicAuth: true,
+          http.Client httpClient})
       : _basicAuth = basicAuth,
-        _httpClient = httpClient == null ? new http.Client() : httpClient;
+        _httpClient = httpClient == null ? new http.Client() : httpClient,
+        _delimiter = delimiter ?? ' ';
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
@@ -148,7 +159,7 @@ class AuthorizationCodeGrant {
     };
 
     if (state != null) parameters['state'] = state;
-    if (!scopes.isEmpty) parameters['scope'] = scopes.join(' ');
+    if (!scopes.isEmpty) parameters['scope'] = scopes.join(_delimiter);
 
     return addQueryParameters(this.authorizationEndpoint, parameters);
   }
@@ -261,7 +272,7 @@ class AuthorizationCodeGrant {
         headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, _scopes);
+        response, tokenEndpoint, startTime, _scopes, _delimiter);
     return new Client(
         credentials,
         identifier: this.identifier,

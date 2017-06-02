@@ -26,6 +26,9 @@ import 'utils.dart';
 /// Note that a given set of credentials can only be refreshed once, so be sure
 /// to save the refreshed credentials for future use.
 class Credentials {
+  /// A [String] used to separate scopes; defaults to `" "`.
+  String _delimiter;
+
   /// The token that is sent to the resource server to prove the authorization
   /// of a client.
   final String accessToken;
@@ -71,16 +74,22 @@ class Credentials {
   /// [Client.credentials] after a [Client] is created by
   /// [AuthorizationCodeGrant]. Alternately, it may be loaded from a serialized
   /// form via [Credentials.fromJson].
+  ///
+  /// The scope strings will be separated by the provided [delimiter]. This
+  /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
+  /// use non-standard delimiters.
   Credentials(
           this.accessToken,
           {this.refreshToken,
           this.tokenEndpoint,
           Iterable<String> scopes,
-          this.expiration})
+          this.expiration,
+          String delimiter})
       : scopes = new UnmodifiableListView(
             // Explicitly type-annotate the list literal to work around
             // sdk#24202.
-            scopes == null ? <String>[] : scopes.toList());
+            scopes == null ? <String>[] : scopes.toList()),
+        _delimiter = delimiter ?? ' ';
 
   /// Loads a set of credentials from a JSON-serialized form.
   ///
@@ -190,7 +199,7 @@ class Credentials {
       "grant_type": "refresh_token",
       "refresh_token": refreshToken
     };
-    if (!scopes.isEmpty) body["scope"] = scopes.join(' ');
+    if (!scopes.isEmpty) body["scope"] = scopes.join(_delimiter);
 
     if (basicAuth && secret != null) {
       headers["Authorization"] = basicAuthHeader(identifier, secret);
@@ -202,7 +211,7 @@ class Credentials {
     var response = await httpClient.post(tokenEndpoint,
         headers: headers, body: body);
     var credentials = await handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, scopes);
+        response, tokenEndpoint, startTime, scopes, _delimiter);
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.
