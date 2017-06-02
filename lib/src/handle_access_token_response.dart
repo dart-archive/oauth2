@@ -23,7 +23,7 @@ const _expirationGrace = const Duration(seconds: 10);
 /// This response format is common across several different components of the
 /// OAuth2 flow.
 /// 
-/// The scope strings will be separated by the provided [delimiter] (default: `' '`).
+/// The scope strings will be separated by the provided [delimiter].
 Credentials handleAccessTokenResponse(
     http.Response response,
     Uri tokenEndpoint,

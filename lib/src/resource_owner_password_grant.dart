@@ -28,7 +28,7 @@ import 'utils.dart';
 /// may not be granted access to every scope you request; you may check the
 /// [Credentials.scopes] field of [Client.credentials] to see which scopes you
 /// were granted.
-/// 
+///
 /// The scope strings will be separated by the provided [delimiter]. This
 /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
 /// use non-standard delimiters.

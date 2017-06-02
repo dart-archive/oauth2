@@ -195,7 +195,8 @@ void main() {
         'refresh_token': null,
         'scope': 'scope1,scope2'
       }), 200, headers: {'content-type': 'application/json'});
-      var credentials = handleAccessTokenResponse(response, tokenEndpoint, startTime, ['scope'], ',');
+      var credentials = handleAccessTokenResponse(
+          response, tokenEndpoint, startTime, ['scope'], ',');
       expect(credentials.scopes, equals(['scope1', 'scope2']));
     });
   });

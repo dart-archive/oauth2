@@ -109,7 +109,10 @@ class AuthorizationCodeGrant {
           this.identifier,
           this.authorizationEndpoint,
           this.tokenEndpoint,
-          {this.secret, String delimiter, bool basicAuth: true, http.Client httpClient})
+          {this.secret,
+          String delimiter,
+          bool basicAuth: true,
+          http.Client httpClient})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ';
