@@ -87,6 +87,21 @@ void main() {
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
     });
 
+    test('builds correct request using scope with custom delimiter', () async {
+      expectClient.expectRequest((request) async {
+        expect(request.bodyFields['grant_type'], equals('password'));
+        expect(request.bodyFields['username'], equals('username'));
+        expect(request.bodyFields['password'], equals('userpass'));
+        expect(request.bodyFields['scope'], equals('one,two'));
+        return new http.Response(success, 200,
+            headers: {'content-type': 'application/json'});
+      });
+
+      await oauth2.resourceOwnerPasswordGrant(
+          authEndpoint, 'username', 'userpass',
+          scopes: ['one', 'two'], httpClient: expectClient, delimiter: ',');
+    });
+
     test('merges with existing query parameters', () async {
       var authEndpoint = Uri.parse('https://example.com?query=value');
 
