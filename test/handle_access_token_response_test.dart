@@ -47,6 +47,12 @@ void main() {
       expect(() => handleError(headers: {
         'content-type': 'text/plain'
       }), throwsFormatException);
+    }, skip: 'text/plain content-type is accepted now');
+
+    test('with a non-JSON, non-plain content-type causes a FormatException', () {
+      expect(() => handleError(headers: {
+        'content-type': 'image/png'
+      }), throwsFormatException);
     });
 
     test('with a JSON content-type and charset causes an '
@@ -124,7 +130,7 @@ void main() {
     test('with a non-JSON content-type causes a FormatException', () {
       expect(() => handleSuccess(contentType: 'text/plain'),
           throwsFormatException);
-    });
+    }, skip: 'text/plain content-type is accepted now');
 
     test('with a JSON content-type and charset returns the correct '
         'credentials', () {
@@ -136,6 +142,14 @@ void main() {
     test('with a JavScript content-type returns the correct credentials', () {
       var credentials = handleSuccess(contentType: 'text/javascript');
       expect(credentials.accessToken, equals('access token'));
+    });
+
+    test('with a text/plain content-type returns the correct credentials', () {
+      var body = 'token_type=bearer&access_token=access%20token';
+      var credentials = handle(new http.Response(body, 200, headers: {'content-type': 'text/plain'}));
+      expect(credentials.accessToken, equals('access token'));
+      expect(credentials.tokenEndpoint.toString(),
+          equals(tokenEndpoint.toString()));
     });
 
     test('with a null access token throws a FormatException', () {

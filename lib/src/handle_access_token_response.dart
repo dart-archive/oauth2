@@ -44,17 +44,38 @@ Credentials handleAccessTokenResponse(
   // (e.g. Dropbox) serve it as text/javascript instead.
   validate(contentType != null &&
       (contentType.mimeType == "application/json" ||
-       contentType.mimeType == "text/javascript"),
-      'content-type was "$contentType", expected "application/json"');
+       contentType.mimeType == "text/javascript"  ||
+       contentType.mimeType == "text/plain"),
+      'content-type was "$contentType", expected "application/json" or "text/plain"');
 
   Map<String, dynamic> parameters;
-  try {
-    var untypedParameters = JSON.decode(response.body);
-    validate(untypedParameters is Map,
-        'parameters must be a map, was "$parameters"');
-    parameters = DelegatingMap.typed(untypedParameters);
-  } on FormatException {
-    validate(false, 'invalid JSON');
+
+  if (contentType.mimeType == "text/plain") {
+    parameters = {};
+
+    for (var unit in response.body.split('&')) {
+      var separator = unit.lastIndexOf('=');
+
+      // The '=' can't be the first or last character in a URL-encoded string
+      //
+      // For example, in 'a=b', the lowest index it can have is 1, and the greatest is
+      // `unit.length - 2`.
+      if (separator > 0 && separator < unit.length - 1) {
+        var key = unit.substring(0, separator);
+        var value = Uri.decodeComponent(unit.substring(separator + 1));
+        parameters[key] = value;
+      }
+    }
+
+  } else {
+    try {
+      var untypedParameters = JSON.decode(response.body);
+      validate(untypedParameters is Map,
+          'parameters must be a map, was "$parameters"');
+      parameters = DelegatingMap.typed(untypedParameters);
+    } on FormatException {
+      validate(false, 'invalid JSON');
+    }
   }
 
   for (var requiredParameter in ['access_token', 'token_type']) {
@@ -117,8 +138,8 @@ void _handleErrorResponse(http.Response response, Uri tokenEndpoint) {
       ? null
       : new MediaType.parse(contentTypeString);
 
-  validate(contentType != null && contentType.mimeType == "application/json",
-      'content-type was "$contentType", expected "application/json"');
+  validate(contentType != null && (contentType.mimeType == "application/json" || contentType.mimeType == "text/plain"),
+      'content-type was "$contentType", expected "application/json" or "text/plain"');
 
   var parameters;
   try {
