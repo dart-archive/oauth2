@@ -144,6 +144,15 @@ void main() {
       expect(credentials.accessToken, equals('access token'));
     });
 
+    test('with a URL-encoded content-type returns the correct credentials', () {
+      var body = 'token_type=bearer&access_token=access%20token';
+      var credentials = handle(new http.Response(body, 200, headers: {'content-type': 'application/x-www-form-urlencoded'}));
+      expect(credentials.accessToken, equals('access token'));
+      expect(credentials.tokenEndpoint.toString(),
+          equals(tokenEndpoint.toString()));
+    });
+
+
     test('with a text/plain content-type returns the correct credentials', () {
       var body = 'token_type=bearer&access_token=access%20token';
       var credentials = handle(new http.Response(body, 200, headers: {'content-type': 'text/plain'}));

@@ -45,12 +45,13 @@ Credentials handleAccessTokenResponse(
   validate(contentType != null &&
       (contentType.mimeType == "application/json" ||
        contentType.mimeType == "text/javascript"  ||
+       contentType.mimeType == "application/x-www-form-urlencoded" ||
        contentType.mimeType == "text/plain"),
-      'content-type was "$contentType", expected "application/json" or "text/plain"');
+      'content-type was "$contentType", expected "application/json", "application/x-www-form-urlencoded", or "text/plain"');
 
   Map<String, dynamic> parameters;
 
-  if (contentType.mimeType == "text/plain") {
+  if (contentType.mimeType == "text/plain" || contentType.mimeType == "application/x-www-form-urlencoded") {
     parameters = {};
 
     for (var unit in response.body.split('&')) {
@@ -138,8 +139,10 @@ void _handleErrorResponse(http.Response response, Uri tokenEndpoint) {
       ? null
       : new MediaType.parse(contentTypeString);
 
-  validate(contentType != null && (contentType.mimeType == "application/json" || contentType.mimeType == "text/plain"),
-      'content-type was "$contentType", expected "application/json" or "text/plain"');
+  validate(contentType != null &&
+      (contentType.mimeType == "application/json" || contentType.mimeType == "text/plain" ||
+       contentType.mimeType == "application/x-www-form-urlencoded"),
+      'content-type was "$contentType", expected "application/json", "application/x-www-form-urlencoded", or "text/plain"');
 
   var parameters;
   try {
