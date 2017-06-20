@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 
 import 'handle_access_token_response.dart';
 import 'utils.dart';
+import 'id_token.dart';
 
 /// Credentials that prove that a client is allowed to access a resource on the
 /// resource owner's behalf.
@@ -44,6 +45,11 @@ class Credentials {
   ///
   /// This may be `null`, indicating that the credentials can't be refreshed.
   final Uri tokenEndpoint;
+
+  /// The Id_Token that is provided with an OpenID Connect authentication.
+  ///
+  /// This may be `null`, indicating that the id_token was not set.
+  final IdToken idToken;
 
   /// The specific permissions being requested from the authorization server.
   ///
@@ -84,6 +90,7 @@ class Credentials {
           this.tokenEndpoint,
           Iterable<String> scopes,
           this.expiration,
+          this.idToken,
           String delimiter})
       : scopes = new UnmodifiableListView(
             // Explicitly type-annotate the list literal to work around
@@ -137,11 +144,18 @@ class Credentials {
       expiration = new DateTime.fromMillisecondsSinceEpoch(expiration);
     }
 
+    var idToken = parsed['id_token'] as String;
+    IdToken idTok;
+    if (idToken != null && idToken.isNotEmpty) {
+      idTok = new IdToken.fromString(idToken);
+    }
+
     return new Credentials(
         parsed['accessToken'],
         refreshToken: parsed['refreshToken'],
         tokenEndpoint: tokenEndpoint,
         scopes: (scopes as List).map((scope) => scope as String),
+        idToken: idTok,
         expiration: expiration);
   }
 

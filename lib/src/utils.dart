@@ -13,3 +13,6 @@ String basicAuthHeader(String identifier, String secret) {
   var userPass = Uri.encodeFull(identifier) + ":" + Uri.encodeFull(secret);
   return "Basic " + BASE64.encode(ASCII.encode(userPass));
 }
+
+DateTime dateFromSeconds(int secondsSinceEpoch) =>
+    new DateTime.fromMillisecondsSinceEpoch(secondsSinceEpoch * 1000);

@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 import 'credentials.dart';
+import 'id_token.dart';
 import 'authorization_exception.dart';
 
 /// The amount of time to add as a "grace period" for credential expiration.
@@ -86,11 +87,19 @@ Credentials handleAccessTokenResponse(
   var expiration = expiresIn == null ? null :
       startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
 
+
+  var idToken = parameters['id_token'] as String;
+  IdToken idTok;
+  if (idToken != null && idToken.isNotEmpty) {
+    idTok = new IdToken.fromString(idToken);
+  }
+
   return new Credentials(
       parameters['access_token'],
       refreshToken: parameters['refresh_token'],
       tokenEndpoint: tokenEndpoint,
       scopes: scopes,
+      idToken: idTok,
       expiration: expiration);
 }
 
