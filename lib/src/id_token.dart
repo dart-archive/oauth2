@@ -33,6 +33,8 @@ class IdToken {
     }
     var claim = new ClaimSet.fromJson(body);
 
+    // TODO(mbutler): Add Signature validation.
+
     return new IdToken(new JoseHeader.fromJson(header), body, claim, parts[2]);
   }
 
@@ -73,7 +75,7 @@ class ClaimSet {
 
   final String issuer;
   final String subject;
-  final String audience;
+  final List<String> audience;
   final DateTime expiration;
   final DateTime notBefore;
   final DateTime issuedAt;
@@ -108,6 +110,9 @@ class ClaimSet {
     _validate(sub != null, 'Required claim: Subject is null');
     var aud = json.remove(_aud);
     _validate(aud != null, 'Required claim: Audience is null');
+    if (aud is String) {
+      aud = [aud];
+    }
 
     var expS = json.remove(_exp);
     _validate(expS != null, 'Required claim: Expiration Time is null');
