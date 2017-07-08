@@ -17,6 +17,54 @@ import 'authorization_exception.dart';
 /// amount of time.
 const _expirationGrace = const Duration(seconds: 10);
 
+/// Returns a function that that parses parameters from a response with either a JSON or URL-encoded body.
+Function parseJsonOrUrlEncoded(void validate(bool condition, String message)) {
+  return (String contentTypeString, String body) {
+    var contentType = contentTypeString == null
+        ? null
+        : new MediaType.parse(contentTypeString);
+
+    // The spec requires a content-type of application/json, but some endpoints
+    // (e.g. Dropbox) serve it as text/javascript instead.
+    validate(contentType != null &&
+        (contentType.mimeType == "application/json" ||
+            contentType.mimeType == "text/javascript" ||
+            contentType.mimeType == "application/x-www-form-urlencoded"),
+        'content-type was "$contentType", expected "application/json" or "application/x-www-form-urlencoded"');
+
+    Map<String, dynamic> parameters;
+
+    if (contentType.mimeType == "application/x-www-form-urlencoded") {
+      parameters = {};
+
+      for (var unit in body.split('&')) {
+        var separator = unit.lastIndexOf('=');
+
+        // The '=' can't be the first or last character in a URL-encoded string
+        //
+        // For example, in 'a=b', the lowest index it can have is 1, and the greatest is
+        // `unit.length - 2`.
+        if (separator > 0 && separator < unit.length - 1) {
+          var key = unit.substring(0, separator);
+          var value = Uri.decodeComponent(unit.substring(separator + 1));
+          parameters[key] = value;
+        }
+      }
+    } else {
+      try {
+        var untypedParameters = JSON.decode(body);
+        validate(untypedParameters is Map,
+            'parameters must be a map, was "$parameters"');
+        parameters = DelegatingMap.typed(untypedParameters);
+      } on FormatException {
+        validate(false, 'invalid JSON');
+      }
+    }
+
+    return parameters;
+  };
+}
+
 /// Handles a response from the authorization server that contains an access
 /// token.
 ///
@@ -29,55 +77,17 @@ Credentials handleAccessTokenResponse(
     Uri tokenEndpoint,
     DateTime startTime,
     List<String> scopes,
-    String delimiter) {
+    String delimiter,
+    {Map<String, dynamic> getParameters(String contentType, String body)}) {
   if (response.statusCode != 200) _handleErrorResponse(response, tokenEndpoint);
 
   validate(condition, message) =>
       _validate(response, tokenEndpoint, condition, message);
 
+  getParameters ??= parseJsonOrUrlEncoded(validate);
+
   var contentTypeString = response.headers['content-type'];
-  var contentType = contentTypeString == null
-      ? null
-      : new MediaType.parse(contentTypeString);
-
-  // The spec requires a content-type of application/json, but some endpoints
-  // (e.g. Dropbox) serve it as text/javascript instead.
-  validate(contentType != null &&
-      (contentType.mimeType == "application/json" ||
-       contentType.mimeType == "text/javascript"  ||
-       contentType.mimeType == "application/x-www-form-urlencoded" ||
-       contentType.mimeType == "text/plain"),
-      'content-type was "$contentType", expected "application/json", "application/x-www-form-urlencoded", or "text/plain"');
-
-  Map<String, dynamic> parameters;
-
-  if (contentType.mimeType == "text/plain" || contentType.mimeType == "application/x-www-form-urlencoded") {
-    parameters = {};
-
-    for (var unit in response.body.split('&')) {
-      var separator = unit.lastIndexOf('=');
-
-      // The '=' can't be the first or last character in a URL-encoded string
-      //
-      // For example, in 'a=b', the lowest index it can have is 1, and the greatest is
-      // `unit.length - 2`.
-      if (separator > 0 && separator < unit.length - 1) {
-        var key = unit.substring(0, separator);
-        var value = Uri.decodeComponent(unit.substring(separator + 1));
-        parameters[key] = value;
-      }
-    }
-
-  } else {
-    try {
-      var untypedParameters = JSON.decode(response.body);
-      validate(untypedParameters is Map,
-          'parameters must be a map, was "$parameters"');
-      parameters = DelegatingMap.typed(untypedParameters);
-    } on FormatException {
-      validate(false, 'invalid JSON');
-    }
-  }
+  var parameters = getParameters(contentTypeString, response.body);
 
   for (var requiredParameter in ['access_token', 'token_type']) {
     validate(parameters.containsKey(requiredParameter),

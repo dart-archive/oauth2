@@ -32,6 +32,9 @@ import 'utils.dart';
 /// The scope strings will be separated by the provided [delimiter]. This
 /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
 /// use non-standard delimiters.
+///
+/// [getParameters] can be a function used to parse parameters out of responses from hosts that do not
+/// respond with application/json or application/x-www-form-urlencoded bodies.
 Future<Client> resourceOwnerPasswordGrant(
     Uri authorizationEndpoint,
     String username,
@@ -41,7 +44,8 @@ Future<Client> resourceOwnerPasswordGrant(
     Iterable<String> scopes,
     bool basicAuth: true,
     http.Client httpClient,
-    String delimiter}) async {
+    String delimiter,
+    Map<String, dynamic> getParameters(String contentType, String body)}) async {
   delimiter ??= ' ';
   var startTime = new DateTime.now();
 
@@ -69,6 +73,6 @@ Future<Client> resourceOwnerPasswordGrant(
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, scopes, delimiter);
+      response, authorizationEndpoint, startTime, scopes, delimiter, getParameters: getParameters);
   return new Client(credentials, identifier: identifier, secret: secret);
 }

@@ -57,6 +57,10 @@ class Credentials {
   /// expiration date.
   final DateTime expiration;
 
+  /// A function used to parse parameters out of responses from hosts that do not
+  /// respond with application/json or application/x-www-form-urlencoded bodies.
+  final Function getParameters;
+
   /// Whether or not these credentials have expired.
   ///
   /// Note that it's possible the credentials will expire shortly after this is
@@ -84,7 +88,8 @@ class Credentials {
           this.tokenEndpoint,
           Iterable<String> scopes,
           this.expiration,
-          String delimiter})
+          String delimiter,
+          Map<String, dynamic> this.getParameters(String contentType, String body)})
       : scopes = new UnmodifiableListView(
             // Explicitly type-annotate the list literal to work around
             // sdk#24202.
@@ -211,7 +216,7 @@ class Credentials {
     var response = await httpClient.post(tokenEndpoint,
         headers: headers, body: body);
     var credentials = await handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, scopes, _delimiter);
+        response, tokenEndpoint, startTime, scopes, _delimiter, getParameters: getParameters);
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.

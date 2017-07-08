@@ -15,8 +15,8 @@ final Uri tokenEndpoint = Uri.parse("https://example.com/token");
 
 final DateTime startTime = new DateTime.now();
 
-oauth2.Credentials handle(http.Response response) =>
-  handleAccessTokenResponse(response, tokenEndpoint, startTime, ["scope"], ' ');
+oauth2.Credentials handle(http.Response response, {Map<String, dynamic> getParameters(String contentType, String body)}) =>
+  handleAccessTokenResponse(response, tokenEndpoint, startTime, ["scope"], ' ', getParameters: getParameters);
 
 void main() {
   group('an error response', () {
@@ -152,10 +152,18 @@ void main() {
           equals(tokenEndpoint.toString()));
     });
 
-
-    test('with a text/plain content-type returns the correct credentials', () {
+    test('with custom getParameters() returns the correct credentials', () {
       var body = 'token_type=bearer&access_token=access%20token';
-      var credentials = handle(new http.Response(body, 200, headers: {'content-type': 'text/plain'}));
+      var credentials = handle(new http.Response(body, 200, headers: {'content-type': 'text/plain'}),
+          getParameters: (String contentType, String body) {
+        return body.split('&').fold<Map<String, dynamic>>({}, (out, str) {
+          var equals = str.lastIndexOf('=');
+          if (equals < 1 || equals >= str.length - 1) return out;
+          var key = str.substring(0, equals);
+          var value = Uri.decodeComponent(str.substring(equals + 1));
+          return out..[key] = value;
+        });
+      });
       expect(credentials.accessToken, equals('access token'));
       expect(credentials.tokenEndpoint.toString(),
           equals(tokenEndpoint.toString()));

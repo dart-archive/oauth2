@@ -59,6 +59,10 @@ class AuthorizationCodeGrant {
   /// documentation.
   final Uri authorizationEndpoint;
 
+  /// A function used to parse parameters out of responses from hosts that do not
+  /// respond with application/json or application/x-www-form-urlencoded bodies.
+  final Function getParameters;
+
   /// A URL provided by the authorization server that this library uses to
   /// obtain long-lasting credentials.
   ///
@@ -112,7 +116,8 @@ class AuthorizationCodeGrant {
           {this.secret,
           String delimiter,
           bool basicAuth: true,
-          http.Client httpClient})
+          http.Client httpClient,
+          Map<String, dynamic> this.getParameters(String contentType, String body)})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ';
@@ -272,7 +277,7 @@ class AuthorizationCodeGrant {
         headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, _scopes, _delimiter);
+        response, tokenEndpoint, startTime, _scopes, _delimiter, getParameters: getParameters);
     return new Client(
         credentials,
         identifier: this.identifier,
