@@ -70,5 +70,6 @@ Future<Client> resourceOwnerPasswordGrant(
 
   var credentials = await handleAccessTokenResponse(
       response, authorizationEndpoint, startTime, scopes, delimiter);
-  return new Client(credentials, identifier: identifier, secret: secret);
+  return new Client(credentials,
+      identifier: identifier, secret: secret, httpClient: httpClient);
 }
