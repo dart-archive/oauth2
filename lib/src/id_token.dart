@@ -16,6 +16,7 @@ class IdToken {
   final Map payload;
   final ClaimSet claimSet;
   final String signature;
+  final String token;
 
   factory IdToken.fromString(String token) {
     var parts = token.split('.');
@@ -35,10 +36,14 @@ class IdToken {
 
     // TODO(mbutler): Add Signature validation.
 
-    return new IdToken(new JoseHeader.fromJson(header), body, claim, parts[2]);
+    return new IdToken(token,
+        new JoseHeader.fromJson(header),
+        body,
+        claim,
+        parts[2]);
   }
 
-  IdToken(this.header, this.payload, this.claimSet, this.signature);
+  IdToken(this.token, this.header, this.payload, this.claimSet, this.signature);
 }
 
 class JoseHeader {
