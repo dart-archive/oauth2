@@ -33,8 +33,19 @@ import 'utils.dart';
 /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
 /// use non-standard delimiters.
 ///
-/// [getParameters] can be a function used to parse parameters out of responses from hosts that do not
-/// respond with application/json or application/x-www-form-urlencoded bodies.
+/// [getParameters] may be a function used to parse parameters out of responses from hosts
+/// that do not correctly implement the OAuth 2.0 specification.
+///
+/// OAuth 2.0 expects the [tokenEndpoint]'s response to have a `Content-Type` of either
+/// `application/json` or `application/x-www-form-urlencoded`.
+///
+/// The value you return should adhere to the specification's expectation of a valid response.
+///
+/// Read the OAuth 2.0 specification for a more in-depth explanation of each response structure:
+/// https://tools.ietf.org/html/rfc6749
+///
+/// Example: In case of an error, the return value should contain a string `error`, and optionally
+/// strings `error_description` and/or `error_uri`.
 Future<Client> resourceOwnerPasswordGrant(
     Uri authorizationEndpoint,
     String username,
@@ -45,7 +56,7 @@ Future<Client> resourceOwnerPasswordGrant(
     bool basicAuth: true,
     http.Client httpClient,
     String delimiter,
-    Map<String, dynamic> getParameters(String contentType, String body)}) async {
+    Map<String, dynamic> getParameters(String contentType, String body, Uri tokenEndpoint)}) async {
   delimiter ??= ' ';
   var startTime = new DateTime.now();
 
@@ -73,6 +84,7 @@ Future<Client> resourceOwnerPasswordGrant(
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, scopes, delimiter, getParameters: getParameters);
-  return new Client(credentials, identifier: identifier, secret: secret);
+      response, authorizationEndpoint, startTime, scopes, delimiter);
+  return new Client(credentials,
+      identifier: identifier, secret: secret, httpClient: httpClient);
 }

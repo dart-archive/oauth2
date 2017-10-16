@@ -15,7 +15,7 @@ final Uri tokenEndpoint = Uri.parse("https://example.com/token");
 
 final DateTime startTime = new DateTime.now();
 
-oauth2.Credentials handle(http.Response response, {Map<String, dynamic> getParameters(String contentType, String body)}) =>
+oauth2.Credentials handle(http.Response response, {Map<String, dynamic> getParameters(String contentType, String body, Uri tokenEndpoint)}) =>
   handleAccessTokenResponse(response, tokenEndpoint, startTime, ["scope"], ' ', getParameters: getParameters);
 
 void main() {
@@ -47,7 +47,7 @@ void main() {
       expect(() => handleError(headers: {
         'content-type': 'text/plain'
       }), throwsFormatException);
-    }, skip: 'text/plain content-type is accepted now');
+    });
 
     test('with a non-JSON, non-plain content-type causes a FormatException', () {
       expect(() => handleError(headers: {
@@ -130,7 +130,7 @@ void main() {
     test('with a non-JSON content-type causes a FormatException', () {
       expect(() => handleSuccess(contentType: 'text/plain'),
           throwsFormatException);
-    }, skip: 'text/plain content-type is accepted now');
+    });
 
     test('with a JSON content-type and charset returns the correct '
         'credentials', () {
@@ -153,20 +153,30 @@ void main() {
     });
 
     test('with custom getParameters() returns the correct credentials', () {
-      var body = 'token_type=bearer&access_token=access%20token';
+      var body = '_' + JSON.encode({'token_type': 'bearer', 'access_token': 'access token'});
       var credentials = handle(new http.Response(body, 200, headers: {'content-type': 'text/plain'}),
-          getParameters: (String contentType, String body) {
-        return body.split('&').fold<Map<String, dynamic>>({}, (out, str) {
-          var equals = str.lastIndexOf('=');
-          if (equals < 1 || equals >= str.length - 1) return out;
-          var key = str.substring(0, equals);
-          var value = Uri.decodeComponent(str.substring(equals + 1));
-          return out..[key] = value;
-        });
+          getParameters: (String contentType, String body, Uri tokenEndpoint) {
+        return JSON.decode(body.substring(1));
       });
       expect(credentials.accessToken, equals('access token'));
       expect(credentials.tokenEndpoint.toString(),
           equals(tokenEndpoint.toString()));
+    });
+
+    test('throws a FormatException if custom getParameters rejects response', () {
+      var response = new http.Response(JSON.encode({
+        'access_token': 'access token',
+        'token_type': 'bearer',
+        'expires_in': 24,
+        'refresh_token': 'refresh token',
+        'scope': 'scope',
+      }), 200, headers: {'content-type': 'foo/bar'});
+
+      Map<String, String> getParameters(String contentType, String body, Uri tokenEndpoint) {
+        throw new FormatException('unsupported content-type: $contentType');
+      }
+
+      expect(() => handle(response, getParameters: getParameters), throwsFormatException);
     });
 
     test('with a null access token throws a FormatException', () {
