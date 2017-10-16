@@ -15,17 +15,18 @@ final Uri tokenEndpoint = Uri.parse("https://example.com/token");
 
 final DateTime startTime = new DateTime.now();
 
-oauth2.Credentials handle(http.Response response) =>
-  handleAccessTokenResponse(response, tokenEndpoint, startTime, ["scope"], ' ');
+oauth2.Credentials handle(http.Response response) => handleAccessTokenResponse(
+    response, tokenEndpoint, startTime, ["scope"], ' ');
 
 void main() {
   group('an error response', () {
     oauth2.Credentials handleError(
-        {String body: '{"error": "invalid_request"}',
-         int statusCode: 400,
-         Map<String, String> headers:
-             const {"content-type": "application/json"}}) =>
-      handle(new http.Response(body, statusCode, headers: headers));
+            {String body: '{"error": "invalid_request"}',
+            int statusCode: 400,
+            Map<String, String> headers: const {
+              "content-type": "application/json"
+            }}) =>
+        handle(new http.Response(body, statusCode, headers: headers));
 
     test('causes an AuthorizationException', () {
       expect(() => handleError(), throwsAuthorizationException);
@@ -44,16 +45,17 @@ void main() {
     });
 
     test('with a non-JSON content-type causes a FormatException', () {
-      expect(() => handleError(headers: {
-        'content-type': 'text/plain'
-      }), throwsFormatException);
+      expect(() => handleError(headers: {'content-type': 'text/plain'}),
+          throwsFormatException);
     });
 
-    test('with a JSON content-type and charset causes an '
+    test(
+        'with a JSON content-type and charset causes an '
         'AuthorizationException', () {
-      expect(() => handleError(headers: {
-        'content-type': 'application/json; charset=UTF-8'
-      }), throwsAuthorizationException);
+      expect(
+          () => handleError(
+              headers: {'content-type': 'application/json; charset=UTF-8'}),
+          throwsAuthorizationException);
     });
 
     test('with invalid JSON causes a FormatException', () {
@@ -65,49 +67,59 @@ void main() {
     });
 
     test('with a non-string error_description causes a FormatException', () {
-      expect(() => handleError(body: JSON.encode({
-        "error": "invalid_request",
-        "error_description": 12
-      })), throwsFormatException);
+      expect(
+          () => handleError(
+              body: JSON.encode(
+                  {"error": "invalid_request", "error_description": 12})),
+          throwsFormatException);
     });
 
     test('with a non-string error_uri causes a FormatException', () {
-      expect(() => handleError(body: JSON.encode({
-        "error": "invalid_request",
-        "error_uri": 12
-      })), throwsFormatException);
+      expect(
+          () => handleError(
+              body: JSON.encode({"error": "invalid_request", "error_uri": 12})),
+          throwsFormatException);
     });
 
     test('with a string error_description causes a AuthorizationException', () {
-      expect(() => handleError(body: JSON.encode({
-        "error": "invalid_request",
-        "error_description": "description"
-      })), throwsAuthorizationException);
+      expect(
+          () => handleError(
+                  body: JSON.encode({
+                "error": "invalid_request",
+                "error_description": "description"
+              })),
+          throwsAuthorizationException);
     });
 
     test('with a string error_uri causes a AuthorizationException', () {
-      expect(() => handleError(body: JSON.encode({
-        "error": "invalid_request",
-        "error_uri": "http://example.com/error"
-      })), throwsAuthorizationException);
+      expect(
+          () => handleError(
+                  body: JSON.encode({
+                "error": "invalid_request",
+                "error_uri": "http://example.com/error"
+              })),
+          throwsAuthorizationException);
     });
   });
 
   group('a success response', () {
     oauth2.Credentials handleSuccess(
         {String contentType: "application/json",
-         accessToken: 'access token',
-         tokenType: 'bearer',
-         expiresIn,
-         refreshToken,
-         scope}) {
-      return handle(new http.Response(JSON.encode({
-        'access_token': accessToken,
-        'token_type': tokenType,
-        'expires_in': expiresIn,
-        'refresh_token': refreshToken,
-        'scope': scope
-      }), 200, headers: {'content-type': contentType}));
+        accessToken: 'access token',
+        tokenType: 'bearer',
+        expiresIn,
+        refreshToken,
+        scope}) {
+      return handle(new http.Response(
+          JSON.encode({
+            'access_token': accessToken,
+            'token_type': tokenType,
+            'expires_in': expiresIn,
+            'refresh_token': refreshToken,
+            'scope': scope
+          }),
+          200,
+          headers: {'content-type': contentType}));
     }
 
     test('returns the correct credentials', () {
@@ -126,10 +138,11 @@ void main() {
           throwsFormatException);
     });
 
-    test('with a JSON content-type and charset returns the correct '
+    test(
+        'with a JSON content-type and charset returns the correct '
         'credentials', () {
-      var credentials = handleSuccess(
-          contentType: 'application/json; charset=UTF-8');
+      var credentials =
+          handleSuccess(contentType: 'application/json; charset=UTF-8');
       expect(credentials.accessToken, equals('access token'));
     });
 
@@ -162,7 +175,8 @@ void main() {
       expect(() => handleSuccess(expiresIn: "whenever"), throwsFormatException);
     });
 
-    test('with expires-in sets the expiration to ten seconds earlier than the '
+    test(
+        'with expires-in sets the expiration to ten seconds earlier than the '
         'server says', () {
       var credentials = handleSuccess(expiresIn: 100);
       expect(credentials.expiration.millisecondsSinceEpoch,
@@ -188,13 +202,16 @@ void main() {
     });
 
     test('with a custom scope delimiter sets the scopes', () {
-      var response = new http.Response(JSON.encode({
-        'access_token': 'access token',
-        'token_type': 'bearer',
-        'expires_in': null,
-        'refresh_token': null,
-        'scope': 'scope1,scope2'
-      }), 200, headers: {'content-type': 'application/json'});
+      var response = new http.Response(
+          JSON.encode({
+            'access_token': 'access token',
+            'token_type': 'bearer',
+            'expires_in': null,
+            'refresh_token': null,
+            'scope': 'scope1,scope2'
+          }),
+          200,
+          headers: {'content-type': 'application/json'});
       var credentials = handleAccessTokenResponse(
           response, tokenEndpoint, startTime, ['scope'], ',');
       expect(credentials.scopes, equals(['scope1', 'scope2']));

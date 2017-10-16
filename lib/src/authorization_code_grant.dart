@@ -106,13 +106,11 @@ class AuthorizationCodeGrant {
   /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
   /// use non-standard delimiters.
   AuthorizationCodeGrant(
-          this.identifier,
-          this.authorizationEndpoint,
-          this.tokenEndpoint,
-          {this.secret,
-          String delimiter,
-          bool basicAuth: true,
-          http.Client httpClient})
+      this.identifier, this.authorizationEndpoint, this.tokenEndpoint,
+      {this.secret,
+      String delimiter,
+      bool basicAuth: true,
+      http.Client httpClient})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ';
@@ -136,8 +134,8 @@ class AuthorizationCodeGrant {
   /// query parameters provided to the redirect URL.
   ///
   /// It is a [StateError] to call this more than once.
-  Uri getAuthorizationUrl(Uri redirect, {Iterable<String> scopes,
-      String state}) {
+  Uri getAuthorizationUrl(Uri redirect,
+      {Iterable<String> scopes, String state}) {
     if (_state != _State.initial) {
       throw new StateError('The authorization URL has already been generated.');
     }
@@ -181,14 +179,12 @@ class AuthorizationCodeGrant {
   /// [FormatError] if the `state` parameter doesn't match the original value.
   ///
   /// Throws [AuthorizationException] if the authorization fails.
-  Future<Client> handleAuthorizationResponse(Map<String, String> parameters)
-      async {
+  Future<Client> handleAuthorizationResponse(
+      Map<String, String> parameters) async {
     if (_state == _State.initial) {
-      throw new StateError(
-          'The authorization URL has not yet been generated.');
+      throw new StateError('The authorization URL has not yet been generated.');
     } else if (_state == _State.finished) {
-      throw new StateError(
-          'The authorization code has already been received.');
+      throw new StateError('The authorization code has already been received.');
     }
     _state = _State.finished;
 
@@ -235,11 +231,9 @@ class AuthorizationCodeGrant {
   /// Throws [AuthorizationException] if the authorization fails.
   Future<Client> handleAuthorizationCode(String authorizationCode) async {
     if (_state == _State.initial) {
-      throw new StateError(
-          'The authorization URL has not yet been generated.');
+      throw new StateError('The authorization URL has not yet been generated.');
     } else if (_state == _State.finished) {
-      throw new StateError(
-          'The authorization code has already been received.');
+      throw new StateError('The authorization code has already been received.');
     }
     _state = _State.finished;
 
@@ -273,8 +267,7 @@ class AuthorizationCodeGrant {
 
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, _scopes, _delimiter);
-    return new Client(
-        credentials,
+    return new Client(credentials,
         identifier: this.identifier,
         secret: this.secret,
         basicAuth: _basicAuth,

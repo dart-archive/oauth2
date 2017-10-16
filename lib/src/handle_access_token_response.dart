@@ -22,29 +22,25 @@ const _expirationGrace = const Duration(seconds: 10);
 ///
 /// This response format is common across several different components of the
 /// OAuth2 flow.
-/// 
+///
 /// The scope strings will be separated by the provided [delimiter].
-Credentials handleAccessTokenResponse(
-    http.Response response,
-    Uri tokenEndpoint,
-    DateTime startTime,
-    List<String> scopes,
-    String delimiter) {
+Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
+    DateTime startTime, List<String> scopes, String delimiter) {
   if (response.statusCode != 200) _handleErrorResponse(response, tokenEndpoint);
 
   validate(condition, message) =>
       _validate(response, tokenEndpoint, condition, message);
 
   var contentTypeString = response.headers['content-type'];
-  var contentType = contentTypeString == null
-      ? null
-      : new MediaType.parse(contentTypeString);
+  var contentType =
+      contentTypeString == null ? null : new MediaType.parse(contentTypeString);
 
   // The spec requires a content-type of application/json, but some endpoints
   // (e.g. Dropbox) serve it as text/javascript instead.
-  validate(contentType != null &&
-      (contentType.mimeType == "application/json" ||
-       contentType.mimeType == "text/javascript"),
+  validate(
+      contentType != null &&
+          (contentType.mimeType == "application/json" ||
+              contentType.mimeType == "text/javascript"),
       'content-type was "$contentType", expected "application/json"');
 
   Map<String, dynamic> parameters;
@@ -60,7 +56,8 @@ Credentials handleAccessTokenResponse(
   for (var requiredParameter in ['access_token', 'token_type']) {
     validate(parameters.containsKey(requiredParameter),
         'did not contain required parameter "$requiredParameter"');
-    validate(parameters[requiredParameter] is String,
+    validate(
+        parameters[requiredParameter] is String,
         'required parameter "$requiredParameter" was not a string, was '
         '"${parameters[requiredParameter]}"');
   }
@@ -83,11 +80,11 @@ Credentials handleAccessTokenResponse(
   var scope = parameters['scope'] as String;
   if (scope != null) scopes = scope.split(delimiter);
 
-  var expiration = expiresIn == null ? null :
-      startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
+  var expiration = expiresIn == null
+      ? null
+      : startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
 
-  return new Credentials(
-      parameters['access_token'],
+  return new Credentials(parameters['access_token'],
       refreshToken: parameters['refresh_token'],
       tokenEndpoint: tokenEndpoint,
       scopes: scopes,
@@ -113,9 +110,8 @@ void _handleErrorResponse(http.Response response, Uri tokenEndpoint) {
   }
 
   var contentTypeString = response.headers['content-type'];
-  var contentType = contentTypeString == null
-      ? null
-      : new MediaType.parse(contentTypeString);
+  var contentType =
+      contentTypeString == null ? null : new MediaType.parse(contentTypeString);
 
   validate(contentType != null && contentType.mimeType == "application/json",
       'content-type was "$contentType", expected "application/json"');
@@ -129,7 +125,8 @@ void _handleErrorResponse(http.Response response, Uri tokenEndpoint) {
 
   validate(parameters.containsKey('error'),
       'did not contain required parameter "error"');
-  validate(parameters["error"] is String,
+  validate(
+      parameters["error"] is String,
       'required parameter "error" was not a string, was '
       '"${parameters["error"]}"');
 
@@ -146,10 +143,7 @@ void _handleErrorResponse(http.Response response, Uri tokenEndpoint) {
 }
 
 void _validate(
-    http.Response response,
-    Uri tokenEndpoint,
-    bool condition,
-    String message) {
+    http.Response response, Uri tokenEndpoint, bool condition, String message) {
   if (condition) return;
   throw new FormatException('Invalid OAuth response for "$tokenEndpoint": '
       '$message.\n\n${response.body}');
