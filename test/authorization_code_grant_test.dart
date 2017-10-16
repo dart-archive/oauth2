@@ -28,7 +28,8 @@ void main() {
 
   group('.getAuthorizationUrl', () {
     test('builds the correct URL', () {
-      expect(grant.getAuthorizationUrl(redirectUrl).toString(),
+      expect(
+          grant.getAuthorizationUrl(redirectUrl).toString(),
           equals('https://example.com/authorization'
               '?response_type=code'
               '&client_id=identifier'
@@ -36,9 +37,10 @@ void main() {
     });
 
     test('builds the correct URL with scopes', () {
-      var authorizationUrl = grant.getAuthorizationUrl(
-          redirectUrl, scopes: ['scope', 'other/scope']);
-      expect(authorizationUrl.toString(),
+      var authorizationUrl = grant
+          .getAuthorizationUrl(redirectUrl, scopes: ['scope', 'other/scope']);
+      expect(
+          authorizationUrl.toString(),
           equals('https://example.com/authorization'
               '?response_type=code'
               '&client_id=identifier'
@@ -54,9 +56,10 @@ void main() {
           secret: 'secret',
           httpClient: client,
           delimiter: '_');
-      var authorizationUrl = grant.getAuthorizationUrl(
-          redirectUrl, scopes: ['scope', 'other/scope']);
-      expect(authorizationUrl.toString(),
+      var authorizationUrl = grant
+          .getAuthorizationUrl(redirectUrl, scopes: ['scope', 'other/scope']);
+      expect(
+          authorizationUrl.toString(),
           equals('https://example.com/authorization'
               '?response_type=code'
               '&client_id=identifier'
@@ -65,9 +68,10 @@ void main() {
     });
 
     test('builds the correct URL with state', () {
-      var authorizationUrl = grant.getAuthorizationUrl(
-          redirectUrl, state: 'state');
-      expect(authorizationUrl.toString(),
+      var authorizationUrl =
+          grant.getAuthorizationUrl(redirectUrl, state: 'state');
+      expect(
+          authorizationUrl.toString(),
           equals('https://example.com/authorization'
               '?response_type=code'
               '&client_id=identifier'
@@ -84,7 +88,8 @@ void main() {
           httpClient: client);
 
       var authorizationUrl = grant.getAuthorizationUrl(redirectUrl);
-      expect(authorizationUrl.toString(),
+      expect(
+          authorizationUrl.toString(),
           equals('https://example.com/authorization'
               '?query=value'
               '&response_type=code'
@@ -119,10 +124,10 @@ void main() {
 
     test('must have the same state parameter the authorization URL did', () {
       grant.getAuthorizationUrl(redirectUrl, state: 'state');
-      expect(grant.handleAuthorizationResponse({
-        'code': 'auth code',
-        'state': 'other state'
-      }), throwsFormatException);
+      expect(
+          grant.handleAuthorizationResponse(
+              {'code': 'auth code', 'state': 'other state'}),
+          throwsFormatException);
     });
 
     test('must have a code parameter', () {
@@ -132,8 +137,7 @@ void main() {
 
     test('with an error parameter throws an AuthorizationException', () {
       grant.getAuthorizationUrl(redirectUrl);
-      expect(
-          grant.handleAuthorizationResponse({'error': 'invalid_request'}),
+      expect(grant.handleAuthorizationResponse({'error': 'invalid_request'}),
           throwsA((e) => e is oauth2.AuthorizationException));
     });
 
@@ -142,23 +146,28 @@ void main() {
       client.expectRequest((request) {
         expect(request.method, equals('POST'));
         expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
-        expect(request.bodyFields, equals({
-          'grant_type': 'authorization_code',
-          'code': 'auth code',
-          'redirect_uri': redirectUrl.toString()
-        }));
-        expect(request.headers, containsPair(
-            "Authorization",
-            "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
+        expect(
+            request.bodyFields,
+            equals({
+              'grant_type': 'authorization_code',
+              'code': 'auth code',
+              'redirect_uri': redirectUrl.toString()
+            }));
+        expect(request.headers,
+            containsPair("Authorization", "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
 
-        return new Future.value(new http.Response(JSON.encode({
-          'access_token': 'access token',
-          'token_type': 'bearer',
-        }), 200, headers: {'content-type': 'application/json'}));
+        return new Future.value(new http.Response(
+            JSON.encode({
+              'access_token': 'access token',
+              'token_type': 'bearer',
+            }),
+            200,
+            headers: {'content-type': 'application/json'}));
       });
 
-      expect(grant.handleAuthorizationResponse({'code': 'auth code'})
-            .then((client) => client.credentials.accessToken),
+      expect(
+          grant.handleAuthorizationResponse({'code': 'auth code'}).then(
+              (client) => client.credentials.accessToken),
           completion(equals('access token')));
     });
   });
@@ -179,26 +188,30 @@ void main() {
       client.expectRequest((request) {
         expect(request.method, equals('POST'));
         expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
-        expect(request.bodyFields, equals({
-          'grant_type': 'authorization_code',
-          'code': 'auth code',
-          'redirect_uri': redirectUrl.toString()
-        }));
-        expect(request.headers, containsPair(
-            "Authorization",
-            "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
+        expect(
+            request.bodyFields,
+            equals({
+              'grant_type': 'authorization_code',
+              'code': 'auth code',
+              'redirect_uri': redirectUrl.toString()
+            }));
+        expect(request.headers,
+            containsPair("Authorization", "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
 
-        return new Future.value(new http.Response(JSON.encode({
-          'access_token': 'access token',
-          'token_type': 'bearer',
-        }), 200, headers: {'content-type': 'application/json'}));
+        return new Future.value(new http.Response(
+            JSON.encode({
+              'access_token': 'access token',
+              'token_type': 'bearer',
+            }),
+            200,
+            headers: {'content-type': 'application/json'}));
       });
 
       expect(grant.handleAuthorizationCode('auth code'),
           completion(predicate((client) {
-            expect(client.credentials.accessToken, equals('access token'));
-            return true;
-          })));
+        expect(client.credentials.accessToken, equals('access token'));
+        return true;
+      })));
     });
   });
 
@@ -220,22 +233,28 @@ void main() {
       client.expectRequest((request) {
         expect(request.method, equals('POST'));
         expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
-        expect(request.bodyFields, equals({
-          'grant_type': 'authorization_code',
-          'code': 'auth code',
-          'redirect_uri': redirectUrl.toString(),
-          'client_id': 'identifier',
-          'client_secret': 'secret'
-        }));
+        expect(
+            request.bodyFields,
+            equals({
+              'grant_type': 'authorization_code',
+              'code': 'auth code',
+              'redirect_uri': redirectUrl.toString(),
+              'client_id': 'identifier',
+              'client_secret': 'secret'
+            }));
 
-        return new Future.value(new http.Response(JSON.encode({
-          'access_token': 'access token',
-          'token_type': 'bearer',
-        }), 200, headers: {'content-type': 'application/json'}));
+        return new Future.value(new http.Response(
+            JSON.encode({
+              'access_token': 'access token',
+              'token_type': 'bearer',
+            }),
+            200,
+            headers: {'content-type': 'application/json'}));
       });
 
-      expect(grant.handleAuthorizationResponse({'code': 'auth code'})
-            .then((client) => client.credentials.accessToken),
+      expect(
+          grant.handleAuthorizationResponse({'code': 'auth code'}).then(
+              (client) => client.credentials.accessToken),
           completion(equals('access token')));
     });
 
@@ -244,25 +263,30 @@ void main() {
       client.expectRequest((request) {
         expect(request.method, equals('POST'));
         expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
-        expect(request.bodyFields, equals({
-          'grant_type': 'authorization_code',
-          'code': 'auth code',
-          'redirect_uri': redirectUrl.toString(),
-          'client_id': 'identifier',
-          'client_secret': 'secret'
-        }));
+        expect(
+            request.bodyFields,
+            equals({
+              'grant_type': 'authorization_code',
+              'code': 'auth code',
+              'redirect_uri': redirectUrl.toString(),
+              'client_id': 'identifier',
+              'client_secret': 'secret'
+            }));
 
-        return new Future.value(new http.Response(JSON.encode({
-          'access_token': 'access token',
-          'token_type': 'bearer',
-        }), 200, headers: {'content-type': 'application/json'}));
+        return new Future.value(new http.Response(
+            JSON.encode({
+              'access_token': 'access token',
+              'token_type': 'bearer',
+            }),
+            200,
+            headers: {'content-type': 'application/json'}));
       });
 
       expect(grant.handleAuthorizationCode('auth code'),
           completion(predicate((client) {
-            expect(client.credentials.accessToken, equals('access token'));
-            return true;
-          })));
+        expect(client.credentials.accessToken, equals('access token'));
+        return true;
+      })));
     });
   });
 }

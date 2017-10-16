@@ -22,37 +22,34 @@ void main() {
   group('with expired credentials', () {
     test("that can't be refreshed throws an ExpirationException on send", () {
       var expiration = new DateTime.now().subtract(new Duration(hours: 1));
-      var credentials = new oauth2.Credentials(
-          'access token', expiration: expiration);
+      var credentials =
+          new oauth2.Credentials('access token', expiration: expiration);
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret', 
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       expect(client.get(requestUri),
           throwsA(new isInstanceOf<oauth2.ExpirationException>()));
     });
 
-    test("that can be refreshed refreshes the credentials and sends the "
+    test(
+        "that can be refreshed refreshes the credentials and sends the "
         "request", () async {
       var expiration = new DateTime.now().subtract(new Duration(hours: 1));
-      var credentials = new oauth2.Credentials(
-          'access token',
+      var credentials = new oauth2.Credentials('access token',
           refreshToken: 'refresh token',
           tokenEndpoint: tokenEndpoint,
           expiration: expiration);
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret',
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       httpClient.expectRequest((request) {
         expect(request.method, equals('POST'));
         expect(request.url.toString(), equals(tokenEndpoint.toString()));
-        return new Future.value(new http.Response(JSON.encode({
-          'access_token': 'new access token',
-          'token_type': 'bearer'
-        }), 200, headers: {'content-type': 'application/json'}));
+        return new Future.value(new http.Response(
+            JSON.encode(
+                {'access_token': 'new access token', 'token_type': 'bearer'}),
+            200,
+            headers: {'content-type': 'application/json'}));
       });
 
       httpClient.expectRequest((request) {
@@ -73,9 +70,7 @@ void main() {
     test("sends a request with bearer authorization", () {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret',
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       httpClient.expectRequest((request) {
         expect(request.method, equals('GET'));
@@ -89,22 +84,19 @@ void main() {
     });
 
     test("can manually refresh the credentials", () async {
-      var credentials = new oauth2.Credentials(
-          'access token',
-          refreshToken: 'refresh token',
-          tokenEndpoint: tokenEndpoint);
+      var credentials = new oauth2.Credentials('access token',
+          refreshToken: 'refresh token', tokenEndpoint: tokenEndpoint);
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret',
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       httpClient.expectRequest((request) {
         expect(request.method, equals('POST'));
         expect(request.url.toString(), equals(tokenEndpoint.toString()));
-        return new Future.value(new http.Response(JSON.encode({
-          'access_token': 'new access token',
-          'token_type': 'bearer'
-        }), 200, headers: {'content-type': 'application/json'}));
+        return new Future.value(new http.Response(
+            JSON.encode(
+                {'access_token': 'new access token', 'token_type': 'bearer'}),
+            200,
+            headers: {'content-type': 'application/json'}));
       });
 
       await client.refreshCredentials();
@@ -114,9 +106,7 @@ void main() {
     test("without a refresh token can't manually refresh the credentials", () {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret',
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       expect(client.refreshCredentials(), throwsA(isStateError));
     });
@@ -126,9 +116,7 @@ void main() {
     test('throws an AuthorizationException for a 401 response', () {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret',
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       httpClient.expectRequest((request) {
         expect(request.method, equals('GET'));
@@ -138,7 +126,7 @@ void main() {
         var authenticate = 'Bearer error="invalid_token", error_description='
             '"Something is terribly wrong."';
         return new Future.value(new http.Response('bad job', 401,
-                headers: {'www-authenticate': authenticate}));
+            headers: {'www-authenticate': authenticate}));
       });
 
       expect(client.read(requestUri),
@@ -148,15 +136,12 @@ void main() {
     test('passes through a 401 response without www-authenticate', () async {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret',
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       httpClient.expectRequest((request) {
         expect(request.method, equals('GET'));
         expect(request.url.toString(), equals(requestUri.toString()));
-        expect(request.headers['authorization'],
-            equals('Bearer access token'));
+        expect(request.headers['authorization'], equals('Bearer access token'));
 
         return new Future.value(new http.Response('bad job', 401));
       });
@@ -168,20 +153,17 @@ void main() {
         () async {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret',
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       httpClient.expectRequest((request) {
         expect(request.method, equals('GET'));
         expect(request.url.toString(), equals(requestUri.toString()));
-        expect(request.headers['authorization'],
-            equals('Bearer access token'));
+        expect(request.headers['authorization'], equals('Bearer access token'));
 
         var authenticate = 'Bearer error="invalid_token" error_description='
-          '"Something is terribly wrong."';
+            '"Something is terribly wrong."';
         return new Future.value(new http.Response('bad job', 401,
-                headers: {'www-authenticate': authenticate}));
+            headers: {'www-authenticate': authenticate}));
       });
 
       expect((await client.get(requestUri)).statusCode, equals(401));
@@ -191,18 +173,15 @@ void main() {
         () async {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret',
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       httpClient.expectRequest((request) {
         expect(request.method, equals('GET'));
         expect(request.url.toString(), equals(requestUri.toString()));
-        expect(request.headers['authorization'],
-            equals('Bearer access token'));
+        expect(request.headers['authorization'], equals('Bearer access token'));
 
         return new Future.value(new http.Response('bad job', 401,
-                headers: {'www-authenticate': 'Digest'}));
+            headers: {'www-authenticate': 'Digest'}));
       });
 
       expect((await client.get(requestUri)).statusCode, equals(401));
@@ -212,18 +191,15 @@ void main() {
         () async {
       var credentials = new oauth2.Credentials('access token');
       var client = new oauth2.Client(credentials,
-          identifier: 'identifier',
-          secret: 'secret',
-          httpClient: httpClient);
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       httpClient.expectRequest((request) {
         expect(request.method, equals('GET'));
         expect(request.url.toString(), equals(requestUri.toString()));
-        expect(request.headers['authorization'],
-            equals('Bearer access token'));
+        expect(request.headers['authorization'], equals('Bearer access token'));
 
         return new Future.value(new http.Response('bad job', 401,
-                headers: {'www-authenticate': 'Bearer'}));
+            headers: {'www-authenticate': 'Bearer'}));
       });
 
       expect((await client.get(requestUri)).statusCode, equals(401));

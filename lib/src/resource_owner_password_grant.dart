@@ -33,9 +33,7 @@ import 'utils.dart';
 /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
 /// use non-standard delimiters.
 Future<Client> resourceOwnerPasswordGrant(
-    Uri authorizationEndpoint,
-    String username,
-    String password,
+    Uri authorizationEndpoint, String username, String password,
     {String identifier,
     String secret,
     Iterable<String> scopes,

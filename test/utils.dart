@@ -14,13 +14,12 @@ class ExpectClient extends MockClient {
   final Queue<MockClientHandler> _handlers;
 
   ExpectClient._(MockClientHandler fn)
-    : _handlers = new Queue<MockClientHandler>(),
-      super(fn);
+      : _handlers = new Queue<MockClientHandler>(),
+        super(fn);
 
   factory ExpectClient() {
     var client;
-    client = new ExpectClient._((request) =>
-        client._handleRequest(request));
+    client = new ExpectClient._((request) => client._handleRequest(request));
     return client;
   }
 
@@ -52,19 +51,16 @@ const Matcher throwsAuthorizationException =
 
 class _AuthorizationException extends TypeMatcher {
   const _AuthorizationException() : super("AuthorizationException");
-  bool matches(item, Map matchState) =>
-    item is oauth2.AuthorizationException;
+  bool matches(item, Map matchState) => item is oauth2.AuthorizationException;
 }
 
 /// A matcher for ExpirationExceptions.
 const isExpirationException = const _ExpirationException();
 
 /// A matcher for functions that throw ExpirationException.
-const Matcher throwsExpirationException =
-    const Throws(isExpirationException);
+const Matcher throwsExpirationException = const Throws(isExpirationException);
 
 class _ExpirationException extends TypeMatcher {
   const _ExpirationException() : super("ExpirationException");
-  bool matches(item, Map matchState) =>
-    item is oauth2.ExpirationException;
+  bool matches(item, Map matchState) => item is oauth2.ExpirationException;
 }

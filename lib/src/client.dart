@@ -83,8 +83,11 @@ class Client extends http.BaseClient {
   /// adding authorization credentials to them.
   ///
   /// Throws an [ArgumentError] if [secret] is passed without [identifier].
-  Client(this._credentials, {this.identifier, this.secret,
-          bool basicAuth: true, http.Client httpClient})
+  Client(this._credentials,
+      {this.identifier,
+      this.secret,
+      bool basicAuth: true,
+      http.Client httpClient})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient {
     if (identifier == null && secret != null) {
@@ -110,21 +113,23 @@ class Client extends http.BaseClient {
 
     var challenges;
     try {
-      challenges = AuthenticationChallenge.parseHeader(
-          response.headers['www-authenticate']);
+      challenges = AuthenticationChallenge
+          .parseHeader(response.headers['www-authenticate']);
     } on FormatException {
       return response;
     }
 
     var challenge = challenges.firstWhere(
-        (challenge) => challenge.scheme == 'bearer', orElse: () => null);
+        (challenge) => challenge.scheme == 'bearer',
+        orElse: () => null);
     if (challenge == null) return response;
 
     var params = challenge.parameters;
     if (!params.containsKey('error')) return response;
 
     throw new AuthorizationException(
-        params['error'], params['error_description'],
+        params['error'],
+        params['error_description'],
         params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
   }
 
