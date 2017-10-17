@@ -56,7 +56,7 @@ Future<Client> resourceOwnerPasswordGrant(
     bool basicAuth: true,
     http.Client httpClient,
     String delimiter,
-    Map<String, dynamic> getParameters(String contentType, String body, Uri tokenEndpoint)}) async {
+    Map<String, dynamic> getParameters(String contentType, String body)}) async {
   delimiter ??= ' ';
   var startTime = new DateTime.now();
 
@@ -84,7 +84,7 @@ Future<Client> resourceOwnerPasswordGrant(
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, scopes, delimiter);
+      response, authorizationEndpoint, startTime, scopes, delimiter, getParameters: getParameters);
   return new Client(credentials,
       identifier: identifier, secret: secret, httpClient: httpClient);
 }

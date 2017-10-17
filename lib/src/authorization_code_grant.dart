@@ -27,7 +27,9 @@ import 'parameters.dart';
 ///
 /// [authorization code grant]: http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-4.1
 class AuthorizationCodeGrant {
-  final GetParameters _getParameters;
+  /// A function used to parse parameters out of responses from hosts that do not
+  /// respond with application/json or application/x-www-form-urlencoded bodies.
+  final Map<String, dynamic> Function(String contentType, String body) _getParameters;
 
   /// The client identifier for this client.
   ///
@@ -134,7 +136,7 @@ class AuthorizationCodeGrant {
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ',
-        _getParameters = getParameters ?? parseJsonOrUrlEncodedParameters;
+        _getParameters = getParameters ?? parseJsonParameters;
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.

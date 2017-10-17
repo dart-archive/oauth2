@@ -15,7 +15,7 @@ final Uri tokenEndpoint = Uri.parse("https://example.com/token");
 
 final DateTime startTime = new DateTime.now();
 
-oauth2.Credentials handle(http.Response response, {Map<String, dynamic> getParameters(String contentType, String body, Uri tokenEndpoint)}) =>
+oauth2.Credentials handle(http.Response response, {Map<String, dynamic> getParameters(String contentType, String body)}) =>
   handleAccessTokenResponse(response, tokenEndpoint, startTime, ["scope"], ' ', getParameters: getParameters);
 
 void main() {
@@ -143,19 +143,10 @@ void main() {
       var credentials = handleSuccess(contentType: 'text/javascript');
       expect(credentials.accessToken, equals('access token'));
     });
-
-    test('with a URL-encoded content-type returns the correct credentials', () {
-      var body = 'token_type=bearer&access_token=access%20token';
-      var credentials = handle(new http.Response(body, 200, headers: {'content-type': 'application/x-www-form-urlencoded'}));
-      expect(credentials.accessToken, equals('access token'));
-      expect(credentials.tokenEndpoint.toString(),
-          equals(tokenEndpoint.toString()));
-    });
-
     test('with custom getParameters() returns the correct credentials', () {
       var body = '_' + JSON.encode({'token_type': 'bearer', 'access_token': 'access token'});
       var credentials = handle(new http.Response(body, 200, headers: {'content-type': 'text/plain'}),
-          getParameters: (String contentType, String body, Uri tokenEndpoint) {
+          getParameters: (String contentType, String body) {
         return JSON.decode(body.substring(1));
       });
       expect(credentials.accessToken, equals('access token'));
@@ -172,7 +163,7 @@ void main() {
         'scope': 'scope',
       }), 200, headers: {'content-type': 'foo/bar'});
 
-      Map<String, String> getParameters(String contentType, String body, Uri tokenEndpoint) {
+      Map<String, String> getParameters(String contentType, String body) {
         throw new FormatException('unsupported content-type: $contentType');
       }
 
