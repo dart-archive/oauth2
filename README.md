@@ -23,7 +23,7 @@ server-side application.
 ## Authorization Code Grant
 
 ```dart
-import 'dart:io'
+import 'dart:io';
 import 'package:oauth2/oauth2.dart' as oauth2;
 
 // These URLs are endpoints that are provided by the authorization
