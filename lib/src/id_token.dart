@@ -148,7 +148,7 @@ class ClaimSet {
         jwtId: jid,
         nonce: nonce,
         authenticationContextClass: acr,
-        authenticationMethods: amr,
+        authenticationMethods: amr is List ? amr.join(",") : amr,
         authorizedParty: azp,
         other: json);
   }
