@@ -116,6 +116,9 @@ class AuthorizationCodeGrant {
   /// [getParameters] may be a function used to parse parameters out of responses from hosts
   /// that do not correctly implement the OAuth 2.0 specification.
   ///
+  /// This function should take the following form:
+  /// `Map<String, dynamic> Function(MediaType contentType, String body)`
+  ///
   /// OAuth 2.0 expects the [tokenEndpoint]'s response to have a `Content-Type` of either
   /// `application/json` or `application/x-www-form-urlencoded`.
   ///
@@ -132,7 +135,7 @@ class AuthorizationCodeGrant {
       String delimiter,
       bool basicAuth: true,
       http.Client httpClient,
-      Map<String, dynamic> getParameters(String contentType, String body)})
+      Map<String, dynamic> getParameters(MediaType contentType, String body)})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ',
