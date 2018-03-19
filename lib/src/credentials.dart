@@ -7,8 +7,10 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'handle_access_token_response.dart';
+import 'parameters.dart';
 import 'utils.dart';
 
 /// Credentials that prove that a client is allowed to access a resource on the
@@ -59,15 +61,15 @@ class Credentials {
 
   /// A function used to parse parameters out of responses from hosts that do not
   /// respond with application/json or application/x-www-form-urlencoded bodies.
-  final Function getParameters;
+  final GetParameters _getParameters;
 
   /// Whether or not these credentials have expired.
   ///
   /// Note that it's possible the credentials will expire shortly after this is
   /// called. However, since the client's expiration date is kept a few seconds
   /// earlier than the server's, there should be enough leeway to rely on this.
-  bool get isExpired => expiration != null &&
-      new DateTime.now().isAfter(expiration);
+  bool get isExpired =>
+      expiration != null && new DateTime.now().isAfter(expiration);
 
   /// Whether it's possible to refresh these credentials.
   bool get canRefresh => refreshToken != null && tokenEndpoint != null;
@@ -82,19 +84,33 @@ class Credentials {
   /// The scope strings will be separated by the provided [delimiter]. This
   /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
   /// use non-standard delimiters.
-  Credentials(
-          this.accessToken,
-          {this.refreshToken,
-          this.tokenEndpoint,
-          Iterable<String> scopes,
-          this.expiration,
-          String delimiter,
-          Map<String, dynamic> this.getParameters(String contentType, String body)})
+  ///
+  /// [getParameters] may be a function used to parse parameters out of responses from hosts
+  /// that do not correctly implement the OAuth 2.0 specification.
+  ///
+  /// OAuth 2.0 expects the [tokenEndpoint]'s response to have a `Content-Type` of either
+  /// `application/json` or `application/x-www-form-urlencoded`.
+  ///
+  /// The value you return should adhere to the specification's expectation of a valid response.
+  ///
+  /// Read the OAuth 2.0 specification for a more in-depth explanation of each response structure:
+  /// https://tools.ietf.org/html/rfc6749
+  ///
+  /// Example: In case of an error, the return value should contain a string `error`, and optionally
+  /// strings `error_description` and/or `error_uri`.
+  Credentials(this.accessToken,
+      {this.refreshToken,
+      this.tokenEndpoint,
+      Iterable<String> scopes,
+      this.expiration,
+      String delimiter,
+      Map<String, dynamic> getParameters(MediaType mediaType, String body)})
       : scopes = new UnmodifiableListView(
             // Explicitly type-annotate the list literal to work around
             // sdk#24202.
             scopes == null ? <String>[] : scopes.toList()),
-        _delimiter = delimiter ?? ' ';
+        _delimiter = delimiter ?? ' ',
+  _getParameters = getParameters ?? parseJsonParameters;
 
   /// Loads a set of credentials from a JSON-serialized form.
   ///
@@ -116,10 +132,10 @@ class Credentials {
     validate(parsed is Map, 'was not a JSON map');
     validate(parsed.containsKey('accessToken'),
         'did not contain required field "accessToken"');
-    validate(parsed['accessToken'] is String,
+    validate(
+        parsed['accessToken'] is String,
         'required field "accessToken" was not a string, was '
         '${parsed["accessToken"]}');
-
 
     for (var stringField in ['refreshToken', 'tokenEndpoint']) {
       var value = parsed[stringField];
@@ -142,8 +158,7 @@ class Credentials {
       expiration = new DateTime.fromMillisecondsSinceEpoch(expiration);
     }
 
-    return new Credentials(
-        parsed['accessToken'],
+    return new Credentials(parsed['accessToken'],
         refreshToken: parsed['refreshToken'],
         tokenEndpoint: tokenEndpoint,
         scopes: (scopes as List).map((scope) => scope as String),
@@ -155,12 +170,14 @@ class Credentials {
   /// Nothing is guaranteed about the output except that it's valid JSON and
   /// compatible with [Credentials.toJson].
   String toJson() => JSON.encode({
-    'accessToken': accessToken,
-    'refreshToken': refreshToken,
-    'tokenEndpoint': tokenEndpoint == null ? null : tokenEndpoint.toString(),
-    'scopes': scopes,
-    'expiration': expiration == null ? null : expiration.millisecondsSinceEpoch
-  });
+        'accessToken': accessToken,
+        'refreshToken': refreshToken,
+        'tokenEndpoint':
+            tokenEndpoint == null ? null : tokenEndpoint.toString(),
+        'scopes': scopes,
+        'expiration':
+            expiration == null ? null : expiration.millisecondsSinceEpoch
+      });
 
   /// Returns a new set of refreshed credentials.
   ///
@@ -200,10 +217,7 @@ class Credentials {
 
     var headers = <String, String>{};
 
-    var body = {
-      "grant_type": "refresh_token",
-      "refresh_token": refreshToken
-    };
+    var body = {"grant_type": "refresh_token", "refresh_token": refreshToken};
     if (!scopes.isEmpty) body["scope"] = scopes.join(_delimiter);
 
     if (basicAuth && secret != null) {
@@ -213,16 +227,16 @@ class Credentials {
       if (secret != null) body["client_secret"] = secret;
     }
 
-    var response = await httpClient.post(tokenEndpoint,
-        headers: headers, body: body);
+    var response =
+        await httpClient.post(tokenEndpoint, headers: headers, body: body);
     var credentials = await handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, scopes, _delimiter, getParameters: getParameters);
+        response, tokenEndpoint, startTime, scopes, _delimiter,
+        getParameters: _getParameters);
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.
     if (credentials.refreshToken != null) return credentials;
-    return new Credentials(
-        credentials.accessToken,
+    return new Credentials(credentials.accessToken,
         refreshToken: this.refreshToken,
         tokenEndpoint: credentials.tokenEndpoint,
         scopes: credentials.scopes,

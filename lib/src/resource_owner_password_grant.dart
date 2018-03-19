@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'client.dart';
 import 'handle_access_token_response.dart';
@@ -47,16 +48,15 @@ import 'utils.dart';
 /// Example: In case of an error, the return value should contain a string `error`, and optionally
 /// strings `error_description` and/or `error_uri`.
 Future<Client> resourceOwnerPasswordGrant(
-    Uri authorizationEndpoint,
-    String username,
-    String password,
+    Uri authorizationEndpoint, String username, String password,
     {String identifier,
     String secret,
     Iterable<String> scopes,
     bool basicAuth: true,
     http.Client httpClient,
     String delimiter,
-    Map<String, dynamic> getParameters(String contentType, String body)}) async {
+    Map<String, dynamic> getParameters(
+        MediaType contentType, String body)}) async {
   delimiter ??= ' ';
   var startTime = new DateTime.now();
 
@@ -84,7 +84,8 @@ Future<Client> resourceOwnerPasswordGrant(
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, scopes, delimiter, getParameters: getParameters);
+      response, authorizationEndpoint, startTime, scopes, delimiter,
+      getParameters: getParameters);
   return new Client(credentials,
       identifier: identifier, secret: secret, httpClient: httpClient);
 }

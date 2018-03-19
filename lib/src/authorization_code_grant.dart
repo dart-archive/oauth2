@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'client.dart';
 import 'authorization_exception.dart';
@@ -29,7 +30,8 @@ import 'parameters.dart';
 class AuthorizationCodeGrant {
   /// A function used to parse parameters out of responses from hosts that do not
   /// respond with application/json or application/x-www-form-urlencoded bodies.
-  final Map<String, dynamic> Function(String contentType, String body) _getParameters;
+  final Map<String, dynamic> Function(MediaType contentType, String body)
+      _getParameters;
 
   /// The client identifier for this client.
   ///
@@ -125,14 +127,12 @@ class AuthorizationCodeGrant {
   /// Example: In case of an error, the return value should contain a string `error`, and optionally
   /// strings `error_description` and/or `error_uri`.
   AuthorizationCodeGrant(
-          this.identifier,
-          this.authorizationEndpoint,
-          this.tokenEndpoint,
-          {this.secret,
-          String delimiter,
-          bool basicAuth: true,
-          http.Client httpClient,
-          Map<String, dynamic> getParameters(String contentType, String body)})
+      this.identifier, this.authorizationEndpoint, this.tokenEndpoint,
+      {this.secret,
+      String delimiter,
+      bool basicAuth: true,
+      http.Client httpClient,
+      Map<String, dynamic> getParameters(String contentType, String body)})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ',
@@ -157,8 +157,8 @@ class AuthorizationCodeGrant {
   /// query parameters provided to the redirect URL.
   ///
   /// It is a [StateError] to call this more than once.
-  Uri getAuthorizationUrl(Uri redirect, {Iterable<String> scopes,
-      String state}) {
+  Uri getAuthorizationUrl(Uri redirect,
+      {Iterable<String> scopes, String state}) {
     if (_state != _State.initial) {
       throw new StateError('The authorization URL has already been generated.');
     }
@@ -202,14 +202,12 @@ class AuthorizationCodeGrant {
   /// [FormatError] if the `state` parameter doesn't match the original value.
   ///
   /// Throws [AuthorizationException] if the authorization fails.
-  Future<Client> handleAuthorizationResponse(Map<String, String> parameters)
-      async {
+  Future<Client> handleAuthorizationResponse(
+      Map<String, String> parameters) async {
     if (_state == _State.initial) {
-      throw new StateError(
-          'The authorization URL has not yet been generated.');
+      throw new StateError('The authorization URL has not yet been generated.');
     } else if (_state == _State.finished) {
-      throw new StateError(
-          'The authorization code has already been received.');
+      throw new StateError('The authorization code has already been received.');
     }
     _state = _State.finished;
 
@@ -256,11 +254,9 @@ class AuthorizationCodeGrant {
   /// Throws [AuthorizationException] if the authorization fails.
   Future<Client> handleAuthorizationCode(String authorizationCode) async {
     if (_state == _State.initial) {
-      throw new StateError(
-          'The authorization URL has not yet been generated.');
+      throw new StateError('The authorization URL has not yet been generated.');
     } else if (_state == _State.finished) {
-      throw new StateError(
-          'The authorization code has already been received.');
+      throw new StateError('The authorization code has already been received.');
     }
     _state = _State.finished;
 
@@ -293,9 +289,9 @@ class AuthorizationCodeGrant {
         headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, _scopes, _delimiter, getParameters: _getParameters);
-    return new Client(
-        credentials,
+        response, tokenEndpoint, startTime, _scopes, _delimiter,
+        getParameters: _getParameters);
+    return new Client(credentials,
         identifier: this.identifier,
         secret: this.secret,
         basicAuth: _basicAuth,
