@@ -41,28 +41,28 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
         new MediaType.parse(contentTypeString), response.body);
 
     for (var requiredParameter in ['access_token', 'token_type']) {
-      validate(parameters.containsKey(requiredParameter),
-          'did not contain required parameter "$requiredParameter"');
-      validate(
-          parameters[requiredParameter] is String,
-          'required parameter "$requiredParameter" was not a string, was '
+      if (!parameters.containsKey(requiredParameter))
+          throw new FormatException('did not contain required parameter "$requiredParameter"');
+      if(
+          parameters[requiredParameter] is! String)
+          throw new FormatException('required parameter "$requiredParameter" was not a string, was '
               '"${parameters[requiredParameter]}"');
     }
 
     // TODO(nweiz): support the "mac" token type
     // (http://tools.ietf.org/html/draft-ietf-oauth-v2-http-mac-01)
-    validate(parameters['token_type'].toLowerCase() == 'bearer',
-        '"$tokenEndpoint": unknown token type "${parameters['token_type']}"');
+    if(parameters['token_type'].toLowerCase() != 'bearer')
+        throw new FormatException('"$tokenEndpoint": unknown token type "${parameters['token_type']}"');
 
     var expiresIn = parameters['expires_in'];
-    validate(expiresIn == null || expiresIn is int,
-        'parameter "expires_in" was not an int, was "$expiresIn"');
+    if(expiresIn != null && expiresIn is! int)
+        throw new FormatException('parameter "expires_in" was not an int, was "$expiresIn"');
 
     for (var name in ['refresh_token', 'scope']) {
       var value = parameters[name];
 
-      validate(value == null || value is String,
-          'parameter "$name" was not a string, was "$value"');
+      if(value != null && value is! String)
+          throw new FormatException('parameter "$name" was not a string, was "$value"');
     }
 
     var scope = parameters['scope'] as String;
@@ -109,19 +109,19 @@ void _handleErrorResponse(
   Map<String, String> parameters =
       getParameters(contentType, response.body);
 
-  validate(parameters.containsKey('error'),
-      'did not contain required parameter "error"');
+  if(!parameters.containsKey('error'))
+      throw new FormatException('did not contain required parameter "error"');
 
-  validate(
-      parameters['error'] is String,
-      'required parameter "error" was not a string, was '
+ if(
+      parameters['error'] is! String)
+      throw new FormatException('required parameter "error" was not a string, was '
       '"${parameters["error"]}"');
 
   for (var name in ['error_description', 'error_uri']) {
     var value = parameters[name];
 
-    validate(value == null || value is String,
-        'parameter "$name" was not a string, was "$value"');
+    if(value != null && value is! String)
+        throw new FormatException('parameter "$name" was not a string, was "$value"');
   }
 
   var description = parameters['error_description'];
