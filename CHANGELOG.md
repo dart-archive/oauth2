@@ -1,3 +1,8 @@
+# 1.1.1
+
+* `resourceOwnerPasswordGrant()` now properly uses its HTTP client for requests
+  made by the OAuth2 client it returns.
+
 # 1.1.0
 
 * Add a `delimiter` parameter to `new AuthorizationCodeGrant()`, `new
