@@ -110,7 +110,7 @@ class Credentials {
             // sdk#24202.
             scopes == null ? <String>[] : scopes.toList()),
         _delimiter = delimiter ?? ' ',
-  _getParameters = getParameters ?? parseJsonParameters;
+        _getParameters = getParameters ?? parseJsonParameters;
 
   /// Loads a set of credentials from a JSON-serialized form.
   ///
