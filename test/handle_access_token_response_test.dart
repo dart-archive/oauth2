@@ -140,8 +140,8 @@ void main() {
           equals(tokenEndpoint.toString()));
     });
 
-    test('with no content-type causes an ArgumentError', () {
-      expect(() => handleSuccess(contentType: null), throwsArgumentError);
+    test('with no content-type causes a FormatException', () {
+      expect(() => handleSuccess(contentType: null), throwsFormatException);
     });
 
     test('with a non-JSON content-type causes a FormatException', () {

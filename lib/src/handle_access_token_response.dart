@@ -37,6 +37,9 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
 
     var contentTypeString = response.headers['content-type'];
 
+    if (contentTypeString == null)
+      throw new FormatException('Missing Content-Type string.');
+
     Map<String, dynamic> parameters =
         getParameters(new MediaType.parse(contentTypeString), response.body);
 
