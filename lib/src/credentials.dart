@@ -7,8 +7,10 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'handle_access_token_response.dart';
+import 'parameters.dart';
 import 'utils.dart';
 
 /// Credentials that prove that a client is allowed to access a resource on the
@@ -57,6 +59,9 @@ class Credentials {
   /// expiration date.
   final DateTime expiration;
 
+  /// The function used to parse parameters from a host's response.
+  final GetParameters _getParameters;
+
   /// Whether or not these credentials have expired.
   ///
   /// Note that it's possible the credentials will expire shortly after this is
@@ -78,17 +83,29 @@ class Credentials {
   /// The scope strings will be separated by the provided [delimiter]. This
   /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
   /// use non-standard delimiters.
+  ///
+  /// By default, this follows the OAuth2 spec and requires the server's
+  /// responses to be in JSON format. However, some servers return non-standard
+  /// response formats, which can be parsed using the [getParameters] function.
+  ///
+  /// This function is passed the `Content-Type` header of the response as well
+  /// as its body as a UTF-8-decoded string. It should return a map in the same
+  /// format as the [standard JSON response][].
+  ///
+  /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
   Credentials(this.accessToken,
       {this.refreshToken,
       this.tokenEndpoint,
       Iterable<String> scopes,
       this.expiration,
-      String delimiter})
+      String delimiter,
+      Map<String, dynamic> getParameters(MediaType mediaType, String body)})
       : scopes = new UnmodifiableListView(
             // Explicitly type-annotate the list literal to work around
             // sdk#24202.
             scopes == null ? <String>[] : scopes.toList()),
-        _delimiter = delimiter ?? ' ';
+        _delimiter = delimiter ?? ' ',
+        _getParameters = getParameters ?? parseJsonParameters;
 
   /// Loads a set of credentials from a JSON-serialized form.
   ///
@@ -208,7 +225,8 @@ class Credentials {
     var response =
         await httpClient.post(tokenEndpoint, headers: headers, body: body);
     var credentials = await handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, scopes, _delimiter);
+        response, tokenEndpoint, startTime, scopes, _delimiter,
+        getParameters: _getParameters);
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.

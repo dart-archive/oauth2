@@ -5,9 +5,12 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:test/test.dart';
+
 import 'package:oauth2/oauth2.dart' as oauth2;
 import 'package:oauth2/src/handle_access_token_response.dart';
-import 'package:test/test.dart';
+import 'package:oauth2/src/parameters.dart';
 
 import 'utils.dart';
 
@@ -15,8 +18,11 @@ final Uri tokenEndpoint = Uri.parse("https://example.com/token");
 
 final DateTime startTime = new DateTime.now();
 
-oauth2.Credentials handle(http.Response response) => handleAccessTokenResponse(
-    response, tokenEndpoint, startTime, ["scope"], ' ');
+oauth2.Credentials handle(http.Response response,
+        {GetParameters getParameters}) =>
+    handleAccessTokenResponse(
+        response, tokenEndpoint, startTime, ["scope"], ' ',
+        getParameters: getParameters);
 
 void main() {
   group('an error response', () {
@@ -46,6 +52,12 @@ void main() {
 
     test('with a non-JSON content-type causes a FormatException', () {
       expect(() => handleError(headers: {'content-type': 'text/plain'}),
+          throwsFormatException);
+    });
+
+    test('with a non-JSON, non-plain content-type causes a FormatException',
+        () {
+      expect(() => handleError(headers: {'content-type': 'image/png'}),
           throwsFormatException);
     });
 
@@ -149,6 +161,37 @@ void main() {
     test('with a JavScript content-type returns the correct credentials', () {
       var credentials = handleSuccess(contentType: 'text/javascript');
       expect(credentials.accessToken, equals('access token'));
+    });
+
+    test('with custom getParameters() returns the correct credentials', () {
+      var body = '_' +
+          JSON.encode({'token_type': 'bearer', 'access_token': 'access token'});
+      var credentials = handle(
+          new http.Response(body, 200, headers: {'content-type': 'text/plain'}),
+          getParameters: (contentType, body) => JSON.decode(body.substring(1)));
+      expect(credentials.accessToken, equals('access token'));
+      expect(credentials.tokenEndpoint.toString(),
+          equals(tokenEndpoint.toString()));
+    });
+
+    test('throws a FormatException if custom getParameters rejects response',
+        () {
+      var response = new http.Response(
+          JSON.encode({
+            'access_token': 'access token',
+            'token_type': 'bearer',
+            'expires_in': 24,
+            'refresh_token': 'refresh token',
+            'scope': 'scope',
+          }),
+          200,
+          headers: {'content-type': 'foo/bar'});
+
+      expect(
+          () => handle(response,
+              getParameters: (contentType, body) => throw new FormatException(
+                  'unsupported content-type: $contentType')),
+          throwsFormatException);
     });
 
     test('with a null access token throws a FormatException', () {

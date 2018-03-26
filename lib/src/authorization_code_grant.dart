@@ -5,10 +5,12 @@
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'client.dart';
 import 'authorization_exception.dart';
 import 'handle_access_token_response.dart';
+import 'parameters.dart';
 import 'utils.dart';
 
 /// A class for obtaining credentials via an [authorization code grant][].
@@ -26,6 +28,9 @@ import 'utils.dart';
 ///
 /// [authorization code grant]: http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-4.1
 class AuthorizationCodeGrant {
+  /// The function used to parse parameters from a host's response.
+  final GetParameters _getParameters;
+
   /// The client identifier for this client.
   ///
   /// The authorization server will issue each client a separate client
@@ -105,15 +110,27 @@ class AuthorizationCodeGrant {
   /// The scope strings will be separated by the provided [delimiter]. This
   /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
   /// use non-standard delimiters.
+  ///
+  /// By default, this follows the OAuth2 spec and requires the server's
+  /// responses to be in JSON format. However, some servers return non-standard
+  /// response formats, which can be parsed using the [getParameters] function.
+  ///
+  /// This function is passed the `Content-Type` header of the response as well
+  /// as its body as a UTF-8-decoded string. It should return a map in the same
+  /// format as the [standard JSON response][].
+  ///
+  /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
   AuthorizationCodeGrant(
       this.identifier, this.authorizationEndpoint, this.tokenEndpoint,
       {this.secret,
       String delimiter,
       bool basicAuth: true,
-      http.Client httpClient})
+      http.Client httpClient,
+      Map<String, dynamic> getParameters(MediaType contentType, String body)})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
-        _delimiter = delimiter ?? ' ';
+        _delimiter = delimiter ?? ' ',
+        _getParameters = getParameters ?? parseJsonParameters;
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
@@ -266,7 +283,8 @@ class AuthorizationCodeGrant {
         headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, _scopes, _delimiter);
+        response, tokenEndpoint, startTime, _scopes, _delimiter,
+        getParameters: _getParameters);
     return new Client(credentials,
         identifier: this.identifier,
         secret: this.secret,

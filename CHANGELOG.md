@@ -1,3 +1,10 @@
+# 1.2.0
+
+* Add a `getParameter()` parameter to `new AuthorizationCodeGrant()`, `new
+  Credentials()`, and `resourceOwnerPasswordGrant()`. This controls how the
+  authorization server's response is parsed for servers that don't provide the
+  standard JSON response.
+
 # 1.1.1
 
 * `resourceOwnerPasswordGrant()` now properly uses its HTTP client for requests

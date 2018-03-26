@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'client.dart';
 import 'handle_access_token_response.dart';
@@ -32,6 +33,16 @@ import 'utils.dart';
 /// The scope strings will be separated by the provided [delimiter]. This
 /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
 /// use non-standard delimiters.
+///
+/// By default, this follows the OAuth2 spec and requires the server's responses
+/// to be in JSON format. However, some servers return non-standard response
+/// formats, which can be parsed using the [getParameters] function.
+///
+/// This function is passed the `Content-Type` header of the response as well as
+/// its body as a UTF-8-decoded string. It should return a map in the same
+/// format as the [standard JSON response][].
+///
+/// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
 Future<Client> resourceOwnerPasswordGrant(
     Uri authorizationEndpoint, String username, String password,
     {String identifier,
@@ -39,7 +50,9 @@ Future<Client> resourceOwnerPasswordGrant(
     Iterable<String> scopes,
     bool basicAuth: true,
     http.Client httpClient,
-    String delimiter}) async {
+    String delimiter,
+    Map<String, dynamic> getParameters(
+        MediaType contentType, String body)}) async {
   delimiter ??= ' ';
   var startTime = new DateTime.now();
 
@@ -67,7 +80,8 @@ Future<Client> resourceOwnerPasswordGrant(
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, scopes, delimiter);
+      response, authorizationEndpoint, startTime, scopes, delimiter,
+      getParameters: getParameters);
   return new Client(credentials,
       identifier: identifier, secret: secret, httpClient: httpClient);
 }
