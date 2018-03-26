@@ -6,9 +6,11 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:test/test.dart';
+
 import 'package:oauth2/oauth2.dart' as oauth2;
 import 'package:oauth2/src/handle_access_token_response.dart';
-import 'package:test/test.dart';
+import 'package:oauth2/src/parameters.dart';
 
 import 'utils.dart';
 
@@ -17,8 +19,7 @@ final Uri tokenEndpoint = Uri.parse("https://example.com/token");
 final DateTime startTime = new DateTime.now();
 
 oauth2.Credentials handle(http.Response response,
-        {Map<String, dynamic> getParameters(
-            MediaType contentType, String body)}) =>
+        {GetParameters getParameters}) =>
     handleAccessTokenResponse(
         response, tokenEndpoint, startTime, ["scope"], ' ',
         getParameters: getParameters);
@@ -161,14 +162,13 @@ void main() {
       var credentials = handleSuccess(contentType: 'text/javascript');
       expect(credentials.accessToken, equals('access token'));
     });
+
     test('with custom getParameters() returns the correct credentials', () {
       var body = '_' +
           JSON.encode({'token_type': 'bearer', 'access_token': 'access token'});
       var credentials = handle(
           new http.Response(body, 200, headers: {'content-type': 'text/plain'}),
-          getParameters: (MediaType contentType, String body) {
-        return JSON.decode(body.substring(1));
-      });
+          getParameters: (contentType, body) => JSON.decode(body.substring(1)));
       expect(credentials.accessToken, equals('access token'));
       expect(credentials.tokenEndpoint.toString(),
           equals(tokenEndpoint.toString()));
@@ -187,11 +187,10 @@ void main() {
           200,
           headers: {'content-type': 'foo/bar'});
 
-      Map<String, String> getParameters(MediaType contentType, String body) {
-        throw new FormatException('unsupported content-type: $contentType');
-      }
-
-      expect(() => handle(response, getParameters: getParameters),
+      expect(
+          () => handle(response,
+              getParameters: (contentType, body) => throw new FormatException(
+                  'unsupported content-type: $contentType')),
           throwsFormatException);
     });
 

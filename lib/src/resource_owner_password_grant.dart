@@ -34,19 +34,15 @@ import 'utils.dart';
 /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
 /// use non-standard delimiters.
 ///
-/// [getParameters] may be a function used to parse parameters out of responses from hosts
-/// that do not correctly implement the OAuth 2.0 specification.
+/// By default, this follows the OAuth2 spec and requires the server's responses
+/// to be in JSON format. However, some servers return non-standard response
+/// formats, which can be parsed using the [getParameters] function.
 ///
-/// OAuth 2.0 expects the [tokenEndpoint]'s response to have a `Content-Type` of either
-/// `application/json` or `application/x-www-form-urlencoded`.
+/// This function is passed the `Content-Type` header of the response as well as
+/// its body as a UTF-8-decoded string. It should return a map in the same
+/// format as the [standard JSON response][].
 ///
-/// The value you return should adhere to the specification's expectation of a valid response.
-///
-/// Read the OAuth 2.0 specification for a more in-depth explanation of each response structure:
-/// https://tools.ietf.org/html/rfc6749
-///
-/// Example: In case of an error, the return value should contain a string `error`, and optionally
-/// strings `error_description` and/or `error_uri`.
+/// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
 Future<Client> resourceOwnerPasswordGrant(
     Uri authorizationEndpoint, String username, String password,
     {String identifier,
