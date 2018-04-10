@@ -157,7 +157,7 @@ void main() {
             containsPair("Authorization", "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
 
         return new Future.value(new http.Response(
-            JSON.encode({
+            jsonEncode({
               'access_token': 'access token',
               'token_type': 'bearer',
             }),
@@ -199,7 +199,7 @@ void main() {
             containsPair("Authorization", "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
 
         return new Future.value(new http.Response(
-            JSON.encode({
+            jsonEncode({
               'access_token': 'access token',
               'token_type': 'bearer',
             }),
@@ -244,7 +244,7 @@ void main() {
             }));
 
         return new Future.value(new http.Response(
-            JSON.encode({
+            jsonEncode({
               'access_token': 'access token',
               'token_type': 'bearer',
             }),
@@ -274,7 +274,7 @@ void main() {
             }));
 
         return new Future.value(new http.Response(
-            JSON.encode({
+            jsonEncode({
               'access_token': 'access token',
               'token_type': 'bearer',
             }),

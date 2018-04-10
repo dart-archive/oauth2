@@ -46,7 +46,7 @@ void main() {
         expect(request.method, equals('POST'));
         expect(request.url.toString(), equals(tokenEndpoint.toString()));
         return new Future.value(new http.Response(
-            JSON.encode(
+            jsonEncode(
                 {'access_token': 'new access token', 'token_type': 'bearer'}),
             200,
             headers: {'content-type': 'application/json'}));
@@ -93,7 +93,7 @@ void main() {
         expect(request.method, equals('POST'));
         expect(request.url.toString(), equals(tokenEndpoint.toString()));
         return new Future.value(new http.Response(
-            JSON.encode(
+            jsonEncode(
                 {'access_token': 'new access token', 'token_type': 'bearer'}),
             200,
             headers: {'content-type': 'application/json'}));

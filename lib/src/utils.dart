@@ -11,5 +11,5 @@ Uri addQueryParameters(Uri url, Map<String, String> parameters) => url.replace(
 
 String basicAuthHeader(String identifier, String secret) {
   var userPass = Uri.encodeFull(identifier) + ":" + Uri.encodeFull(secret);
-  return "Basic " + BASE64.encode(ASCII.encode(userPass));
+  return "Basic " + base64Encode(ascii.encode(userPass));
 }
