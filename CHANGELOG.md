@@ -1,4 +1,4 @@
-## 1.2.1
+# 1.2.1
 
 - Updated SDK version to 2.0.0-dev.17.0
 
