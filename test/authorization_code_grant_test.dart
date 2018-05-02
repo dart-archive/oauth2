@@ -14,8 +14,8 @@ import 'utils.dart';
 final redirectUrl = Uri.parse('http://example.com/redirect');
 
 void main() {
-  var client;
-  var grant;
+  ExpectClient client;
+  oauth2.AuthorizationCodeGrant grant;
   setUp(() {
     client = new ExpectClient();
     grant = new oauth2.AuthorizationCodeGrant(
