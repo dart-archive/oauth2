@@ -119,7 +119,7 @@ class Credentials {
 
     var parsed;
     try {
-      parsed = JSON.decode(json);
+      parsed = jsonDecode(json);
     } on FormatException {
       validate(false, 'invalid JSON');
     }
@@ -164,7 +164,7 @@ class Credentials {
   ///
   /// Nothing is guaranteed about the output except that it's valid JSON and
   /// compatible with [Credentials.toJson].
-  String toJson() => JSON.encode({
+  String toJson() => jsonEncode({
         'accessToken': accessToken,
         'refreshToken': refreshToken,
         'tokenEndpoint':

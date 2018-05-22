@@ -12,7 +12,7 @@ import 'package:test/test.dart';
 
 import 'utils.dart';
 
-final success = JSON.encode({
+final success = jsonEncode({
   "access_token": "2YotnFZFEjr1zCsicMWpAA",
   "token_type": "bearer",
   "expires_in": 3600,

@@ -24,7 +24,7 @@ Map<String, dynamic> parseJsonParameters(MediaType contentType, String body) {
         'Content-Type was "$contentType", expected "application/json"');
   }
 
-  var untypedParameters = JSON.decode(body);
+  var untypedParameters = jsonDecode(body);
   if (untypedParameters is! Map) {
     throw new FormatException(
         'Parameters must be a map, was "$untypedParameters"');

@@ -1,3 +1,7 @@
+# 1.2.1
+
+* Updated SDK version to 2.0.0-dev.17.0
+
 # 1.2.0
 
 * Add a `getParameter()` parameter to `new AuthorizationCodeGrant()`, `new

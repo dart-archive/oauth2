@@ -81,7 +81,7 @@ void main() {
     test('with a non-string error_description causes a FormatException', () {
       expect(
           () => handleError(
-              body: JSON.encode(
+              body: jsonEncode(
                   {"error": "invalid_request", "error_description": 12})),
           throwsFormatException);
     });
@@ -89,14 +89,14 @@ void main() {
     test('with a non-string error_uri causes a FormatException', () {
       expect(
           () => handleError(
-              body: JSON.encode({"error": "invalid_request", "error_uri": 12})),
+              body: jsonEncode({"error": "invalid_request", "error_uri": 12})),
           throwsFormatException);
     });
 
     test('with a string error_description causes a AuthorizationException', () {
       expect(
           () => handleError(
-                  body: JSON.encode({
+                  body: jsonEncode({
                 "error": "invalid_request",
                 "error_description": "description"
               })),
@@ -106,7 +106,7 @@ void main() {
     test('with a string error_uri causes a AuthorizationException', () {
       expect(
           () => handleError(
-                  body: JSON.encode({
+                  body: jsonEncode({
                 "error": "invalid_request",
                 "error_uri": "http://example.com/error"
               })),
@@ -123,7 +123,7 @@ void main() {
         refreshToken,
         scope}) {
       return handle(new http.Response(
-          JSON.encode({
+          jsonEncode({
             'access_token': accessToken,
             'token_type': tokenType,
             'expires_in': expiresIn,
@@ -165,10 +165,10 @@ void main() {
 
     test('with custom getParameters() returns the correct credentials', () {
       var body = '_' +
-          JSON.encode({'token_type': 'bearer', 'access_token': 'access token'});
+          jsonEncode({'token_type': 'bearer', 'access_token': 'access token'});
       var credentials = handle(
           new http.Response(body, 200, headers: {'content-type': 'text/plain'}),
-          getParameters: (contentType, body) => JSON.decode(body.substring(1)));
+          getParameters: (contentType, body) => jsonDecode(body.substring(1)));
       expect(credentials.accessToken, equals('access token'));
       expect(credentials.tokenEndpoint.toString(),
           equals(tokenEndpoint.toString()));
@@ -177,7 +177,7 @@ void main() {
     test('throws a FormatException if custom getParameters rejects response',
         () {
       var response = new http.Response(
-          JSON.encode({
+          jsonEncode({
             'access_token': 'access token',
             'token_type': 'bearer',
             'expires_in': 24,
@@ -246,7 +246,7 @@ void main() {
 
     test('with a custom scope delimiter sets the scopes', () {
       var response = new http.Response(
-          JSON.encode({
+          jsonEncode({
             'access_token': 'access token',
             'token_type': 'bearer',
             'expires_in': null,

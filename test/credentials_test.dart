@@ -81,7 +81,7 @@ void main() {
               "Basic aWQlQzMlQUJudCVDNCVBQmZpZXI6cyVDMyVBQmNyZXQ="));
 
       return new Future.value(new http.Response(
-          JSON.encode({
+          jsonEncode({
             'access_token': 'new access token',
             'token_type': 'bearer',
             'refresh_token': 'new refresh token'
@@ -105,7 +105,7 @@ void main() {
     httpClient.expectRequest((http.Request request) {
       expect(request.bodyFields['scope'], equals('scope1,scope2'));
       return new Future.value(new http.Response(
-          JSON.encode({
+          jsonEncode({
             'access_token': 'new access token',
             'token_type': 'bearer',
             'refresh_token': 'new refresh token'
@@ -137,7 +137,7 @@ void main() {
           }));
 
       return new Future.value(new http.Response(
-          JSON.encode({
+          jsonEncode({
             'access_token': 'new access token',
             'token_type': 'bearer',
             'refresh_token': 'new refresh token'
@@ -171,7 +171,7 @@ void main() {
           }));
 
       return new Future.value(new http.Response(
-          JSON.encode({
+          jsonEncode({
             'access_token': 'new access token',
             'token_type': 'bearer',
             'refresh_token': 'new refresh token'
@@ -205,7 +205,7 @@ void main() {
               "Basic aWQlQzMlQUJudCVDNCVBQmZpZXI6cyVDMyVBQmNyZXQ="));
 
       return new Future.value(new http.Response(
-          JSON.encode(
+          jsonEncode(
               {'access_token': 'new access token', 'token_type': 'bearer'}),
           200,
           headers: {'content-type': 'application/json'}));
@@ -238,7 +238,7 @@ void main() {
           }));
 
       return new Future.value(new http.Response(
-          JSON.encode({
+          jsonEncode({
             'access_token': 'new access token',
             'token_type': 'bearer',
             'refresh_token': 'new refresh token'
@@ -258,7 +258,7 @@ void main() {
 
   group("fromJson", () {
     oauth2.Credentials fromMap(Map map) =>
-        new oauth2.Credentials.fromJson(JSON.encode(map));
+        new oauth2.Credentials.fromJson(jsonEncode(map));
 
     test("should load the same credentials from toJson", () {
       // Round the expiration down to milliseconds since epoch, since that's
