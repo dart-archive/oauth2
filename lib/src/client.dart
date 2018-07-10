@@ -113,8 +113,8 @@ class Client extends http.BaseClient {
 
     var challenges;
     try {
-      challenges = AuthenticationChallenge
-          .parseHeader(response.headers['www-authenticate']);
+      challenges = AuthenticationChallenge.parseHeader(
+          response.headers['www-authenticate']);
     } on FormatException {
       return response;
     }
