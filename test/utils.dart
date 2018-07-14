@@ -48,8 +48,9 @@ const isAuthorizationException = const _AuthorizationException();
 /// A matcher for functions that throw AuthorizationException.
 final Matcher throwsAuthorizationException = throwsA(isAuthorizationException);
 
-class _AuthorizationException extends TypeMatcher {
-  const _AuthorizationException() : super("AuthorizationException");
+class _AuthorizationException
+    extends TypeMatcher<oauth2.AuthorizationException> {
+  const _AuthorizationException() : super();
   bool matches(item, Map matchState) => item is oauth2.AuthorizationException;
 }
 
@@ -59,7 +60,7 @@ const isExpirationException = const _ExpirationException();
 /// A matcher for functions that throw ExpirationException.
 final Matcher throwsExpirationException = throwsA(isExpirationException);
 
-class _ExpirationException extends TypeMatcher {
-  const _ExpirationException() : super("ExpirationException");
+class _ExpirationException extends TypeMatcher<oauth2.ExpirationException> {
+  const _ExpirationException() : super();
   bool matches(item, Map matchState) => item is oauth2.ExpirationException;
 }

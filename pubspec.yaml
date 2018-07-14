@@ -1,16 +1,20 @@
 name: oauth2
-version: 1.2.1
-author: Dart Team <misc@dartlang.org>
-homepage: https://github.com/dart-lang/oauth2
+version: 1.2.2
+
 description: >
   A client library for authenticating with a remote service via OAuth2 on
   behalf of a user, and making authorized HTTP requests with the user's
   OAuth2 credentials.
+author: Dart Team <misc@dartlang.org>
+homepage: https://github.com/dart-lang/oauth2
+
 environment:
-  sdk: '>=2.0.0-dev.17.0 <2.0.0'
+  sdk: '>=2.0.0-dev.17.0 <3.0.0'
+
 dependencies:
-  collection: '^1.5.0'
-  http: '>=0.11.0 <0.12.0'
+  collection: ^1.5.0
+  http: '>=0.11.0 <0.13.0'
   http_parser: '>=1.0.0 <4.0.0'
+
 dev_dependencies:
-  test: '>=0.12.0 <0.13.0'
+  test: '>=0.12.0 <2.0.0'

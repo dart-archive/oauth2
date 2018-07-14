@@ -5,7 +5,6 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import 'package:test/test.dart';
 
 import 'package:oauth2/oauth2.dart' as oauth2;
