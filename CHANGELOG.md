@@ -1,3 +1,7 @@
+# 1.2.3
+
+* Support for `http` 0.12.0
+
 # 1.2.2
 
 * Allow the stable 2.0 SDK.
