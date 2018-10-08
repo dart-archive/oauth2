@@ -4,6 +4,7 @@
 
 export 'src/authorization_code_grant.dart';
 export 'src/resource_owner_password_grant.dart';
+export 'src/social_grant.dart';
 export 'src/client.dart';
 export 'src/credentials.dart';
 export 'src/authorization_exception.dart';
