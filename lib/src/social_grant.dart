@@ -47,6 +47,7 @@ Future<Client> resourceOwnerSocialGrant(
     Uri authorizationEndpoint, String token,
     {String identifier,
     String secret,
+    String provider,
     Iterable<String> scopes,
     bool basicAuth: true,
     http.Client httpClient,
@@ -58,7 +59,8 @@ Future<Client> resourceOwnerSocialGrant(
 
   var body = {
     "grant_type": "social",
-    "access_token": token
+    "access_token": token,
+    "provider": provider
   };
 
   var headers = <String, String>{};
