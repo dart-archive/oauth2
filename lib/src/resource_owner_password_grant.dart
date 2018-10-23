@@ -49,7 +49,7 @@ Future<Client> resourceOwnerPasswordGrant(
     String secret,
     Iterable<String> scopes,
     bool basicAuth: true,
-    Map<String, String> headers = {},
+    Map<String, String> headers = const {},
     http.Client httpClient,
     String delimiter,
     Map<String, dynamic> getParameters(
