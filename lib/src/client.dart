@@ -154,6 +154,7 @@ class Client extends http.BaseClient {
         identifier: identifier,
         secret: secret,
         newScopes: newScopes,
+        headers: headers,
         basicAuth: _basicAuth,
         httpClient: _httpClient);
 
