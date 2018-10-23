@@ -43,6 +43,9 @@ class Client extends http.BaseClient {
   ///
   /// This is usually global to the program using this library.
   final String identifier;
+  
+   /// The custom headers for this request
+  final Map<String, String> headers;
 
   /// The client secret for this client.
   ///
