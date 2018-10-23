@@ -45,7 +45,7 @@ class Client extends http.BaseClient {
   final String identifier;
   
    /// The custom headers for this request
-  final Map<String, String> headers;
+  final Map<String, String> headers = const {};
 
   /// The client secret for this client.
   ///
