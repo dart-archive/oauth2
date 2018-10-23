@@ -45,7 +45,7 @@ class Client extends http.BaseClient {
   final String identifier;
   
    /// The custom headers for this request
-  final Map<String, String> headers = const {};
+  final Map<String, String> headers;
 
   /// The client secret for this client.
   ///
@@ -90,7 +90,7 @@ class Client extends http.BaseClient {
       {this.identifier,
       this.secret,
       bool basicAuth: true,
-      Map<String, String> headers = const {},
+      this.headers,
       http.Client httpClient})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient {
