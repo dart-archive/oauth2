@@ -190,6 +190,7 @@ class Credentials {
       {String identifier,
       String secret,
       Iterable<String> newScopes,
+      Map<String, String> = const {},
       bool basicAuth: true,
       http.Client httpClient}) async {
     var scopes = this.scopes;
@@ -209,8 +210,6 @@ class Credentials {
       throw new StateError("Can't refresh credentials without a token "
           "endpoint.");
     }
-
-    var headers = <String, String>{};
 
     var body = {"grant_type": "refresh_token", "refresh_token": refreshToken};
     if (!scopes.isEmpty) body["scope"] = scopes.join(_delimiter);
