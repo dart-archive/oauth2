@@ -50,6 +50,7 @@ Future<Client> resourceOwnerSocialGrant(
     String provider,
     Iterable<String> scopes,
     bool basicAuth: true,
+    Map<String, String> headers = {},
     http.Client httpClient,
     String delimiter,
     Map<String, dynamic> getParameters(
@@ -62,8 +63,6 @@ Future<Client> resourceOwnerSocialGrant(
     "access_token": token,
     "provider": provider
   };
-
-  var headers = <String, String>{};
 
   if (identifier != null) {
     if (basicAuth) {
