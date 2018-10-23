@@ -190,7 +190,7 @@ class Credentials {
       {String identifier,
       String secret,
       Iterable<String> newScopes,
-      Map<String, String> = const {},
+      Map<String, String> headers = const {},
       bool basicAuth: true,
       http.Client httpClient}) async {
     var scopes = this.scopes;
