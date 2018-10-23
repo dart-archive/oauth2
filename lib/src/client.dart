@@ -87,6 +87,7 @@ class Client extends http.BaseClient {
       {this.identifier,
       this.secret,
       bool basicAuth: true,
+      Map<String, String> headers = {},
       http.Client httpClient})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient {
