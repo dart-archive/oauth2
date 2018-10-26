@@ -190,7 +190,7 @@ class Credentials {
       {String identifier,
       String secret,
       Iterable<String> newScopes,
-      bool basicAuth: true,
+      bool basicAuth = true,
       http.Client httpClient}) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
@@ -213,7 +213,7 @@ class Credentials {
     var headers = <String, String>{};
 
     var body = {"grant_type": "refresh_token", "refresh_token": refreshToken};
-    if (!scopes.isEmpty) body["scope"] = scopes.join(_delimiter);
+    if (scopes.isNotEmpty) body["scope"] = scopes.join(_delimiter);
 
     if (basicAuth && secret != null) {
       headers["Authorization"] = basicAuthHeader(identifier, secret);

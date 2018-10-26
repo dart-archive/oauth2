@@ -48,7 +48,7 @@ Future<Client> resourceOwnerPasswordGrant(
     {String identifier,
     String secret,
     Iterable<String> scopes,
-    bool basicAuth: true,
+    bool basicAuth = true,
     http.Client httpClient,
     String delimiter,
     Map<String, dynamic> getParameters(
@@ -73,7 +73,8 @@ Future<Client> resourceOwnerPasswordGrant(
     }
   }
 
-  if (scopes != null && !scopes.isEmpty) body['scope'] = scopes.join(delimiter);
+  if (scopes != null && scopes.isNotEmpty)
+    body['scope'] = scopes.join(delimiter);
 
   if (httpClient == null) httpClient = new http.Client();
   var response = await httpClient.post(authorizationEndpoint,

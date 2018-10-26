@@ -26,9 +26,9 @@ oauth2.Credentials handle(http.Response response,
 void main() {
   group('an error response', () {
     oauth2.Credentials handleError(
-            {String body: '{"error": "invalid_request"}',
-            int statusCode: 400,
-            Map<String, String> headers: const {
+            {String body = '{"error": "invalid_request"}',
+            int statusCode = 400,
+            Map<String, String> headers = const {
               "content-type": "application/json"
             }}) =>
         handle(new http.Response(body, statusCode, headers: headers));
@@ -115,9 +115,9 @@ void main() {
 
   group('a success response', () {
     oauth2.Credentials handleSuccess(
-        {String contentType: "application/json",
-        accessToken: 'access token',
-        tokenType: 'bearer',
+        {String contentType = "application/json",
+        accessToken = 'access token',
+        tokenType = 'bearer',
         expiresIn,
         refreshToken,
         scope}) {
