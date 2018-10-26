@@ -4,7 +4,6 @@
 
 import 'dart:convert';
 
-import 'package:collection/collection.dart';
 import 'package:http_parser/http_parser.dart';
 
 /// The type of a callback that parses parameters from an HTTP response.
@@ -25,10 +24,10 @@ Map<String, dynamic> parseJsonParameters(MediaType contentType, String body) {
   }
 
   var untypedParameters = jsonDecode(body);
-  if (untypedParameters is! Map) {
-    throw new FormatException(
-        'Parameters must be a map, was "$untypedParameters"');
+  if (untypedParameters is Map<String, dynamic>) {
+    return untypedParameters;
   }
 
-  return DelegatingMap.typed(untypedParameters);
+  throw new FormatException(
+      'Parameters must be a map, was "$untypedParameters"');
 }
