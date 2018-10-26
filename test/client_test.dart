@@ -28,7 +28,7 @@ void main() {
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
       expect(client.get(requestUri),
-          throwsA(new isInstanceOf<oauth2.ExpirationException>()));
+          throwsA(const TypeMatcher<oauth2.ExpirationException>()));
     });
 
     test(
@@ -130,7 +130,7 @@ void main() {
       });
 
       expect(client.read(requestUri),
-          throwsA(new isInstanceOf<oauth2.AuthorizationException>()));
+          throwsA(const TypeMatcher<oauth2.AuthorizationException>()));
     });
 
     test('passes through a 401 response without www-authenticate', () async {

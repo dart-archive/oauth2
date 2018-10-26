@@ -42,24 +42,10 @@ class ExpectClient extends MockClient {
   }
 }
 
-/// A matcher for AuthorizationExceptions.
-const isAuthorizationException = const _AuthorizationException();
-
 /// A matcher for functions that throw AuthorizationException.
-final Matcher throwsAuthorizationException = throwsA(isAuthorizationException);
-
-class _AuthorizationException extends TypeMatcher {
-  const _AuthorizationException() : super("AuthorizationException");
-  bool matches(item, Map matchState) => item is oauth2.AuthorizationException;
-}
-
-/// A matcher for ExpirationExceptions.
-const isExpirationException = const _ExpirationException();
+final Matcher throwsAuthorizationException =
+    throwsA(const TypeMatcher<oauth2.AuthorizationException>());
 
 /// A matcher for functions that throw ExpirationException.
-final Matcher throwsExpirationException = throwsA(isExpirationException);
-
-class _ExpirationException extends TypeMatcher {
-  const _ExpirationException() : super("ExpirationException");
-  bool matches(item, Map matchState) => item is oauth2.ExpirationException;
-}
+final Matcher throwsExpirationException =
+    throwsA(const TypeMatcher<oauth2.ExpirationException>());
