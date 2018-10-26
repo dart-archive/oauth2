@@ -106,7 +106,7 @@ void _handleErrorResponse(
   // off-spec.
   if (response.statusCode != 400 && response.statusCode != 401) {
     var reason = '';
-    if (response.reasonPhrase != null && !response.reasonPhrase.isEmpty) {
+    if (response.reasonPhrase != null && response.reasonPhrase.isNotEmpty) {
       ' ${response.reasonPhrase}';
     }
     throw new FormatException('OAuth request for "$tokenEndpoint" failed '

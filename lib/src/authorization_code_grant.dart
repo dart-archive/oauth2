@@ -124,7 +124,7 @@ class AuthorizationCodeGrant {
       this.identifier, this.authorizationEndpoint, this.tokenEndpoint,
       {this.secret,
       String delimiter,
-      bool basicAuth: true,
+      bool basicAuth = true,
       http.Client httpClient,
       Map<String, dynamic> getParameters(MediaType contentType, String body)})
       : _basicAuth = basicAuth,
@@ -174,7 +174,7 @@ class AuthorizationCodeGrant {
     };
 
     if (state != null) parameters['state'] = state;
-    if (!scopes.isEmpty) parameters['scope'] = scopes.join(_delimiter);
+    if (scopes.isNotEmpty) parameters['scope'] = scopes.join(_delimiter);
 
     return addQueryParameters(this.authorizationEndpoint, parameters);
   }
