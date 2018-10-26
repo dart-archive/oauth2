@@ -1,3 +1,7 @@
+# 1.2.3
+
+* Support the latest `package:http` release.
+
 # 1.2.2
 
 * Allow the stable 2.0 SDK.
