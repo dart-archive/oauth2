@@ -60,7 +60,7 @@ final credentialsFile = new File("~/.myapp/credentials.json");
 
 /// Either load an OAuth2 client from saved credentials or authenticate a new
 /// one.
-Future<oauth2.Client> getClient() async {
+Future<oauth2.Client> loadClient() async {
   var exists = await credentialsFile.exists();
 
   // If the OAuth2 credentials have already been saved from a previous run, we
