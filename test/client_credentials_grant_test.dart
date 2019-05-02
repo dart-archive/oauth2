@@ -31,16 +31,14 @@ void main() {
         () async {
       expectClient.expectRequest((request) async {
         expect(auth, equals(request.headers['authorization']));
-        expect(request.bodyFields['grant_type'], equals('password'));
-        expect(request.bodyFields['username'], equals('username'));
-        expect(request.bodyFields['password'], equals('userpass'));
+        expect(request.bodyFields['grant_type'], equals('client_credentials'));
         return new http.Response(success, 200,
             headers: {'content-type': 'application/json'});
       });
 
       var client = await oauth2.clientCredentialsGrant(
-          authEndpoint, 'username', 'userpass',
-          identifier: 'client', secret: 'secret', httpClient: expectClient);
+          authEndpoint, 'client', 'secret',
+          httpClient: expectClient);
 
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
@@ -49,37 +47,31 @@ void main() {
     test('builds correct request when using query parameters for client',
         () async {
       expectClient.expectRequest((request) async {
-        expect(request.bodyFields['grant_type'], equals('password'));
+        expect(request.bodyFields['grant_type'], equals('client_credentials'));
         expect(request.bodyFields['client_id'], equals('client'));
         expect(request.bodyFields['client_secret'], equals('secret'));
-        expect(request.bodyFields['username'], equals('username'));
-        expect(request.bodyFields['password'], equals('userpass'));
         return new http.Response(success, 200,
             headers: {'content-type': 'application/json'});
       });
 
       var client = await oauth2.clientCredentialsGrant(
-          authEndpoint, 'username', 'userpass',
-          identifier: 'client',
-          secret: 'secret',
-          basicAuth: false,
-          httpClient: expectClient);
+          authEndpoint, 'client', 'secret',
+          basicAuth: false, httpClient: expectClient);
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
     });
 
     test('builds correct request using scope', () async {
       expectClient.expectRequest((request) async {
-        expect(request.bodyFields['grant_type'], equals('password'));
-        expect(request.bodyFields['username'], equals('username'));
-        expect(request.bodyFields['password'], equals('userpass'));
+        expect(auth, equals(request.headers['authorization']));
+        expect(request.bodyFields['grant_type'], equals('client_credentials'));
         expect(request.bodyFields['scope'], equals('one two'));
         return new http.Response(success, 200,
             headers: {'content-type': 'application/json'});
       });
 
       var client = await oauth2.clientCredentialsGrant(
-          authEndpoint, 'username', 'userpass',
+          authEndpoint, 'client', 'secret',
           scopes: ['one', 'two'], httpClient: expectClient);
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
@@ -87,15 +79,13 @@ void main() {
 
     test('builds correct request using scope with custom delimiter', () async {
       expectClient.expectRequest((request) async {
-        expect(request.bodyFields['grant_type'], equals('password'));
-        expect(request.bodyFields['username'], equals('username'));
-        expect(request.bodyFields['password'], equals('userpass'));
+        expect(request.bodyFields['grant_type'], equals('client_credentials'));
         expect(request.bodyFields['scope'], equals('one,two'));
         return new http.Response(success, 200,
             headers: {'content-type': 'application/json'});
       });
 
-      await oauth2.clientCredentialsGrant(authEndpoint, 'username', 'userpass',
+      await oauth2.clientCredentialsGrant(authEndpoint, 'client', 'secret',
           scopes: ['one', 'two'], httpClient: expectClient, delimiter: ',');
     });
 
@@ -103,22 +93,17 @@ void main() {
       var authEndpoint = Uri.parse('https://example.com?query=value');
 
       expectClient.expectRequest((request) async {
-        expect(request.bodyFields['grant_type'], equals('password'));
+        expect(request.bodyFields['grant_type'], equals('client_credentials'));
         expect(request.bodyFields['client_id'], equals('client'));
         expect(request.bodyFields['client_secret'], equals('secret'));
-        expect(request.bodyFields['username'], equals('username'));
-        expect(request.bodyFields['password'], equals('userpass'));
         expect(request.url.queryParameters['query'], equals('value'));
         return new http.Response(success, 200,
             headers: {'content-type': 'application/json'});
       });
 
       var client = await oauth2.clientCredentialsGrant(
-          authEndpoint, 'username', 'userpass',
-          identifier: 'client',
-          secret: 'secret',
-          basicAuth: false,
-          httpClient: expectClient);
+          authEndpoint, 'client', 'secret',
+          basicAuth: false, httpClient: expectClient);
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
     });
