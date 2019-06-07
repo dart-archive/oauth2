@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 @TestOn("vm")
-
 import 'dart:convert';
+import 'dart:mirrors';
 
 import 'package:http/http.dart' as http;
 import 'package:oauth2/oauth2.dart' as oauth2;
@@ -44,6 +44,29 @@ void main() {
 
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
+    });
+
+    test('passes the onCredentialsRefreshed callback to the client', () async {
+      expectClient.expectRequest((request) async {
+        return new http.Response(success, 200,
+            headers: {'content-type': 'application/json'});
+      });
+
+      var onCredentialsRefreshedCallback = (oauth2.Credentials credentials) {};
+
+      var client = await oauth2.resourceOwnerPasswordGrant(
+          authEndpoint, 'username', 'userpass',
+          identifier: 'client',
+          secret: 'secret',
+          httpClient: expectClient,
+          onCredentialsRefreshed: onCredentialsRefreshedCallback);
+
+      var reflection = reflect(client);
+      var sym = MirrorSystem.getSymbol(
+          '_onCredentialsRefreshed', reflection.type.owner);
+
+      expect(reflection.getField(sym).reflectee,
+          equals(onCredentialsRefreshedCallback));
     });
 
     test('builds correct request when using query parameters for client',

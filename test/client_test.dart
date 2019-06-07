@@ -64,6 +64,37 @@ void main() {
       await client.read(requestUri);
       expect(client.credentials.accessToken, equals('new access token'));
     });
+
+    test("that onCredentialsRefreshed is called", () async {
+      var callbackCalled = false;
+
+      var expiration = new DateTime.now().subtract(new Duration(hours: 1));
+      var credentials = new oauth2.Credentials('access token',
+          refreshToken: 'refresh token',
+          tokenEndpoint: tokenEndpoint,
+          expiration: expiration);
+      var client = new oauth2.Client(credentials,
+          identifier: 'identifier',
+          secret: 'secret',
+          httpClient: httpClient, onCredentialsRefreshed: (credentials) {
+        callbackCalled = true;
+      });
+
+      httpClient.expectRequest((request) {
+        return new Future.value(new http.Response(
+            jsonEncode(
+                {'access_token': 'new access token', 'token_type': 'bearer'}),
+            200,
+            headers: {'content-type': 'application/json'}));
+      });
+
+      httpClient.expectRequest((request) {
+        return new Future.value(new http.Response('good job', 200));
+      });
+
+      await client.read(requestUri);
+      expect(callbackCalled, equals(true));
+    });
   });
 
   group('with valid credentials', () {
