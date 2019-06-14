@@ -1,3 +1,7 @@
+# 1.2.4
+
+* OpenID's id_token treated.
+
 # 1.2.3
 
 * Support the latest `package:http` release.

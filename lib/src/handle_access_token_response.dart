@@ -72,7 +72,7 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
           'parameter "expires_in" was not an int, was "$expiresIn"');
     }
 
-    for (var name in ['refresh_token', 'scope']) {
+    for (var name in ['refresh_token', 'id_token', 'scope']) {
       var value = parameters[name];
       if (value != null && value is! String)
         throw new FormatException(
@@ -88,6 +88,7 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
 
     return new Credentials(parameters['access_token'],
         refreshToken: parameters['refresh_token'],
+        idToken: parameters['id_token'],
         tokenEndpoint: tokenEndpoint,
         scopes: scopes,
         expiration: expiration);

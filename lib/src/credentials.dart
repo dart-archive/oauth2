@@ -41,6 +41,14 @@ class Credentials {
   /// This may be `null`, indicating that the credentials can't be refreshed.
   final String refreshToken;
 
+  /// The token that is received from the authorization server to enable
+  /// End-Users to be Authenticated, contains Claims, represented as a
+  /// JSON Web Token (JWT).
+  ///
+  /// [spec]: https://openid.net/specs/openid-connect-core-1_0.html#IDToken
+  /// This may be `null`, indicating that the openid scope is not implemented.
+  final String idToken;
+
   /// The URL of the authorization server endpoint that's used to refresh the
   /// credentials.
   ///
@@ -95,6 +103,7 @@ class Credentials {
   /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
   Credentials(this.accessToken,
       {this.refreshToken,
+      this.idToken,
       this.tokenEndpoint,
       Iterable<String> scopes,
       this.expiration,
@@ -132,7 +141,7 @@ class Credentials {
         'required field "accessToken" was not a string, was '
         '${parsed["accessToken"]}');
 
-    for (var stringField in ['refreshToken', 'tokenEndpoint']) {
+    for (var stringField in ['refreshToken', 'idToken', 'tokenEndpoint']) {
       var value = parsed[stringField];
       validate(value == null || value is String,
           'field "$stringField" was not a string, was "$value"');
@@ -155,6 +164,7 @@ class Credentials {
 
     return new Credentials(parsed['accessToken'],
         refreshToken: parsed['refreshToken'],
+        idToken: parsed['idToken'],
         tokenEndpoint: tokenEndpoint,
         scopes: (scopes as List).map((scope) => scope as String),
         expiration: expiration);
@@ -167,6 +177,7 @@ class Credentials {
   String toJson() => jsonEncode({
         'accessToken': accessToken,
         'refreshToken': refreshToken,
+        'idToken': idToken,
         'tokenEndpoint':
             tokenEndpoint == null ? null : tokenEndpoint.toString(),
         'scopes': scopes,
@@ -233,6 +244,7 @@ class Credentials {
     if (credentials.refreshToken != null) return credentials;
     return new Credentials(credentials.accessToken,
         refreshToken: this.refreshToken,
+        idToken: credentials.idToken,
         tokenEndpoint: credentials.tokenEndpoint,
         scopes: credentials.scopes,
         expiration: credentials.expiration);
