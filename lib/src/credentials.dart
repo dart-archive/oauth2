@@ -45,8 +45,9 @@ class Credentials {
   /// End-Users to be Authenticated, contains Claims, represented as a
   /// JSON Web Token (JWT).
   ///
-  /// [spec]: https://openid.net/specs/openid-connect-core-1_0.html#IDToken
   /// This may be `null`, indicating that the openid scope is not implemented.
+  ///
+  /// [spec]: https://openid.net/specs/openid-connect-core-1_0.html#IDToken
   final String idToken;
 
   /// The URL of the authorization server endpoint that's used to refresh the
