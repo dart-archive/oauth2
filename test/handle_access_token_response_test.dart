@@ -260,13 +260,12 @@ void main() {
     });
   });
 
-  group('a success response with id_token', () {
+  group('a success response with a id_token', () {
     oauth2.Credentials handleSuccess(
         {String contentType = "application/json",
           accessToken = 'access token',
           tokenType = 'bearer',
           expiresIn,
-          refreshToken,
           idToken = 'decode me',
           scope}) {
       return handle(new http.Response(
@@ -274,7 +273,6 @@ void main() {
             'access_token': accessToken,
             'token_type': tokenType,
             'expires_in': expiresIn,
-            'refresh_token': refreshToken,
             'id_token': idToken,
             'scope': scope
           }),
