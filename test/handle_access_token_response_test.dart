@@ -263,11 +263,11 @@ void main() {
   group('a success response with a id_token', () {
     oauth2.Credentials handleSuccess(
         {String contentType = "application/json",
-          accessToken = 'access token',
-          tokenType = 'bearer',
-          expiresIn,
-          idToken = 'decode me',
-          scope}) {
+        accessToken = 'access token',
+        tokenType = 'bearer',
+        expiresIn,
+        idToken = 'decode me',
+        scope}) {
       return handle(new http.Response(
           jsonEncode({
             'access_token': accessToken,
