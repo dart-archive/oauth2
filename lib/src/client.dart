@@ -159,8 +159,7 @@ class Client extends http.BaseClient {
         basicAuth: _basicAuth,
         httpClient: _httpClient);
 
-    if (_onCredentialsRefreshed != null)
-      _onCredentialsRefreshed(_credentials);
+    if (_onCredentialsRefreshed != null) _onCredentialsRefreshed(_credentials);
 
     return this;
   }
