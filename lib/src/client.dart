@@ -11,8 +11,6 @@ import 'authorization_exception.dart';
 import 'credentials.dart';
 import 'expiration_exception.dart';
 
-// TODO(nweiz): Add an onCredentialsRefreshed event once we have some event
-// infrastructure.
 /// An OAuth2 client.
 ///
 /// This acts as a drop-in replacement for an [http.Client], while sending
