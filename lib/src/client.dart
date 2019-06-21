@@ -68,7 +68,7 @@ class Client extends http.BaseClient {
   Credentials _credentials;
 
   /// Callback to be invoked whenever the credentials refreshed.
-  CredentialsRefreshedCallback _onCredentialsRefreshed;
+  final CredentialsRefreshedCallback _onCredentialsRefreshed;
 
   /// Whether to use HTTP Basic authentication for authorizing the client.
   final bool _basicAuth;
@@ -161,9 +161,8 @@ class Client extends http.BaseClient {
         basicAuth: _basicAuth,
         httpClient: _httpClient);
 
-    if (_onCredentialsRefreshed != null) {
+    if (_onCredentialsRefreshed != null)
       _onCredentialsRefreshed(_credentials);
-    }
 
     return this;
   }
