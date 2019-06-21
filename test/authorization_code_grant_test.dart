@@ -289,4 +289,50 @@ void main() {
       })));
     });
   });
+
+  group('onCredentialsRefreshed', () {
+    test('is correctly propagated', () async {
+      var isCallbackInvoked = false;
+      var grant = new oauth2.AuthorizationCodeGrant(
+          'identifier',
+          Uri.parse('https://example.com/authorization'),
+          Uri.parse('https://example.com/token'),
+          secret: 'secret',
+          basicAuth: false,
+          httpClient: client, onCredentialsRefreshed: (credentials) {
+        isCallbackInvoked = true;
+      });
+
+      grant.getAuthorizationUrl(redirectUrl);
+      client.expectRequest((request) {
+        return new Future.value(new http.Response(
+            jsonEncode({
+              'access_token': 'access token',
+              'token_type': 'bearer',
+              "expires_in": -3600,
+              "refresh_token": "refresh token",
+            }),
+            200,
+            headers: {'content-type': 'application/json'}));
+      });
+
+      var oauth2Client = await grant.handleAuthorizationCode('auth code');
+
+      client.expectRequest((request) {
+        return new Future.value(new http.Response(
+            jsonEncode(
+                {'access_token': 'new access token', 'token_type': 'bearer'}),
+            200,
+            headers: {'content-type': 'application/json'}));
+      });
+
+      client.expectRequest((request) {
+        return new Future.value(new http.Response('good job', 200));
+      });
+
+      await oauth2Client.read(Uri.parse("http://example.com/resource"));
+
+      expect(isCallbackInvoked, equals(true));
+    });
+  });
 }
