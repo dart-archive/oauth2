@@ -4,7 +4,7 @@
 
 @TestOn("vm")
 import 'dart:convert';
-import 'dart:mirrors';
+import 'dart:async';
 
 import 'package:http/http.dart' as http;
 import 'package:oauth2/oauth2.dart' as oauth2;
@@ -48,25 +48,40 @@ void main() {
 
     test('passes the onCredentialsRefreshed callback to the client', () async {
       expectClient.expectRequest((request) async {
-        return new http.Response(success, 200,
+        return new http.Response(
+            jsonEncode({
+              "access_token": "2YotnFZFEjr1zCsicMWpAA",
+              "token_type": "bearer",
+              "expires_in": -3600,
+              "refresh_token": "tGzv3JOkF0XG5Qx2TlKWIA",
+            }),
+            200,
             headers: {'content-type': 'application/json'});
       });
 
-      var onCredentialsRefreshedCallback = (oauth2.Credentials credentials) {};
+      var callbackCalled = false;
 
       var client = await oauth2.resourceOwnerPasswordGrant(
           authEndpoint, 'username', 'userpass',
-          identifier: 'client',
-          secret: 'secret',
-          httpClient: expectClient,
-          onCredentialsRefreshed: onCredentialsRefreshedCallback);
+          identifier: 'client', secret: 'secret', httpClient: expectClient,
+          onCredentialsRefreshed: (oauth2.Credentials credentials) {
+        callbackCalled = true;
+      });
 
-      var reflection = reflect(client);
-      var sym = MirrorSystem.getSymbol(
-          '_onCredentialsRefreshed', reflection.type.owner);
+      expectClient.expectRequest((request) {
+        return new Future.value(new http.Response(
+            jsonEncode(
+                {'access_token': 'new access token', 'token_type': 'bearer'}),
+            200,
+            headers: {'content-type': 'application/json'}));
+      });
 
-      expect(reflection.getField(sym).reflectee,
-          equals(onCredentialsRefreshedCallback));
+      expectClient.expectRequest((request) {
+        return new Future.value(new http.Response('good job', 200));
+      });
+
+      await client.read(Uri.parse("http://example.com/resource"));
+      expect(callbackCalled, equals(true));
     });
 
     test('builds correct request when using query parameters for client',

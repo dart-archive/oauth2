@@ -78,6 +78,7 @@ void main() {
           secret: 'secret',
           httpClient: httpClient, onCredentialsRefreshed: (credentials) {
         callbackCalled = true;
+        expect(credentials.accessToken, equals('new access token'));
       });
 
       httpClient.expectRequest((request) {
