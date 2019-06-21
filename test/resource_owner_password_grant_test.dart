@@ -59,13 +59,13 @@ void main() {
             headers: {'content-type': 'application/json'});
       });
 
-      var callbackCalled = false;
+      var isCallbackInvoked = false;
 
       var client = await oauth2.resourceOwnerPasswordGrant(
           authEndpoint, 'username', 'userpass',
           identifier: 'client', secret: 'secret', httpClient: expectClient,
           onCredentialsRefreshed: (oauth2.Credentials credentials) {
-        callbackCalled = true;
+        isCallbackInvoked = true;
       });
 
       expectClient.expectRequest((request) {
@@ -81,7 +81,7 @@ void main() {
       });
 
       await client.read(Uri.parse("http://example.com/resource"));
-      expect(callbackCalled, equals(true));
+      expect(isCallbackInvoked, equals(true));
     });
 
     test('builds correct request when using query parameters for client',
