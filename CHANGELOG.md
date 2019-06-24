@@ -1,3 +1,4 @@
+# 1.3.0
 
 * Added `onCredentialsRefreshed` option when creating `Client` objects.
 
