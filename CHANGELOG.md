@@ -1,3 +1,6 @@
+
+* Added `onCredentialsRefreshed` option when creating `Client` objects.
+
 # 1.2.3
 
 * Support the latest `package:http` release.
