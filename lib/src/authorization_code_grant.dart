@@ -9,6 +9,7 @@ import 'package:http_parser/http_parser.dart';
 
 import 'client.dart';
 import 'authorization_exception.dart';
+import 'credentials.dart';
 import 'handle_access_token_response.dart';
 import 'parameters.dart';
 import 'utils.dart';
@@ -71,6 +72,11 @@ class AuthorizationCodeGrant {
   /// documentation.
   final Uri tokenEndpoint;
 
+  /// Callback to be invoked whenever the credentials are refreshed.
+  ///
+  /// This will be passed as-is to the constructed [Client].
+  CredentialsRefreshedCallback _onCredentialsRefreshed;
+
   /// Whether to use HTTP Basic authentication for authorizing the client.
   final bool _basicAuth;
 
@@ -107,6 +113,9 @@ class AuthorizationCodeGrant {
   /// [httpClient] is used for all HTTP requests made by this grant, as well as
   /// those of the [Client] is constructs.
   ///
+  /// [onCredentialsRefreshed] will be called by the constructed [Client]
+  /// whenever the credentials are refreshed.
+  ///
   /// The scope strings will be separated by the provided [delimiter]. This
   /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
   /// use non-standard delimiters.
@@ -126,11 +135,13 @@ class AuthorizationCodeGrant {
       String delimiter,
       bool basicAuth = true,
       http.Client httpClient,
+      CredentialsRefreshedCallback onCredentialsRefreshed,
       Map<String, dynamic> getParameters(MediaType contentType, String body)})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ',
-        _getParameters = getParameters ?? parseJsonParameters;
+        _getParameters = getParameters ?? parseJsonParameters,
+        _onCredentialsRefreshed = onCredentialsRefreshed;
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
@@ -289,7 +300,8 @@ class AuthorizationCodeGrant {
         identifier: this.identifier,
         secret: this.secret,
         basicAuth: _basicAuth,
-        httpClient: _httpClient);
+        httpClient: _httpClient,
+        onCredentialsRefreshed: _onCredentialsRefreshed);
   }
 
   /// Closes the grant and frees its resources.

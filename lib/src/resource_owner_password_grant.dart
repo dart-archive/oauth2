@@ -10,6 +10,7 @@ import 'package:http_parser/http_parser.dart';
 import 'client.dart';
 import 'handle_access_token_response.dart';
 import 'utils.dart';
+import 'credentials.dart';
 
 /// Obtains credentials using a [resource owner password grant][].
 ///
@@ -49,6 +50,7 @@ Future<Client> resourceOwnerPasswordGrant(
     String secret,
     Iterable<String> scopes,
     bool basicAuth = true,
+    CredentialsRefreshedCallback onCredentialsRefreshed,
     http.Client httpClient,
     String delimiter,
     Map<String, dynamic> getParameters(
@@ -84,5 +86,8 @@ Future<Client> resourceOwnerPasswordGrant(
       response, authorizationEndpoint, startTime, scopes, delimiter,
       getParameters: getParameters);
   return new Client(credentials,
-      identifier: identifier, secret: secret, httpClient: httpClient);
+      identifier: identifier,
+      secret: secret,
+      httpClient: httpClient,
+      onCredentialsRefreshed: onCredentialsRefreshed);
 }

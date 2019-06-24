@@ -13,6 +13,9 @@ import 'handle_access_token_response.dart';
 import 'parameters.dart';
 import 'utils.dart';
 
+/// Type of the callback when credentials are refreshed.
+typedef CredentialsRefreshedCallback = void Function(Credentials);
+
 /// Credentials that prove that a client is allowed to access a resource on the
 /// resource owner's behalf.
 ///

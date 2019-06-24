@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 @TestOn("vm")
-
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:http/http.dart' as http;
 import 'package:oauth2/oauth2.dart' as oauth2;
@@ -44,6 +44,44 @@ void main() {
 
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
+    });
+
+    test('passes the onCredentialsRefreshed callback to the client', () async {
+      expectClient.expectRequest((request) async {
+        return new http.Response(
+            jsonEncode({
+              "access_token": "2YotnFZFEjr1zCsicMWpAA",
+              "token_type": "bearer",
+              "expires_in": -3600,
+              "refresh_token": "tGzv3JOkF0XG5Qx2TlKWIA",
+            }),
+            200,
+            headers: {'content-type': 'application/json'});
+      });
+
+      var isCallbackInvoked = false;
+
+      var client = await oauth2.resourceOwnerPasswordGrant(
+          authEndpoint, 'username', 'userpass',
+          identifier: 'client', secret: 'secret', httpClient: expectClient,
+          onCredentialsRefreshed: (oauth2.Credentials credentials) {
+        isCallbackInvoked = true;
+      });
+
+      expectClient.expectRequest((request) {
+        return new Future.value(new http.Response(
+            jsonEncode(
+                {'access_token': 'new access token', 'token_type': 'bearer'}),
+            200,
+            headers: {'content-type': 'application/json'}));
+      });
+
+      expectClient.expectRequest((request) {
+        return new Future.value(new http.Response('good job', 200));
+      });
+
+      await client.read(Uri.parse("http://example.com/resource"));
+      expect(isCallbackInvoked, equals(true));
     });
 
     test('builds correct request when using query parameters for client',
