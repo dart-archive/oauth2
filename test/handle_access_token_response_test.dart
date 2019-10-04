@@ -259,4 +259,34 @@ void main() {
       expect(credentials.scopes, equals(['scope1', 'scope2']));
     });
   });
+
+  group('a success response with a id_token', () {
+    oauth2.Credentials handleSuccess(
+        {String contentType = "application/json",
+        accessToken = 'access token',
+        tokenType = 'bearer',
+        expiresIn,
+        idToken = 'decode me',
+        scope}) {
+      return handle(new http.Response(
+          jsonEncode({
+            'access_token': accessToken,
+            'token_type': tokenType,
+            'expires_in': expiresIn,
+            'id_token': idToken,
+            'scope': scope
+          }),
+          200,
+          headers: {'content-type': contentType}));
+    }
+
+    test('with a non-string id token throws a FormatException', () {
+      expect(() => handleSuccess(idToken: 12), throwsFormatException);
+    });
+
+    test('with a id token sets the id token', () {
+      var credentials = handleSuccess(idToken: "decode me");
+      expect(credentials.idToken, equals("decode me"));
+    });
+  });
 }
