@@ -45,7 +45,8 @@ class Credentials {
   /// End-Users to be Authenticated, contains Claims, represented as a
   /// JSON Web Token (JWT).
   ///
-  /// This may be `null`, indicating that the openid scope is not implemented.
+  /// This may be `null`, indicating that the 'openid' scope was not
+  /// requested (or not supported).
   ///
   /// [spec]: https://openid.net/specs/openid-connect-core-1_0.html#IDToken
   final String idToken;
