@@ -97,7 +97,7 @@ Future<oauth2.Client> getClient() async {
 }
 
 main() async {
-  var client = await loadClient();
+  var client = await getClient();
 
   // Once you have a Client, you can use it just like any other HTTP client.
   var result = client.read("http://example.com/protected-resources.txt");

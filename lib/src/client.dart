@@ -11,8 +11,6 @@ import 'authorization_exception.dart';
 import 'credentials.dart';
 import 'expiration_exception.dart';
 
-// TODO(nweiz): Add an onCredentialsRefreshed event once we have some event
-// infrastructure.
 /// An OAuth2 client.
 ///
 /// This acts as a drop-in replacement for an [http.Client], while sending
@@ -67,6 +65,9 @@ class Client extends http.BaseClient {
   Credentials get credentials => _credentials;
   Credentials _credentials;
 
+  /// Callback to be invoked whenever the credentials refreshed.
+  final CredentialsRefreshedCallback _onCredentialsRefreshed;
+
   /// Whether to use HTTP Basic authentication for authorizing the client.
   final bool _basicAuth;
 
@@ -86,9 +87,11 @@ class Client extends http.BaseClient {
   Client(this._credentials,
       {this.identifier,
       this.secret,
+      CredentialsRefreshedCallback onCredentialsRefreshed,
       bool basicAuth = true,
       http.Client httpClient})
       : _basicAuth = basicAuth,
+        _onCredentialsRefreshed = onCredentialsRefreshed,
         _httpClient = httpClient == null ? new http.Client() : httpClient {
     if (identifier == null && secret != null) {
       throw new ArgumentError("secret may not be passed without identifier.");
@@ -155,6 +158,8 @@ class Client extends http.BaseClient {
         newScopes: newScopes,
         basicAuth: _basicAuth,
         httpClient: _httpClient);
+
+    if (_onCredentialsRefreshed != null) _onCredentialsRefreshed(_credentials);
 
     return this;
   }
