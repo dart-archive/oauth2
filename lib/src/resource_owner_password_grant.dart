@@ -12,7 +12,7 @@ import 'handle_access_token_response.dart';
 import 'utils.dart';
 import 'credentials.dart';
 
-/// Obtains credentials using a [resource owner password grant][].
+/// Obtains credentials using a [resource owner password grant](https://tools.ietf.org/html/rfc6749#section-1.3.3).
 ///
 /// This mode of authorization uses the user's username and password to obtain
 /// an authentication token, which can then be stored. This is safer than

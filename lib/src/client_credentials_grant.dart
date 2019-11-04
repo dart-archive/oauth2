@@ -11,7 +11,7 @@ import 'client.dart';
 import 'handle_access_token_response.dart';
 import 'utils.dart';
 
-/// Obtains credentials using a [client credentials grant][].
+/// Obtains credentials using a [client credentials grant](https://tools.ietf.org/html/rfc6749#section-1.3.4).
 ///
 /// This mode of authorization uses the client's [identifier] and [secret]
 /// to obtain an authorization token from the authorization server, instead
