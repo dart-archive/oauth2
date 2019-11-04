@@ -113,6 +113,41 @@ main() async {
 }
 ```
 
+## Client Credentials Grant
+```dart
+// This URL is an endpoint that's provided by the authorization server. It's
+// usually included in the server's documentation of its OAuth2 API.
+final authorizationEndpoint =
+    Uri.parse("http://example.com/oauth2/authorization");
+
+// The OAuth2 specification expects a client's identifier and secret
+// to be sent when using the client credentials grant.
+//
+// Because the client credentials grant is not inherently associated with a user,
+// it is up to the server in question whether the returned token allows limited
+// API access.
+//
+// Either way, you must provide both a client identifier and a client secret:
+final identifier = "my client identifier";
+final secret = "my client secret";
+
+// Calling the top-level `clientCredentialsGrant` function will return a
+// [Client] instead.
+var client = await oauth2.clientCredentialsGrant(
+    authorizationEndpoint, identifier, secret);
+
+// With an authenticated client, you can make requests, and the `Bearer` token
+// returned by the server during the client credentials grant will be attached
+// to any request you make.
+var response = await client.read("https://example.com/api/some_resource.json");
+
+// You can save the client's credentials, which consists of an access token, and
+// potentially a refresh token and expiry date, to a file. This way, subsequent runs
+// do not need to reauthenticate, and you can avoid saving the client identifier and
+// secret.
+await credentialsFile.writeAsString(client.credentials.toJson());
+```
+
 ## Resource Owner Password Grant
 
 ```dart
