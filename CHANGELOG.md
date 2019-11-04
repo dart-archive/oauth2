@@ -1,3 +1,11 @@
+# 1.4.0
+
+* OpenID's id_token treated.
+
+# 1.3.0
+
+* Added `onCredentialsRefreshed` option when creating `Client` objects.
+
 # 1.2.3
 
 * Support the latest `package:http` release.

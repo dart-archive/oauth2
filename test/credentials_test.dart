@@ -270,6 +270,7 @@ void main() {
 
       var credentials = new oauth2.Credentials('access token',
           refreshToken: 'refresh token',
+          idToken: 'id token',
           tokenEndpoint: tokenEndpoint,
           scopes: ['scope1', 'scope2'],
           expiration: expiration);
@@ -277,6 +278,7 @@ void main() {
 
       expect(reloaded.accessToken, equals(credentials.accessToken));
       expect(reloaded.refreshToken, equals(credentials.refreshToken));
+      expect(reloaded.idToken, equals(credentials.idToken));
       expect(reloaded.tokenEndpoint.toString(),
           equals(credentials.tokenEndpoint.toString()));
       expect(reloaded.scopes, equals(credentials.scopes));
@@ -303,6 +305,11 @@ void main() {
 
     test("should throw a FormatException if refreshToken is not a string", () {
       expect(() => fromMap({"accessToken": "foo", "refreshToken": 12}),
+          throwsFormatException);
+    });
+
+    test("should throw a FormatException if idToken is not a string", () {
+      expect(() => fromMap({"accessToken": "foo", "idToken": 12}),
           throwsFormatException);
     });
 
