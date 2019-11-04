@@ -12,12 +12,13 @@ client has permission to access resources on behalf of the resource owner.
 
 OAuth2 provides several different methods for the client to obtain
 authorization. At the time of writing, this library only supports the
-[AuthorizationCodeGrant][] and [resourceOwnerPasswordGrant][] methods, but
+[AuthorizationCodeGrant][], [clientCredentialsGrant][] and [resourceOwnerPasswordGrant][] methods, but
 further methods may be added in the future. The following example uses this
 method to authenticate, and assumes that the library is being used by a
 server-side application.
 
 [AuthorizationCodeGrant]: http://www.dartdocs.org/documentation/oauth2/latest/index.html#oauth2/oauth2.AuthorizationCodeGrant
+[clientCredentialsGrant]: http://www.dartdocs.org/documentation/oauth2/latest/index.html#oauth2/oauth2.clientCredentialsGrant
 [resourceOwnerPasswordGrant]: http://www.dartdocs.org/documentation/oauth2/latest/index.html#oauth2/oauth2.resourceOwnerPasswordGrant
 
 ## Authorization Code Grant
