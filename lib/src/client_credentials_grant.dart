@@ -38,9 +38,7 @@ import 'utils.dart';
 ///
 /// This function is passed the `Content-Type` header of the response as well as
 /// its body as a UTF-8-decoded string. It should return a map in the same
-/// format as the [standard JSON response][].
-///
-/// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
+/// format as the [standard JSON response](https://tools.ietf.org/html/rfc6749#section-5.1)
 Future<Client> clientCredentialsGrant(
     Uri authorizationEndpoint, String identifier, String secret,
     {Iterable<String> scopes,
