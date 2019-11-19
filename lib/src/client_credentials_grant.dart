@@ -10,17 +10,14 @@ import 'package:http_parser/http_parser.dart';
 import 'client.dart';
 import 'handle_access_token_response.dart';
 import 'utils.dart';
-import 'credentials.dart';
 
-/// Obtains credentials using a [resource owner password grant](https://tools.ietf.org/html/rfc6749#section-1.3.3).
+/// Obtains credentials using a [client credentials grant](https://tools.ietf.org/html/rfc6749#section-1.3.4).
 ///
-/// This mode of authorization uses the user's username and password to obtain
-/// an authentication token, which can then be stored. This is safer than
-/// storing the username and password directly, but it should be avoided if any
-/// other authorization method is available, since it requires the user to
-/// provide their username and password to a third party (you).
+/// This mode of authorization uses the client's [identifier] and [secret]
+/// to obtain an authorization token from the authorization server, instead
+/// of sending a user through a dedicated flow.
 ///
-/// The client [identifier] and [secret] may be issued by the server, and are
+/// The client [identifier] and [secret] are required, and are
 /// used to identify and authenticate your specific OAuth2 client. These are
 /// usually global to the program using this library.
 ///
@@ -41,16 +38,11 @@ import 'credentials.dart';
 ///
 /// This function is passed the `Content-Type` header of the response as well as
 /// its body as a UTF-8-decoded string. It should return a map in the same
-/// format as the [standard JSON response][].
-///
-/// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
-Future<Client> resourceOwnerPasswordGrant(
-    Uri authorizationEndpoint, String username, String password,
-    {String identifier,
-    String secret,
-    Iterable<String> scopes,
+/// format as the [standard JSON response](https://tools.ietf.org/html/rfc6749#section-5.1)
+Future<Client> clientCredentialsGrant(
+    Uri authorizationEndpoint, String identifier, String secret,
+    {Iterable<String> scopes,
     bool basicAuth = true,
-    CredentialsRefreshedCallback onCredentialsRefreshed,
     http.Client httpClient,
     String delimiter,
     Map<String, dynamic> getParameters(
@@ -58,11 +50,7 @@ Future<Client> resourceOwnerPasswordGrant(
   delimiter ??= ' ';
   var startTime = new DateTime.now();
 
-  var body = {
-    "grant_type": "password",
-    "username": username,
-    "password": password
-  };
+  var body = {"grant_type": "client_credentials"};
 
   var headers = <String, String>{};
 
@@ -86,8 +74,5 @@ Future<Client> resourceOwnerPasswordGrant(
       response, authorizationEndpoint, startTime, scopes, delimiter,
       getParameters: getParameters);
   return new Client(credentials,
-      identifier: identifier,
-      secret: secret,
-      httpClient: httpClient,
-      onCredentialsRefreshed: onCredentialsRefreshed);
+      identifier: identifier, secret: secret, httpClient: httpClient);
 }
