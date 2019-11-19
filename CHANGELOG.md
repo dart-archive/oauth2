@@ -1,3 +1,7 @@
+# 1.5.0
+
+* Added support for `clientCredentialsGrant`.
+
 # 1.4.0
 
 * OpenID's id_token treated.
