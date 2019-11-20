@@ -3,7 +3,10 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
@@ -29,6 +32,10 @@ import 'utils.dart';
 ///
 /// [authorization code grant]: http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-4.1
 class AuthorizationCodeGrant {
+  static final String _charset =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+  static final Random _random = Random.secure();
+
   /// The function used to parse parameters from a host's response.
   final GetParameters _getParameters;
 
@@ -100,6 +107,8 @@ class AuthorizationCodeGrant {
   /// The current state of the grant object.
   _State _state = _State.initial;
 
+  String _codeVerifier;
+
   /// Creates a new grant.
   ///
   /// If [basicAuth] is `true` (the default), the client credentials are sent to
@@ -143,6 +152,11 @@ class AuthorizationCodeGrant {
         _getParameters = getParameters ?? parseJsonParameters,
         _onCredentialsRefreshed = onCredentialsRefreshed;
 
+  String _createCodeVerifier() {
+    return List.generate(128, (i) => _charset[_random.nextInt(_charset.length)])
+        .join();
+  }
+
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
   ///
@@ -175,13 +189,20 @@ class AuthorizationCodeGrant {
       scopes = scopes.toList();
     }
 
+    _codeVerifier = _createCodeVerifier();
+    var codeChallenge = base64Url
+        .encode(sha256.convert(ascii.encode(_codeVerifier)).bytes)
+        .replaceAll("=", "");
+
     this._redirectEndpoint = redirect;
     this._scopes = scopes;
     this._stateString = state;
     var parameters = {
       "response_type": "code",
       "client_id": this.identifier,
-      "redirect_uri": redirect.toString()
+      "redirect_uri": redirect.toString(),
+      "code_challenge": codeChallenge,
+      "code_challenge_method": "S256"
     };
 
     if (state != null) parameters['state'] = state;
@@ -278,7 +299,8 @@ class AuthorizationCodeGrant {
     var body = {
       "grant_type": "authorization_code",
       "code": authorizationCode,
-      "redirect_uri": this._redirectEndpoint.toString()
+      "redirect_uri": this._redirectEndpoint.toString(),
+      "code_verifier": _codeVerifier
     };
 
     if (_basicAuth && secret != null) {
