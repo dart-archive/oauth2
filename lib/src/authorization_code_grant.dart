@@ -32,11 +32,10 @@ import 'utils.dart';
 ///
 /// [authorization code grant]: http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-4.1
 class AuthorizationCodeGrant {
-  
   /// Allowed characters when creating the code_verifier
   static final String _charset =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
-  
+
   static final Random _random = Random.secure();
 
   /// The function used to parse parameters from a host's response.

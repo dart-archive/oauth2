@@ -167,7 +167,8 @@ void main() {
               containsPair('grant_type', 'authorization_code'),
               containsPair('code', 'auth code'),
               containsPair('redirect_uri', redirectUrl.toString()),
-              containsPair('code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}'))
+              containsPair(
+                  'code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}'))
             ]));
         expect(request.headers,
             containsPair("Authorization", "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
@@ -210,7 +211,8 @@ void main() {
               containsPair('grant_type', 'authorization_code'),
               containsPair('code', 'auth code'),
               containsPair('redirect_uri', redirectUrl.toString()),
-              containsPair('code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}'))
+              containsPair(
+                  'code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}'))
             ]));
         expect(request.headers,
             containsPair("Authorization", "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
@@ -256,7 +258,8 @@ void main() {
               containsPair('grant_type', 'authorization_code'),
               containsPair('code', 'auth code'),
               containsPair('redirect_uri', redirectUrl.toString()),
-              containsPair('code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}')),
+              containsPair(
+                  'code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}')),
               containsPair('client_id', 'identifier'),
               containsPair('client_secret', 'secret')
             ]));
@@ -287,7 +290,8 @@ void main() {
               containsPair('grant_type', 'authorization_code'),
               containsPair('code', 'auth code'),
               containsPair('redirect_uri', redirectUrl.toString()),
-              containsPair('code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}')),
+              containsPair(
+                  'code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}')),
               containsPair('client_id', 'identifier'),
               containsPair('client_secret', 'secret')
             ]));
