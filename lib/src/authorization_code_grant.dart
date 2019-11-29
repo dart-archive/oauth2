@@ -32,8 +32,11 @@ import 'utils.dart';
 ///
 /// [authorization code grant]: http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-4.1
 class AuthorizationCodeGrant {
+  
+  /// Allowed characters when creating the code_verifier
   static final String _charset =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+  
   static final Random _random = Random.secure();
 
   /// The function used to parse parameters from a host's response.
@@ -107,6 +110,7 @@ class AuthorizationCodeGrant {
   /// The current state of the grant object.
   _State _state = _State.initial;
 
+  /// The generated PKCE code verifier.
   String _codeVerifier;
 
   /// Creates a new grant.
@@ -151,11 +155,6 @@ class AuthorizationCodeGrant {
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters,
         _onCredentialsRefreshed = onCredentialsRefreshed;
-
-  String _createCodeVerifier() {
-    return List.generate(128, (i) => _charset[_random.nextInt(_charset.length)])
-        .join();
-  }
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
@@ -209,6 +208,12 @@ class AuthorizationCodeGrant {
     if (scopes.isNotEmpty) parameters['scope'] = scopes.join(_delimiter);
 
     return addQueryParameters(this.authorizationEndpoint, parameters);
+  }
+
+  /// Randomly generates the 128 character string to use for the PKCE code verifier
+  String _createCodeVerifier() {
+    return List.generate(128, (i) => _charset[_random.nextInt(_charset.length)])
+        .join();
   }
 
   /// Processes the query parameters added to a redirect from the authorization
