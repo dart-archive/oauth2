@@ -144,7 +144,6 @@ class AuthorizationCodeGrant {
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ',
-        _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters,
         _additionalBody = additionalBody,
         _onCredentialsRefreshed = onCredentialsRefreshed;
