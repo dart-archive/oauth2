@@ -64,8 +64,10 @@ Future<Client> resourceOwnerPasswordGrant(
     "username": username,
     "password": password
   };
-  
-  body.addAll(additionalBody);
+
+  if (additionalBody != null) {
+    body.addAll(additionalBody);
+  }
 
   var headers = <String, String>{};
 
