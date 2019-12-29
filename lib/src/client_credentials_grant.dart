@@ -45,12 +45,17 @@ Future<Client> clientCredentialsGrant(
     bool basicAuth = true,
     http.Client httpClient,
     String delimiter,
+    Map<String, dynamic> additionalBody,
     Map<String, dynamic> getParameters(
         MediaType contentType, String body)}) async {
   delimiter ??= ' ';
   var startTime = new DateTime.now();
 
   var body = {"grant_type": "client_credentials"};
+    
+  if (additionalBody != null) {
+    body.addAll(additionalBody);
+  }
 
   var headers = <String, String>{};
 
