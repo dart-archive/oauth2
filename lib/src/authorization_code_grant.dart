@@ -99,7 +99,7 @@ class AuthorizationCodeGrant {
 
   /// The current state of the grant object.
   _State _state = _State.initial;
-  
+
   // Additional field on request body
   Map<String, dynamic> _additionalBody;
 
@@ -132,15 +132,15 @@ class AuthorizationCodeGrant {
   /// format as the [standard JSON response][].
   ///
   /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
-  AuthorizationCodeGrant(
-      this.identifier, this.authorizationEndpoint, this.tokenEndpoint,
+  AuthorizationCodeGrant(this.identifier, this.authorizationEndpoint,
+      this.tokenEndpoint,
       {this.secret,
-      String delimiter,
-      bool basicAuth = true,
-      http.Client httpClient,
-      CredentialsRefreshedCallback onCredentialsRefreshed,
-      Map<String, dynamic> additionalBody,
-      Map<String, dynamic> getParameters(MediaType contentType, String body)})
+        String delimiter,
+        bool basicAuth = true,
+        http.Client httpClient,
+        CredentialsRefreshedCallback onCredentialsRefreshed,
+        Map<String, dynamic> additionalBody,
+        Map<String, dynamic> getParameters(MediaType contentType, String body)})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ',
@@ -285,7 +285,7 @@ class AuthorizationCodeGrant {
       "code": authorizationCode,
       "redirect_uri": this._redirectEndpoint.toString()
     };
-    
+
     if (_additionalBody != null) {
       body.addAll(_additionalBody);
     }
