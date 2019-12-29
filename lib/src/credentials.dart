@@ -108,16 +108,16 @@ class Credentials {
   /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
   Credentials(this.accessToken,
       {this.refreshToken,
-      this.idToken,
-      this.tokenEndpoint,
-      Iterable<String> scopes,
-      this.expiration,
-      String delimiter,
-      Map<String, dynamic> getParameters(MediaType mediaType, String body)})
+        this.idToken,
+        this.tokenEndpoint,
+        Iterable<String> scopes,
+        this.expiration,
+        String delimiter,
+        Map<String, dynamic> getParameters(MediaType mediaType, String body)})
       : scopes = new UnmodifiableListView(
-            // Explicitly type-annotate the list literal to work around
-            // sdk#24202.
-            scopes == null ? <String>[] : scopes.toList()),
+    // Explicitly type-annotate the list literal to work around
+    // sdk#24202.
+      scopes == null ? <String>[] : scopes.toList()),
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters;
 
@@ -144,7 +144,7 @@ class Credentials {
     validate(
         parsed['accessToken'] is String,
         'required field "accessToken" was not a string, was '
-        '${parsed["accessToken"]}');
+            '${parsed["accessToken"]}');
 
     for (var stringField in ['refreshToken', 'idToken', 'tokenEndpoint']) {
       var value = parsed[stringField];
@@ -179,15 +179,16 @@ class Credentials {
   ///
   /// Nothing is guaranteed about the output except that it's valid JSON and
   /// compatible with [Credentials.toJson].
-  String toJson() => jsonEncode({
+  String toJson() =>
+      jsonEncode({
         'accessToken': accessToken,
         'refreshToken': refreshToken,
         'idToken': idToken,
         'tokenEndpoint':
-            tokenEndpoint == null ? null : tokenEndpoint.toString(),
+        tokenEndpoint == null ? null : tokenEndpoint.toString(),
         'scopes': scopes,
         'expiration':
-            expiration == null ? null : expiration.millisecondsSinceEpoch
+        expiration == null ? null : expiration.millisecondsSinceEpoch
       });
 
   /// Returns a new set of refreshed credentials.
@@ -202,13 +203,12 @@ class Credentials {
   /// a [StateError] if these credentials can't be refreshed, an
   /// [AuthorizationException] if refreshing the credentials fails, or a
   /// [FormatError] if the authorization server returns invalid responses.
-  Future<Credentials> refresh(
-      {String identifier,
-      String secret,
-      Iterable<String> newScopes,
-      bool basicAuth = true,
-      http.Client httpClient,
-      Map<String, dynamic> additionalBody}) async {
+  Future<Credentials> refresh({String identifier,
+    String secret,
+    Iterable<String> newScopes,
+    bool basicAuth = true,
+    http.Client httpClient,
+    Map<String, dynamic> additionalBody}) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
     if (scopes == null) scopes = [];
@@ -230,11 +230,11 @@ class Credentials {
     var headers = <String, String>{};
 
     var body = {"grant_type": "refresh_token", "refresh_token": refreshToken};
-    
+
     if (additionalBody != null) {
       body.addAll(additionalBody);
     }
-    
+
     if (scopes.isNotEmpty) body["scope"] = scopes.join(_delimiter);
 
     if (basicAuth && secret != null) {
@@ -245,7 +245,7 @@ class Credentials {
     }
 
     var response =
-        await httpClient.post(tokenEndpoint, headers: headers, body: body);
+    await httpClient.post(tokenEndpoint, headers: headers, body: body);
     var credentials = await handleAccessTokenResponse(
         response, tokenEndpoint, startTime, scopes, _delimiter,
         getParameters: _getParameters);
