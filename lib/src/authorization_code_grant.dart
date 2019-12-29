@@ -132,15 +132,15 @@ class AuthorizationCodeGrant {
   /// format as the [standard JSON response][].
   ///
   /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
-  AuthorizationCodeGrant(this.identifier, this.authorizationEndpoint,
-      this.tokenEndpoint,
+  AuthorizationCodeGrant(
+      this.identifier, this.authorizationEndpoint, this.tokenEndpoint,
       {this.secret,
-        String delimiter,
-        bool basicAuth = true,
-        http.Client httpClient,
-        CredentialsRefreshedCallback onCredentialsRefreshed,
-        Map<String, dynamic> additionalBody,
-        Map<String, dynamic> getParameters(MediaType contentType, String body)})
+      String delimiter,
+      bool basicAuth = true,
+      http.Client httpClient,
+      CredentialsRefreshedCallback onCredentialsRefreshed,
+      Map<String, dynamic> additionalBody,
+      Map<String, dynamic> getParameters(MediaType contentType, String body)})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ',
