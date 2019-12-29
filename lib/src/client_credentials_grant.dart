@@ -39,15 +39,15 @@ import 'utils.dart';
 /// This function is passed the `Content-Type` header of the response as well as
 /// its body as a UTF-8-decoded string. It should return a map in the same
 /// format as the [standard JSON response](https://tools.ietf.org/html/rfc6749#section-5.1)
-Future<Client> clientCredentialsGrant(Uri authorizationEndpoint,
-    String identifier, String secret,
+Future<Client> clientCredentialsGrant(
+    Uri authorizationEndpoint, String identifier, String secret,
     {Iterable<String> scopes,
-      bool basicAuth = true,
-      http.Client httpClient,
-      String delimiter,
-      Map<String, dynamic> additionalBody,
-      Map<String, dynamic> getParameters(MediaType contentType,
-          String body)}) async {
+    bool basicAuth = true,
+    http.Client httpClient,
+    String delimiter,
+    Map<String, dynamic> additionalBody,
+    Map<String, dynamic> getParameters(
+        MediaType contentType, String body)}) async {
   delimiter ??= ' ';
   var startTime = new DateTime.now();
 
