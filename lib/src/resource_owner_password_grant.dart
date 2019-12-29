@@ -53,6 +53,7 @@ Future<Client> resourceOwnerPasswordGrant(
     CredentialsRefreshedCallback onCredentialsRefreshed,
     http.Client httpClient,
     String delimiter,
+    Map<String, dynamic> additionalBody,
     Map<String, dynamic> getParameters(
         MediaType contentType, String body)}) async {
   delimiter ??= ' ';
@@ -63,6 +64,8 @@ Future<Client> resourceOwnerPasswordGrant(
     "username": username,
     "password": password
   };
+  
+  body.addAll(additionalBody);
 
   var headers = <String, String>{};
 
