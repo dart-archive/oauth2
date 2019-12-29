@@ -99,6 +99,9 @@ class AuthorizationCodeGrant {
 
   /// The current state of the grant object.
   _State _state = _State.initial;
+  
+  // Additional field on request body
+  Map<String, dynamic> _additionalBody;
 
   /// Creates a new grant.
   ///
@@ -136,11 +139,14 @@ class AuthorizationCodeGrant {
       bool basicAuth = true,
       http.Client httpClient,
       CredentialsRefreshedCallback onCredentialsRefreshed,
+      Map<String, dynamic> additionalBody,
       Map<String, dynamic> getParameters(MediaType contentType, String body)})
       : _basicAuth = basicAuth,
         _httpClient = httpClient == null ? new http.Client() : httpClient,
         _delimiter = delimiter ?? ' ',
+        _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters,
+        _additionalBody = additionalBody,
         _onCredentialsRefreshed = onCredentialsRefreshed;
 
   /// Returns the URL to which the resource owner should be redirected to
@@ -280,6 +286,10 @@ class AuthorizationCodeGrant {
       "code": authorizationCode,
       "redirect_uri": this._redirectEndpoint.toString()
     };
+    
+    if (_additionalBody != null) {
+      body.addAll(_additionalBody);
+    }
 
     if (_basicAuth && secret != null) {
       headers["Authorization"] = basicAuthHeader(identifier, secret);
