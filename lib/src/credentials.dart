@@ -207,7 +207,8 @@ class Credentials {
       String secret,
       Iterable<String> newScopes,
       bool basicAuth = true,
-      http.Client httpClient}) async {
+      http.Client httpClient,
+      Map<String, dynamic> additionalBody}) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
     if (scopes == null) scopes = [];
@@ -229,6 +230,11 @@ class Credentials {
     var headers = <String, String>{};
 
     var body = {"grant_type": "refresh_token", "refresh_token": refreshToken};
+    
+    if (additionalBody != null) {
+      body.addAll(additionalBody);
+    }
+    
     if (scopes.isNotEmpty) body["scope"] = scopes.join(_delimiter);
 
     if (basicAuth && secret != null) {
