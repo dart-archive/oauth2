@@ -35,6 +35,8 @@ import 'credentials.dart';
 /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
 /// use non-standard delimiters.
 ///
+/// [additionalBody] will be added to request parameters
+///
 /// By default, this follows the OAuth2 spec and requires the server's responses
 /// to be in JSON format. However, some servers return non-standard response
 /// formats, which can be parsed using the [getParameters] function.
