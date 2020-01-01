@@ -202,6 +202,9 @@ class Credentials {
   /// a [StateError] if these credentials can't be refreshed, an
   /// [AuthorizationException] if refreshing the credentials fails, or a
   /// [FormatError] if the authorization server returns invalid responses.
+  ///
+  /// [additionalBody] will be added to request parameters
+  ///
   Future<Credentials> refresh(
       {String identifier,
       String secret,
