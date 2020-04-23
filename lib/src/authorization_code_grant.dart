@@ -104,7 +104,8 @@ class AuthorizationCodeGrant {
   _State _state = _State.initial;
 
   /// Allowed characters for generating the _codeVerifier
-  static const String _charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+  static const String _charset =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
 
   /// The generated PKCE code verifier
   String _codeVerifier;
@@ -186,8 +187,8 @@ class AuthorizationCodeGrant {
 
     _codeVerifier = _createCodeVerifier();
     var codeChallenge = base64Url
-      .encode(sha256.convert(ascii.encode(_codeVerifier)).bytes)
-      .replaceAll("=", "");
+        .encode(sha256.convert(ascii.encode(_codeVerifier)).bytes)
+        .replaceAll("=", "");
 
     this._redirectEndpoint = redirect;
     this._scopes = scopes;
@@ -323,8 +324,8 @@ class AuthorizationCodeGrant {
 
   /// Randomly generate a 128 character string to be used as the PKCE code verifier
   static String _createCodeVerifier() {
-    return List.generate(128, (i) => _charset[Random.secure().nextInt(_charset.length)])
-        .join();
+    return List.generate(
+        128, (i) => _charset[Random.secure().nextInt(_charset.length)]).join();
   }
 
   /// Closes the grant and frees its resources.
