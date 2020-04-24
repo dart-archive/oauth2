@@ -1,3 +1,7 @@
+# 1.6.0
+
+* Added PKCE support to `AuthorizationCodeGrant`.
+
 # 1.5.0
 
 * Added support for `clientCredentialsGrant`.
