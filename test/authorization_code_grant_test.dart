@@ -30,10 +30,13 @@ void main() {
     test('builds the correct URL', () {
       expect(
           grant.getAuthorizationUrl(redirectUrl).toString(),
-          equals('https://example.com/authorization'
-              '?response_type=code'
-              '&client_id=identifier'
-              '&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'));
+          allOf([
+            startsWith('https://example.com/authorization?response_type=code'),
+            contains('&client_id=identifier'),
+            contains('&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'),
+            matches(r'&code_challenge=[A-Za-z0-9\+\/\-\_]{43}'),
+            contains('&code_challenge_method=S256')
+          ]));
     });
 
     test('builds the correct URL with scopes', () {
@@ -41,11 +44,14 @@ void main() {
           .getAuthorizationUrl(redirectUrl, scopes: ['scope', 'other/scope']);
       expect(
           authorizationUrl.toString(),
-          equals('https://example.com/authorization'
-              '?response_type=code'
-              '&client_id=identifier'
-              '&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'
-              '&scope=scope+other%2Fscope'));
+          allOf([
+            startsWith('https://example.com/authorization?response_type=code'),
+            contains('&client_id=identifier'),
+            contains('&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'),
+            matches(r'&code_challenge=[A-Za-z0-9\+\/\-\_]{43}'),
+            contains('&code_challenge_method=S256'),
+            contains('&scope=scope+other%2Fscope')
+          ]));
     });
 
     test('separates scopes with the correct delimiter', () {
@@ -60,11 +66,14 @@ void main() {
           .getAuthorizationUrl(redirectUrl, scopes: ['scope', 'other/scope']);
       expect(
           authorizationUrl.toString(),
-          equals('https://example.com/authorization'
-              '?response_type=code'
-              '&client_id=identifier'
-              '&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'
-              '&scope=scope_other%2Fscope'));
+          allOf([
+            startsWith('https://example.com/authorization?response_type=code'),
+            contains('&client_id=identifier'),
+            contains('&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'),
+            matches(r'&code_challenge=[A-Za-z0-9\+\/\-\_]{43}'),
+            contains('&code_challenge_method=S256'),
+            contains('&scope=scope_other%2Fscope')
+          ]));
     });
 
     test('builds the correct URL with state', () {
@@ -72,11 +81,14 @@ void main() {
           grant.getAuthorizationUrl(redirectUrl, state: 'state');
       expect(
           authorizationUrl.toString(),
-          equals('https://example.com/authorization'
-              '?response_type=code'
-              '&client_id=identifier'
-              '&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'
-              '&state=state'));
+          allOf([
+            startsWith('https://example.com/authorization?response_type=code'),
+            contains('&client_id=identifier'),
+            contains('&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'),
+            matches(r'&code_challenge=[A-Za-z0-9\+\/\-\_]{43}'),
+            contains('&code_challenge_method=S256'),
+            contains('&state=state')
+          ]));
     });
 
     test('merges with existing query parameters', () {
@@ -90,11 +102,14 @@ void main() {
       var authorizationUrl = grant.getAuthorizationUrl(redirectUrl);
       expect(
           authorizationUrl.toString(),
-          equals('https://example.com/authorization'
-              '?query=value'
-              '&response_type=code'
-              '&client_id=identifier'
-              '&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'));
+          allOf([
+            startsWith('https://example.com/authorization?query=value'),
+            contains('&response_type=code'),
+            contains('&client_id=identifier'),
+            contains('&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'),
+            matches(r'&code_challenge=[A-Za-z0-9\+\/\-\_]{43}'),
+            contains('&code_challenge_method=S256'),
+          ]));
     });
 
     test("can't be called twice", () {
@@ -148,11 +163,13 @@ void main() {
         expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
         expect(
             request.bodyFields,
-            equals({
-              'grant_type': 'authorization_code',
-              'code': 'auth code',
-              'redirect_uri': redirectUrl.toString()
-            }));
+            allOf([
+              containsPair('grant_type', 'authorization_code'),
+              containsPair('code', 'auth code'),
+              containsPair('redirect_uri', redirectUrl.toString()),
+              containsPair(
+                  'code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}'))
+            ]));
         expect(request.headers,
             containsPair("Authorization", "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
 
@@ -190,11 +207,13 @@ void main() {
         expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
         expect(
             request.bodyFields,
-            equals({
-              'grant_type': 'authorization_code',
-              'code': 'auth code',
-              'redirect_uri': redirectUrl.toString()
-            }));
+            allOf([
+              containsPair('grant_type', 'authorization_code'),
+              containsPair('code', 'auth code'),
+              containsPair('redirect_uri', redirectUrl.toString()),
+              containsPair(
+                  'code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}'))
+            ]));
         expect(request.headers,
             containsPair("Authorization", "Basic aWRlbnRpZmllcjpzZWNyZXQ="));
 
@@ -235,13 +254,15 @@ void main() {
         expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
         expect(
             request.bodyFields,
-            equals({
-              'grant_type': 'authorization_code',
-              'code': 'auth code',
-              'redirect_uri': redirectUrl.toString(),
-              'client_id': 'identifier',
-              'client_secret': 'secret'
-            }));
+            allOf([
+              containsPair('grant_type', 'authorization_code'),
+              containsPair('code', 'auth code'),
+              containsPair('redirect_uri', redirectUrl.toString()),
+              containsPair(
+                  'code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}')),
+              containsPair('client_id', 'identifier'),
+              containsPair('client_secret', 'secret')
+            ]));
 
         return new Future.value(new http.Response(
             jsonEncode({
@@ -265,13 +286,15 @@ void main() {
         expect(request.url.toString(), equals(grant.tokenEndpoint.toString()));
         expect(
             request.bodyFields,
-            equals({
-              'grant_type': 'authorization_code',
-              'code': 'auth code',
-              'redirect_uri': redirectUrl.toString(),
-              'client_id': 'identifier',
-              'client_secret': 'secret'
-            }));
+            allOf([
+              containsPair('grant_type', 'authorization_code'),
+              containsPair('code', 'auth code'),
+              containsPair('redirect_uri', redirectUrl.toString()),
+              containsPair(
+                  'code_verifier', matches(r'[A-Za-z0-9\-\.\_\~]{128}')),
+              containsPair('client_id', 'identifier'),
+              containsPair('client_secret', 'secret')
+            ]));
 
         return new Future.value(new http.Response(
             jsonEncode({
