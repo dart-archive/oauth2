@@ -26,6 +26,7 @@ class AuthorizationException implements Exception {
   AuthorizationException(this.error, this.description, this.uri);
 
   /// Provides a string description of the AuthorizationException.
+  @override
   String toString() {
     var header = 'OAuth authorization error ($error)';
     if (description != null) {
