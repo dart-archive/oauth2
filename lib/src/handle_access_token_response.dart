@@ -32,7 +32,8 @@ const _expirationGrace = Duration(seconds: 10);
 /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
 Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
     DateTime startTime, List<String> scopes, String delimiter,
-    {Map<String, dynamic> Function(MediaType contentType, String body) getParameters}) {
+    {Map<String, dynamic> Function(MediaType contentType, String body)
+        getParameters}) {
   getParameters ??= parseJsonParameters;
 
   try {
@@ -124,8 +125,7 @@ void _handleErrorResponse(
   if (!parameters.containsKey('error')) {
     throw FormatException('did not contain required parameter "error"');
   } else if (parameters['error'] is! String) {
-    throw FormatException(
-        'required parameter "error" was not a string, was '
+    throw FormatException('required parameter "error" was not a string, was '
         '"${parameters["error"]}"');
   }
 
@@ -133,8 +133,7 @@ void _handleErrorResponse(
     var value = parameters[name];
 
     if (value != null && value is! String) {
-      throw FormatException(
-          'parameter "$name" was not a string, was "$value"');
+      throw FormatException('parameter "$name" was not a string, was "$value"');
     }
   }
 

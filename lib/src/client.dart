@@ -131,9 +131,7 @@ class Client extends http.BaseClient {
     var params = challenge.parameters;
     if (!params.containsKey('error')) return response;
 
-    throw AuthorizationException(
-        params['error'],
-        params['error_description'],
+    throw AuthorizationException(params['error'], params['error_description'],
         params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
   }
 

@@ -146,7 +146,8 @@ class AuthorizationCodeGrant {
       bool basicAuth = true,
       http.Client httpClient,
       CredentialsRefreshedCallback onCredentialsRefreshed,
-      Map<String, dynamic> Function(MediaType contentType, String body) getParameters})
+      Map<String, dynamic> Function(MediaType contentType, String body)
+          getParameters})
       : _basicAuth = basicAuth,
         _httpClient = httpClient ?? http.Client(),
         _delimiter = delimiter ?? ' ',
@@ -308,8 +309,8 @@ class AuthorizationCodeGrant {
       if (secret != null) body['client_secret'] = secret;
     }
 
-    var response = await _httpClient.post(tokenEndpoint,
-        headers: headers, body: body);
+    var response =
+        await _httpClient.post(tokenEndpoint, headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, _scopes, _delimiter,

@@ -45,8 +45,8 @@ Future<Client> clientCredentialsGrant(
     bool basicAuth = true,
     http.Client httpClient,
     String delimiter,
-    Map<String, dynamic> Function(
-        MediaType contentType, String body) getParameters}) async {
+    Map<String, dynamic> Function(MediaType contentType, String body)
+        getParameters}) async {
   delimiter ??= ' ';
   var startTime = DateTime.now();
 

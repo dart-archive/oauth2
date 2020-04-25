@@ -113,7 +113,8 @@ class Credentials {
       Iterable<String> scopes,
       this.expiration,
       String delimiter,
-      Map<String, dynamic> Function(MediaType mediaType, String body) getParameters})
+      Map<String, dynamic> Function(MediaType mediaType, String body)
+          getParameters})
       : scopes = UnmodifiableListView(
             // Explicitly type-annotate the list literal to work around
             // sdk#24202.
@@ -127,8 +128,7 @@ class Credentials {
   factory Credentials.fromJson(String json) {
     void validate(condition, message) {
       if (condition) return;
-      throw FormatException(
-          'Failed to load credentials: $message.\n\n$json');
+      throw FormatException('Failed to load credentials: $message.\n\n$json');
     }
 
     var parsed;

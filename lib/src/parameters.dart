@@ -7,7 +7,8 @@ import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
 
 /// The type of a callback that parses parameters from an HTTP response.
-typedef GetParameters = Map<String, dynamic> Function(MediaType contentType, String body);
+typedef GetParameters = Map<String, dynamic> Function(
+    MediaType contentType, String body);
 
 /// Parses parameters from a response with a JSON body, as per the [OAuth2
 /// spec][].
@@ -28,6 +29,5 @@ Map<String, dynamic> parseJsonParameters(MediaType contentType, String body) {
     return untypedParameters;
   }
 
-  throw FormatException(
-      'Parameters must be a map, was "$untypedParameters"');
+  throw FormatException('Parameters must be a map, was "$untypedParameters"');
 }
