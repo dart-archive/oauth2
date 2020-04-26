@@ -12,16 +12,10 @@ client has permission to access resources on behalf of the resource owner.
 
 OAuth2 provides several different methods for the client to obtain
 authorization. At the time of writing, this library only supports the
-[AuthorizationCodeGrant][], [clientCredentialsGrant][] and [resourceOwnerPasswordGrant][] methods, but
-further methods may be added in the future. The following example uses this
-method to authenticate, and assumes that the library is being used by a
-server-side application.
-
-[AuthorizationCodeGrant]: http://www.dartdocs.org/documentation/oauth2/latest/index.html#oauth2/oauth2.AuthorizationCodeGrant
-[clientCredentialsGrant]: http://www.dartdocs.org/documentation/oauth2/latest/index.html#oauth2/oauth2.clientCredentialsGrant
-[resourceOwnerPasswordGrant]: http://www.dartdocs.org/documentation/oauth2/latest/index.html#oauth2/oauth2.resourceOwnerPasswordGrant
+[Authorization Code Grant][authorizationCodeGrantSection], [Client Credentials Grant][clientCredentialsGrantSection] and [Resource Owner Password Grant][resourceOwnerPasswordGrantSection] flows, but more may be added in the future.
 
 ## Authorization Code Grant
+**Resources:** [Class summary][authorizationCodeGrantMethod], [OAuth documentation][authorizationCodeGrantDocs]
 
 ```dart
 import 'dart:io';
@@ -79,22 +73,25 @@ Future<oauth2.Client> getClient() async {
       identifier, authorizationEndpoint, tokenEndpoint,
       secret: secret);
 
-  // Redirect the resource owner to the authorization URL. This will be a URL on
-  // the authorization server (authorizationEndpoint with some additional query
-  // parameters). Once the resource owner has authorized, they'll be redirected
-  // to `redirectUrl` with an authorization code.
+  // A URL on the authorization server (authorizationEndpoint with some additional
+  // query parameters). Scopes and state can optionally be passed into this method.
+  var authorizationUrl = grant.getAuthorizationUrl(redirectUrl);
+
+  // Redirect the resource owner to the authorization URL. Once the resource
+  // owner has authorized, they'll be redirected to `redirectUrl` with an
+  // authorization code.
   //
   // `redirect` is an imaginary function that redirects the resource
   // owner's browser.
-  await redirect(grant.getAuthorizationUrl(redirectUrl));
+  await redirect(authorizationUrl);
   
   // Another imaginary function that listens for a request to `redirectUrl`.
-  var request = await listen(redirectUrl);
+  var responseUrl = await listen(redirectUrl);
 
   // Once the user is redirected to `redirectUrl`, pass the query parameters to
   // the AuthorizationCodeGrant. It will validate them and extract the
   // authorization code to create a new Client.
-  return await grant.handleAuthorizationResponse(request.uri.queryParameters);
+  return await grant.handleAuthorizationResponse(responseUrl.queryParameters);
 }
 
 main() async {
@@ -113,7 +110,52 @@ main() async {
 }
 ```
 
+<details>
+  <summary>Click here to learn how to implement the imaginary functions mentioned above.</summary>
+  
+  -----
+  
+  Unfortunately, there's not a universal example for implementing the imaginary functions, `redirect` and `listen`, because different options exist for each platform.
+      
+  For Flutter apps, there's two popular approaches:
+  1. Launch a browser using [url_launcher][] and listen for a redirect using [uni_links][].
+      ```dart
+        if (await canLaunch(authorizationUrl.toString())) {
+          await launch(authorizationUrl.toString());
+        }
+
+        ...
+    
+        final linksStream = getLinksStream().listen((Uri uri) async {
+          if (uri.toString().startsWith(redirectUrl)) {
+            responseUrl = uri;
+          }
+        });
+      ```
+
+  2. Launch a WebView inside the app and listen for a redirect using [webview_flutter][].
+      ```dart
+        WebView(
+          javascriptMode: JavascriptMode.unrestricted,
+          initialUrl: authorizationUrl.toString(),
+          navigationDelegate: (navReq) {
+            if (navReq.url.startsWith(redirectUrl)) {
+              responseUrl = Uri.parse(navReq.url);
+              return NavigationDecision.prevent;
+            }
+            
+            return NavigationDecision.navigate;
+          },
+          ...
+        );
+      ```
+   
+  For Dart apps, the best approach depends on the available options for accessing a browser. In general, you'll need to launch the authorization URL through the client's browser and listen for the redirect URL.
+</details>
+
 ## Client Credentials Grant
+**Resources:** [Method summary][clientCredentialsGrantMethod], [OAuth documentation][clientCredentialsGrantDocs]
+
 ```dart
 // This URL is an endpoint that's provided by the authorization server. It's
 // usually included in the server's documentation of its OAuth2 API.
@@ -149,6 +191,7 @@ await credentialsFile.writeAsString(client.credentials.toJson());
 ```
 
 ## Resource Owner Password Grant
+**Resources:** [Method summary][resourceOwnerPasswordGrantMethod], [OAuth documentation][resourceOwnerPasswordGrantDocs]
 
 ```dart
 // This URL is an endpoint that's provided by the authorization server. It's
@@ -185,3 +228,16 @@ var result = await client.read("http://example.com/protected-resources.txt");
 new File("~/.myapp/credentials.json")
     .writeAsString(client.credentials.toJson());
 ```
+
+[authorizationCodeGrantDocs]: https://oauth.net/2/grant-types/authorization-code/
+[authorizationCodeGrantMethod]: https://pub.dev/documentation/oauth2/latest/oauth2/AuthorizationCodeGrant-class.html
+[authorizationCodeGrantSection]: #authorization-code-grant
+[clientCredentialsGrantDocs]: https://oauth.net/2/grant-types/client-credentials/
+[clientCredentialsGrantMethod]: https://pub.dev/documentation/oauth2/latest/oauth2/clientCredentialsGrant.html
+[clientCredentialsGrantSection]: #client-credentials-grant
+[resourceOwnerPasswordGrantDocs]: https://oauth.net/2/grant-types/password/
+[resourceOwnerPasswordGrantMethod]: https://pub.dev/documentation/oauth2/latest/oauth2/resourceOwnerPasswordGrant.html
+[resourceOwnerPasswordGrantSection]: #resource-owner-password-grant
+[uni_links]: https://pub.dev/packages/uni_links
+[url_launcher]: https://pub.dev/packages/url_launcher
+[webview_flutter]: https://pub.dev/packages/webview_flutter
