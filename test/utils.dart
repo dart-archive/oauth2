@@ -14,17 +14,17 @@ class ExpectClient extends MockClient {
   final Queue<MockClientHandler> _handlers;
 
   ExpectClient._(MockClientHandler fn)
-      : _handlers = new Queue<MockClientHandler>(),
+      : _handlers = Queue<MockClientHandler>(),
         super(fn);
 
   factory ExpectClient() {
     var client;
-    client = new ExpectClient._((request) => client._handleRequest(request));
+    client = ExpectClient._((request) => client._handleRequest(request));
     return client;
   }
 
   void expectRequest(MockClientHandler fn) {
-    var completer = new Completer();
+    var completer = Completer();
     expect(completer.future, completes);
 
     _handlers.add((request) {
@@ -35,7 +35,7 @@ class ExpectClient extends MockClient {
 
   Future<http.Response> _handleRequest(http.Request request) {
     if (_handlers.isEmpty) {
-      return new Future.value(new http.Response('not found', 404));
+      return Future.value(http.Response('not found', 404));
     } else {
       return _handlers.removeFirst()(request);
     }

@@ -13,6 +13,7 @@ class ExpirationException implements Exception {
   ExpirationException(this.credentials);
 
   /// Provides a string description of the ExpirationException.
+  @override
   String toString() =>
       "OAuth2 credentials have expired and can't be refreshed.";
 }

@@ -53,15 +53,15 @@ Future<Client> resourceOwnerPasswordGrant(
     CredentialsRefreshedCallback onCredentialsRefreshed,
     http.Client httpClient,
     String delimiter,
-    Map<String, dynamic> getParameters(
-        MediaType contentType, String body)}) async {
+    Map<String, dynamic> Function(MediaType contentType, String body)
+        getParameters}) async {
   delimiter ??= ' ';
-  var startTime = new DateTime.now();
+  var startTime = DateTime.now();
 
   var body = {
-    "grant_type": "password",
-    "username": username,
-    "password": password
+    'grant_type': 'password',
+    'username': username,
+    'password': password
   };
 
   var headers = <String, String>{};
@@ -75,17 +75,18 @@ Future<Client> resourceOwnerPasswordGrant(
     }
   }
 
-  if (scopes != null && scopes.isNotEmpty)
+  if (scopes != null && scopes.isNotEmpty) {
     body['scope'] = scopes.join(delimiter);
+  }
 
-  if (httpClient == null) httpClient = new http.Client();
+  httpClient ??= http.Client();
   var response = await httpClient.post(authorizationEndpoint,
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
       response, authorizationEndpoint, startTime, scopes, delimiter,
       getParameters: getParameters);
-  return new Client(credentials,
+  return Client(credentials,
       identifier: identifier,
       secret: secret,
       httpClient: httpClient,

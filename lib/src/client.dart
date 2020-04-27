@@ -92,9 +92,9 @@ class Client extends http.BaseClient {
       http.Client httpClient})
       : _basicAuth = basicAuth,
         _onCredentialsRefreshed = onCredentialsRefreshed,
-        _httpClient = httpClient == null ? new http.Client() : httpClient {
+        _httpClient = httpClient ?? http.Client() {
     if (identifier == null && secret != null) {
-      throw new ArgumentError("secret may not be passed without identifier.");
+      throw ArgumentError('secret may not be passed without identifier.');
     }
   }
 
@@ -102,13 +102,14 @@ class Client extends http.BaseClient {
   ///
   /// This will also automatically refresh this client's [Credentials] before
   /// sending the request if necessary.
+  @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     if (credentials.isExpired) {
-      if (!credentials.canRefresh) throw new ExpirationException(credentials);
+      if (!credentials.canRefresh) throw ExpirationException(credentials);
       await refreshCredentials();
     }
 
-    request.headers['authorization'] = "Bearer ${credentials.accessToken}";
+    request.headers['authorization'] = 'Bearer ${credentials.accessToken}';
     var response = await _httpClient.send(request);
 
     if (response.statusCode != 401) return response;
@@ -130,9 +131,7 @@ class Client extends http.BaseClient {
     var params = challenge.parameters;
     if (!params.containsKey('error')) return response;
 
-    throw new AuthorizationException(
-        params['error'],
-        params['error_description'],
+    throw AuthorizationException(params['error'], params['error_description'],
         params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
   }
 
@@ -147,9 +146,9 @@ class Client extends http.BaseClient {
   /// [Credentials.scopes] field of [Client.credentials].
   Future<Client> refreshCredentials([List<String> newScopes]) async {
     if (!credentials.canRefresh) {
-      var prefix = "OAuth credentials";
-      if (credentials.isExpired) prefix = "$prefix have expired and";
-      throw new StateError("$prefix can't be refreshed.");
+      var prefix = 'OAuth credentials';
+      if (credentials.isExpired) prefix = '$prefix have expired and';
+      throw StateError("$prefix can't be refreshed.");
     }
 
     _credentials = await credentials.refresh(
@@ -165,6 +164,7 @@ class Client extends http.BaseClient {
   }
 
   /// Closes this client and its underlying HTTP client.
+  @override
   void close() {
     if (_httpClient != null) _httpClient.close();
     _httpClient = null;

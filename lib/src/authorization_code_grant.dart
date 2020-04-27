@@ -78,13 +78,13 @@ class AuthorizationCodeGrant {
   /// Callback to be invoked whenever the credentials are refreshed.
   ///
   /// This will be passed as-is to the constructed [Client].
-  CredentialsRefreshedCallback _onCredentialsRefreshed;
+  final CredentialsRefreshedCallback _onCredentialsRefreshed;
 
   /// Whether to use HTTP Basic authentication for authorizing the client.
   final bool _basicAuth;
 
   /// A [String] used to separate scopes; defaults to `" "`.
-  String _delimiter;
+  final String _delimiter;
 
   /// The HTTP client used to make HTTP requests.
   http.Client _httpClient;
@@ -105,7 +105,7 @@ class AuthorizationCodeGrant {
 
   /// Allowed characters for generating the _codeVerifier
   static const String _charset =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
 
   /// The generated PKCE code verifier
   String _codeVerifier;
@@ -146,9 +146,10 @@ class AuthorizationCodeGrant {
       bool basicAuth = true,
       http.Client httpClient,
       CredentialsRefreshedCallback onCredentialsRefreshed,
-      Map<String, dynamic> getParameters(MediaType contentType, String body)})
+      Map<String, dynamic> Function(MediaType contentType, String body)
+          getParameters})
       : _basicAuth = basicAuth,
-        _httpClient = httpClient == null ? new http.Client() : httpClient,
+        _httpClient = httpClient ?? http.Client(),
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters,
         _onCredentialsRefreshed = onCredentialsRefreshed;
@@ -175,7 +176,7 @@ class AuthorizationCodeGrant {
   Uri getAuthorizationUrl(Uri redirect,
       {Iterable<String> scopes, String state}) {
     if (_state != _State.initial) {
-      throw new StateError('The authorization URL has already been generated.');
+      throw StateError('The authorization URL has already been generated.');
     }
     _state = _State.awaitingResponse;
 
@@ -188,23 +189,23 @@ class AuthorizationCodeGrant {
     _codeVerifier = _createCodeVerifier();
     var codeChallenge = base64Url
         .encode(sha256.convert(ascii.encode(_codeVerifier)).bytes)
-        .replaceAll("=", "");
+        .replaceAll('=', '');
 
-    this._redirectEndpoint = redirect;
-    this._scopes = scopes;
-    this._stateString = state;
+    _redirectEndpoint = redirect;
+    _scopes = scopes;
+    _stateString = state;
     var parameters = {
-      "response_type": "code",
-      "client_id": this.identifier,
-      "redirect_uri": redirect.toString(),
-      "code_challenge": codeChallenge,
-      "code_challenge_method": "S256"
+      'response_type': 'code',
+      'client_id': identifier,
+      'redirect_uri': redirect.toString(),
+      'code_challenge': codeChallenge,
+      'code_challenge_method': 'S256'
     };
 
     if (state != null) parameters['state'] = state;
     if (scopes.isNotEmpty) parameters['scope'] = scopes.join(_delimiter);
 
-    return addQueryParameters(this.authorizationEndpoint, parameters);
+    return addQueryParameters(authorizationEndpoint, parameters);
   }
 
   /// Processes the query parameters added to a redirect from the authorization
@@ -227,19 +228,19 @@ class AuthorizationCodeGrant {
   Future<Client> handleAuthorizationResponse(
       Map<String, String> parameters) async {
     if (_state == _State.initial) {
-      throw new StateError('The authorization URL has not yet been generated.');
+      throw StateError('The authorization URL has not yet been generated.');
     } else if (_state == _State.finished) {
-      throw new StateError('The authorization code has already been received.');
+      throw StateError('The authorization code has already been received.');
     }
     _state = _State.finished;
 
     if (_stateString != null) {
       if (!parameters.containsKey('state')) {
-        throw new FormatException('Invalid OAuth response for '
+        throw FormatException('Invalid OAuth response for '
             '"$authorizationEndpoint": parameter "state" expected to be '
             '"$_stateString", was missing.');
       } else if (parameters['state'] != _stateString) {
-        throw new FormatException('Invalid OAuth response for '
+        throw FormatException('Invalid OAuth response for '
             '"$authorizationEndpoint": parameter "state" expected to be '
             '"$_stateString", was "${parameters['state']}".');
       }
@@ -249,9 +250,9 @@ class AuthorizationCodeGrant {
       var description = parameters['error_description'];
       var uriString = parameters['error_uri'];
       var uri = uriString == null ? null : Uri.parse(uriString);
-      throw new AuthorizationException(parameters['error'], description, uri);
+      throw AuthorizationException(parameters['error'], description, uri);
     } else if (!parameters.containsKey('code')) {
-      throw new FormatException('Invalid OAuth response for '
+      throw FormatException('Invalid OAuth response for '
           '"$authorizationEndpoint": did not contain required parameter '
           '"code".');
     }
@@ -276,9 +277,9 @@ class AuthorizationCodeGrant {
   /// Throws [AuthorizationException] if the authorization fails.
   Future<Client> handleAuthorizationCode(String authorizationCode) async {
     if (_state == _State.initial) {
-      throw new StateError('The authorization URL has not yet been generated.');
+      throw StateError('The authorization URL has not yet been generated.');
     } else if (_state == _State.finished) {
-      throw new StateError('The authorization code has already been received.');
+      throw StateError('The authorization code has already been received.');
     }
     _state = _State.finished;
 
@@ -288,35 +289,35 @@ class AuthorizationCodeGrant {
   /// This works just like [handleAuthorizationCode], except it doesn't validate
   /// the state beforehand.
   Future<Client> _handleAuthorizationCode(String authorizationCode) async {
-    var startTime = new DateTime.now();
+    var startTime = DateTime.now();
 
     var headers = <String, String>{};
 
     var body = {
-      "grant_type": "authorization_code",
-      "code": authorizationCode,
-      "redirect_uri": this._redirectEndpoint.toString(),
-      "code_verifier": _codeVerifier
+      'grant_type': 'authorization_code',
+      'code': authorizationCode,
+      'redirect_uri': _redirectEndpoint.toString(),
+      'code_verifier': _codeVerifier
     };
 
     if (_basicAuth && secret != null) {
-      headers["Authorization"] = basicAuthHeader(identifier, secret);
+      headers['Authorization'] = basicAuthHeader(identifier, secret);
     } else {
       // The ID is required for this request any time basic auth isn't being
       // used, even if there's no actual client authentication to be done.
-      body["client_id"] = identifier;
-      if (secret != null) body["client_secret"] = secret;
+      body['client_id'] = identifier;
+      if (secret != null) body['client_secret'] = secret;
     }
 
-    var response = await _httpClient.post(this.tokenEndpoint,
-        headers: headers, body: body);
+    var response =
+        await _httpClient.post(tokenEndpoint, headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, _scopes, _delimiter,
         getParameters: _getParameters);
-    return new Client(credentials,
-        identifier: this.identifier,
-        secret: this.secret,
+    return Client(credentials,
+        identifier: identifier,
+        secret: secret,
         basicAuth: _basicAuth,
         httpClient: _httpClient,
         onCredentialsRefreshed: _onCredentialsRefreshed);
@@ -343,21 +344,22 @@ class AuthorizationCodeGrant {
 class _State {
   /// [AuthorizationCodeGrant.getAuthorizationUrl] has not yet been called for
   /// this grant.
-  static const initial = const _State("initial");
+  static const initial = _State('initial');
 
   // [AuthorizationCodeGrant.getAuthorizationUrl] has been called but neither
   // [AuthorizationCodeGrant.handleAuthorizationResponse] nor
   // [AuthorizationCodeGrant.handleAuthorizationCode] has been called.
-  static const awaitingResponse = const _State("awaiting response");
+  static const awaitingResponse = _State('awaiting response');
 
   // [AuthorizationCodeGrant.getAuthorizationUrl] and either
   // [AuthorizationCodeGrant.handleAuthorizationResponse] or
   // [AuthorizationCodeGrant.handleAuthorizationCode] have been called.
-  static const finished = const _State("finished");
+  static const finished = _State('finished');
 
   final String _name;
 
   const _State(this._name);
 
+  @override
   String toString() => _name;
 }

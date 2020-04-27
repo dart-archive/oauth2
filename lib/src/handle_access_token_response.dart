@@ -13,7 +13,7 @@ import 'parameters.dart';
 ///
 /// This allows credential expiration checks to remain valid for a reasonable
 /// amount of time.
-const _expirationGrace = const Duration(seconds: 10);
+const _expirationGrace = Duration(seconds: 10);
 
 /// Handles a response from the authorization server that contains an access
 /// token.
@@ -32,7 +32,8 @@ const _expirationGrace = const Duration(seconds: 10);
 /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
 Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
     DateTime startTime, List<String> scopes, String delimiter,
-    {Map<String, dynamic> getParameters(MediaType contentType, String body)}) {
+    {Map<String, dynamic> Function(MediaType contentType, String body)
+        getParameters}) {
   getParameters ??= parseJsonParameters;
 
   try {
@@ -42,18 +43,18 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
 
     var contentTypeString = response.headers['content-type'];
     if (contentTypeString == null) {
-      throw new FormatException('Missing Content-Type string.');
+      throw FormatException('Missing Content-Type string.');
     }
 
     var parameters =
-        getParameters(new MediaType.parse(contentTypeString), response.body);
+        getParameters(MediaType.parse(contentTypeString), response.body);
 
     for (var requiredParameter in ['access_token', 'token_type']) {
       if (!parameters.containsKey(requiredParameter)) {
-        throw new FormatException(
+        throw FormatException(
             'did not contain required parameter "$requiredParameter"');
       } else if (parameters[requiredParameter] is! String) {
-        throw new FormatException(
+        throw FormatException(
             'required parameter "$requiredParameter" was not a string, was '
             '"${parameters[requiredParameter]}"');
       }
@@ -62,21 +63,22 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
     // TODO(nweiz): support the "mac" token type
     // (http://tools.ietf.org/html/draft-ietf-oauth-v2-http-mac-01)
     if (parameters['token_type'].toLowerCase() != 'bearer') {
-      throw new FormatException(
+      throw FormatException(
           '"$tokenEndpoint": unknown token type "${parameters['token_type']}"');
     }
 
     var expiresIn = parameters['expires_in'];
     if (expiresIn != null && expiresIn is! int) {
-      throw new FormatException(
+      throw FormatException(
           'parameter "expires_in" was not an int, was "$expiresIn"');
     }
 
     for (var name in ['refresh_token', 'id_token', 'scope']) {
       var value = parameters[name];
-      if (value != null && value is! String)
-        throw new FormatException(
+      if (value != null && value is! String) {
+        throw FormatException(
             'parameter "$name" was not a string, was "$value"');
+      }
     }
 
     var scope = parameters['scope'] as String;
@@ -84,16 +86,16 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
 
     var expiration = expiresIn == null
         ? null
-        : startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
+        : startTime.add(Duration(seconds: expiresIn) - _expirationGrace);
 
-    return new Credentials(parameters['access_token'],
+    return Credentials(parameters['access_token'],
         refreshToken: parameters['refresh_token'],
         idToken: parameters['id_token'],
         tokenEndpoint: tokenEndpoint,
         scopes: scopes,
         expiration: expiration);
   } on FormatException catch (e) {
-    throw new FormatException('Invalid OAuth response for "$tokenEndpoint": '
+    throw FormatException('Invalid OAuth response for "$tokenEndpoint": '
         '${e.message}.\n\n${response.body}');
   }
 }
@@ -110,34 +112,33 @@ void _handleErrorResponse(
     if (response.reasonPhrase != null && response.reasonPhrase.isNotEmpty) {
       ' ${response.reasonPhrase}';
     }
-    throw new FormatException('OAuth request for "$tokenEndpoint" failed '
+    throw FormatException('OAuth request for "$tokenEndpoint" failed '
         'with status ${response.statusCode}$reason.\n\n${response.body}');
   }
 
   var contentTypeString = response.headers['content-type'];
   var contentType =
-      contentTypeString == null ? null : new MediaType.parse(contentTypeString);
+      contentTypeString == null ? null : MediaType.parse(contentTypeString);
 
   var parameters = getParameters(contentType, response.body);
 
   if (!parameters.containsKey('error')) {
-    throw new FormatException('did not contain required parameter "error"');
+    throw FormatException('did not contain required parameter "error"');
   } else if (parameters['error'] is! String) {
-    throw new FormatException(
-        'required parameter "error" was not a string, was '
+    throw FormatException('required parameter "error" was not a string, was '
         '"${parameters["error"]}"');
   }
 
   for (var name in ['error_description', 'error_uri']) {
     var value = parameters[name];
 
-    if (value != null && value is! String)
-      throw new FormatException(
-          'parameter "$name" was not a string, was "$value"');
+    if (value != null && value is! String) {
+      throw FormatException('parameter "$name" was not a string, was "$value"');
+    }
   }
 
   var description = parameters['error_description'];
   var uriString = parameters['error_uri'];
   var uri = uriString == null ? null : Uri.parse(uriString);
-  throw new AuthorizationException(parameters['error'], description, uri);
+  throw AuthorizationException(parameters['error'], description, uri);
 }
