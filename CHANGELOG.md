@@ -1,3 +1,7 @@
+# 1.6.1
+
+* Added fix to make sure that credentials are only refreshed once when multiple calls are made.
+
 # 1.6.0
 
 * Added PKCE support to `AuthorizationCodeGrant`.
