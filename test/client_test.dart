@@ -65,6 +65,46 @@ void main() {
       expect(client.credentials.accessToken, equals('new access token'));
     });
 
+    test(
+        'that can be refreshed refreshes only once if multiple requests are made',
+        () async {
+      var expiration = DateTime.now().subtract(Duration(hours: 1));
+      var credentials = oauth2.Credentials('access token',
+          refreshToken: 'refresh token',
+          tokenEndpoint: tokenEndpoint,
+          expiration: expiration);
+      var client = oauth2.Client(credentials,
+          identifier: 'identifier', secret: 'secret', httpClient: httpClient);
+
+      httpClient.expectRequest((request) {
+        expect(request.method, equals('POST'));
+        expect(request.url.toString(), equals(tokenEndpoint.toString()));
+        return Future.value(http.Response(
+            jsonEncode(
+                {'access_token': 'new access token', 'token_type': 'bearer'}),
+            200,
+            headers: {'content-type': 'application/json'}));
+      });
+
+      final numCalls = 2;
+
+      for (var i = 0; i < numCalls; i++) {
+        httpClient.expectRequest((request) {
+          expect(request.method, equals('GET'));
+          expect(request.url.toString(), equals(requestUri.toString()));
+          expect(request.headers['authorization'],
+              equals('Bearer new access token'));
+
+          return Future.value(http.Response('good job', 200));
+        });
+      }
+
+      await Future.wait(
+          List<Future>.generate(numCalls, (_) => client.read(requestUri)));
+
+      expect(client.credentials.accessToken, equals('new access token'));
+    });
+
     test('that onCredentialsRefreshed is called', () async {
       var callbackCalled = false;
 
