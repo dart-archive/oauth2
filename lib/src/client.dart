@@ -135,6 +135,9 @@ class Client extends http.BaseClient {
         params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
   }
 
+  /// A [Future] used to track whether [refreshCredentials] is running.
+  Future<Credentials> _refreshingFuture;
+
   /// Explicitly refreshes this client's credentials. Returns this client.
   ///
   /// This will throw a [StateError] if the [Credentials] can't be refreshed, an
@@ -151,14 +154,26 @@ class Client extends http.BaseClient {
       throw StateError("$prefix can't be refreshed.");
     }
 
-    _credentials = await credentials.refresh(
-        identifier: identifier,
-        secret: secret,
-        newScopes: newScopes,
-        basicAuth: _basicAuth,
-        httpClient: _httpClient);
-
-    if (_onCredentialsRefreshed != null) _onCredentialsRefreshed(_credentials);
+    // To make sure that only one refresh happens when credentials are expired
+    // we track it using the [_refreshingFuture]. And also make sure that the
+    // _onCredentialsRefreshed callback is only called once.
+    if (_refreshingFuture == null) {
+      try {
+        _refreshingFuture = credentials.refresh(
+          identifier: identifier,
+          secret: secret,
+          newScopes: newScopes,
+          basicAuth: _basicAuth,
+          httpClient: _httpClient,
+        );
+        _credentials = await _refreshingFuture;
+        _onCredentialsRefreshed?.call(_credentials);
+      } finally {
+        _refreshingFuture = null;
+      }
+    } else {
+      await _refreshingFuture;
+    }
 
     return this;
   }
