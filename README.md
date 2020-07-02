@@ -50,7 +50,9 @@ final redirectUrl = Uri.parse("http://my-site.com/oauth2-redirect");
 /// A file in which the users credentials are stored persistently. If the server
 /// issues a refresh token allowing the client to refresh outdated credentials,
 /// these may be valid indefinitely, meaning the user never has to
-/// re-authenticate.
+/// re-authenticate. This is only for demonstration purpose, and you should not 
+/// save it as a normal file. Instead, the credentials should be saved using 
+/// secure storage (such as flutter_secure_storage).
 final credentialsFile = new File("~/.myapp/credentials.json");
 
 /// Either load an OAuth2 client from saved credentials or authenticate a new
@@ -224,7 +226,11 @@ var result = await client.read("http://example.com/protected-resources.txt");
 
 // Once we're done with the client, save the credentials file. This will allow
 // us to re-use the credentials and avoid storing the username and password
-// directly.
+// directly. This is only for demonstration purpose, and you should not save it
+// as a normal file. Instead, the credentials should be saved using secure 
+// storage (such as flutter_secure_storage). This is only for demonstration 
+// purpose, and you should not save it as a normal file. Instead, the 
+// credentials should be saved using secure storage (such as flutter_secure_storage).
 new File("~/.myapp/credentials.json")
     .writeAsString(client.credentials.toJson());
 ```
