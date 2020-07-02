@@ -228,9 +228,7 @@ var result = await client.read("http://example.com/protected-resources.txt");
 // us to re-use the credentials and avoid storing the username and password
 // directly. This is only for demonstration purpose, and you should not save it
 // as a normal file. Instead, the credentials should be saved using secure 
-// storage (such as flutter_secure_storage). This is only for demonstration 
-// purpose, and you should not save it as a normal file. Instead, the 
-// credentials should be saved using secure storage (such as flutter_secure_storage).
+// storage (such as flutter_secure_storage). 
 new File("~/.myapp/credentials.json")
     .writeAsString(client.credentials.toJson());
 ```
