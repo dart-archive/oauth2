@@ -1,6 +1,5 @@
 name: oauth2
-version: 1.6.1
-author: Dart Team <misc@dartlang.org>
+version: 1.6.2-dev
 homepage: https://github.com/dart-lang/oauth2
 description: >-
   A client library for authenticating with a remote service via OAuth2 on
