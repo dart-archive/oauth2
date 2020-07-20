@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:oauth2/oauth2.dart' as oauth2;
@@ -75,11 +76,20 @@ void main() async {
   var client = await createClient();
 
   // Once you have a Client, you can use it just like any other HTTP client.
-  var result = client.read('http://example.com/protected-resources.txt');
+  print(await client.read('http://example.com/protected-resources.txt'));
 
   // Once we're done with the client, save the credentials file. This ensures
   // that if the credentials were automatically refreshed while using the
   // client, the new credentials are available for the next run of the
   // program.
   await credentialsFile.writeAsString(client.credentials.toJson());
+}
+
+Future<void> redirect(Uri url) async {
+  // Client implementation detail
+}
+
+Future<Uri> listen(Uri url) async {
+  // Client implementation detail
+  return null;
 }
