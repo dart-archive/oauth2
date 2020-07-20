@@ -1,3 +1,5 @@
+# 1.6.2-dev
+
 # 1.6.1
 
 * Added fix to make sure that credentials are only refreshed once when multiple calls are made.
