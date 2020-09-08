@@ -329,6 +329,42 @@ class AuthorizationCodeGrant {
         128, (i) => _charset[Random.secure().nextInt(_charset.length)]).join();
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'identifier': identifier,
+      'secret': secret,
+      'authorization_endpoint': authorizationEndpoint.toString(),
+      'token_endpoint': tokenEndpoint.toString(),
+      'code_verifier': _codeVerifier,
+      'redirect_uri': _redirectEndpoint.toString(),
+      'scopes': _scopes,
+      'state_string': _stateString,
+    };
+  }
+
+  factory AuthorizationCodeGrant.fromJson(Map<String, dynamic> json) {
+    String identifier = json['identifier'];
+    final authorizationEndpoint = Uri.parse(json['authorization_endpoint']);
+    final tokenEndpoint = Uri.parse(json['token_endpoint']);
+    String secret = json['secret'];
+    String code_verifier = json['code_verifier'];
+    final _redirectEndpoint = Uri.parse(json['redirect_uri']);
+    List<String> scopes = json['scopes'];
+    String stateString = json['state_string'];
+
+    var grant = AuthorizationCodeGrant(
+      identifier,
+      authorizationEndpoint,
+      tokenEndpoint,
+      secret: secret,
+    );
+    grant._codeVerifier = code_verifier;
+    grant._redirectEndpoint = _redirectEndpoint;
+    grant._scopes = scopes;
+    grant._stateString = stateString;
+    return grant;
+  }
+
   /// Closes the grant and frees its resources.
   ///
   /// This will close the underlying HTTP client, which is shared by the
