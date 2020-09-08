@@ -329,7 +329,7 @@ class AuthorizationCodeGrant {
         128, (i) => _charset[Random.secure().nextInt(_charset.length)]).join();
   }
 
-  Map<String, String> toJson() {
+  Map<String, dynamic> toJson() {
     return {
       'identifier': identifier,
       'secret': secret,
@@ -337,33 +337,24 @@ class AuthorizationCodeGrant {
       'token_endpoint': tokenEndpoint.toString(),
       'code_verifier': _codeVerifier,
       'redirect_uri': _redirectEndpoint.toString(),
-      'scopes': jsonEncode(_scopes),
+      'scopes': _scopes.cast<String>(),
+      'state': _state._name,
       'state_string': _stateString,
     };
   }
 
-  factory AuthorizationCodeGrant.fromJson(Map<String, String> json) {
-    final identifier = json['identifier'];
-    final authorizationEndpoint = Uri.parse(json['authorization_endpoint']);
-    final tokenEndpoint = Uri.parse(json['token_endpoint']);
-    final secret = json['secret'];
-    final code_verifier = json['code_verifier'];
-    final _redirectEndpoint = Uri.parse(json['redirect_uri']);
-
-    List<String> scopes =
-        jsonDecode(json['scopes']).map((scope) => scope.toString()).toList();
-    final stateString = json['state_string'];
-
+  factory AuthorizationCodeGrant.fromJson(Map<String, dynamic> json) {
     var grant = AuthorizationCodeGrant(
-      identifier,
-      authorizationEndpoint,
-      tokenEndpoint,
-      secret: secret,
+      json['identifier'],
+      Uri.parse(json['authorization_endpoint']),
+      Uri.parse(json['token_endpoint']),
+      secret: json['secret'],
     );
-    grant._codeVerifier = code_verifier;
-    grant._redirectEndpoint = _redirectEndpoint;
-    grant._scopes = scopes;
-    grant._stateString = stateString;
+    grant._codeVerifier = json['code_verifier'];
+    grant._redirectEndpoint = Uri.parse(json['redirect_uri']);
+    grant._scopes = json['scopes'].cast<String>();
+    grant._state = _State(json['state']);
+    grant._stateString = json['state_string'];
     return grant;
   }
 
