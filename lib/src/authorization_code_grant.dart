@@ -349,7 +349,9 @@ class AuthorizationCodeGrant {
     String secret = json['secret'];
     String code_verifier = json['code_verifier'];
     final _redirectEndpoint = Uri.parse(json['redirect_uri']);
-    List<String> scopes = json['scopes'];
+
+    List<String> scopes =
+        json['scopes'].map((scope) => scope.toString()).toList();
     String stateString = json['state_string'];
 
     var grant = AuthorizationCodeGrant(
