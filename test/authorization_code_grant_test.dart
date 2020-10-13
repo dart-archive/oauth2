@@ -54,6 +54,29 @@ void main() {
           ]));
     });
 
+    test('builds the correct URL with passed in code verifier', () {
+      final codeVerifier =
+          'it1shei7LooGoh3looxaa4sieveijeib2zecauz2oo8aebae5aehee0ahPirewoh5Bo6Maexooqui3uL2si6ahweiv7shauc1shahxooveoB3aeyahsaiye0Egh3raix';
+      final expectedCodeChallenge =
+          'EjfFMv8TFPd3GuNxAn5COhlWBGpfZLimHett7ypJfJ0';
+      var grant = oauth2.AuthorizationCodeGrant(
+          'identifier',
+          Uri.parse('https://example.com/authorization'),
+          Uri.parse('https://example.com/token'),
+          secret: 'secret',
+          httpClient: client,
+          codeVerifier: codeVerifier);
+      expect(
+          grant.getAuthorizationUrl(redirectUrl).toString(),
+          allOf([
+            startsWith('https://example.com/authorization?response_type=code'),
+            contains('&client_id=identifier'),
+            contains('&redirect_uri=http%3A%2F%2Fexample.com%2Fredirect'),
+            contains('&code_challenge=$expectedCodeChallenge'),
+            contains('&code_challenge_method=S256')
+          ]));
+    });
+
     test('separates scopes with the correct delimiter', () {
       var grant = oauth2.AuthorizationCodeGrant(
           'identifier',
