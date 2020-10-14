@@ -126,8 +126,9 @@ class AuthorizationCodeGrant {
   /// [onCredentialsRefreshed] will be called by the constructed [Client]
   /// whenever the credentials are refreshed.
   ///
-  /// [codeVerifier] String to be used as PKCE code verifier. If none is provided one
-  /// will be generated. Must meet requirements specified in [RFC 7636].
+  /// [codeVerifier] String to be used as PKCE code verifier. If none is provided a
+  /// random codeVerifier will be generated.
+  /// The codeVerifier must meet requirements specified in [RFC 7636].
   ///
   /// [RFC 7636]: https://tools.ietf.org/html/rfc7636#section-4.1
   ///
