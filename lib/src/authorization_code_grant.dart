@@ -107,8 +107,8 @@ class AuthorizationCodeGrant {
   static const String _charset =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
 
-  /// The generated PKCE code verifier
-  String _codeVerifier;
+  /// The PKCE code verifier. Will be generated if one is not provided in the constructor.
+  final String _codeVerifier;
 
   /// Creates a new grant.
   ///
@@ -125,6 +125,12 @@ class AuthorizationCodeGrant {
   ///
   /// [onCredentialsRefreshed] will be called by the constructed [Client]
   /// whenever the credentials are refreshed.
+  ///
+  /// [codeVerifier] String to be used as PKCE code verifier. If none is provided a
+  /// random codeVerifier will be generated.
+  /// The codeVerifier must meet requirements specified in [RFC 7636].
+  ///
+  /// [RFC 7636]: https://tools.ietf.org/html/rfc7636#section-4.1
   ///
   /// The scope strings will be separated by the provided [delimiter]. This
   /// defaults to `" "`, the OAuth2 standard, but some APIs (such as Facebook's)
@@ -147,12 +153,14 @@ class AuthorizationCodeGrant {
       http.Client httpClient,
       CredentialsRefreshedCallback onCredentialsRefreshed,
       Map<String, dynamic> Function(MediaType contentType, String body)
-          getParameters})
+          getParameters,
+      String codeVerifier})
       : _basicAuth = basicAuth,
         _httpClient = httpClient ?? http.Client(),
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters,
-        _onCredentialsRefreshed = onCredentialsRefreshed;
+        _onCredentialsRefreshed = onCredentialsRefreshed,
+        _codeVerifier = codeVerifier ?? _createCodeVerifier();
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
@@ -186,7 +194,6 @@ class AuthorizationCodeGrant {
       scopes = scopes.toList();
     }
 
-    _codeVerifier = _createCodeVerifier();
     var codeChallenge = base64Url
         .encode(sha256.convert(ascii.encode(_codeVerifier)).bytes)
         .replaceAll('=', '');
