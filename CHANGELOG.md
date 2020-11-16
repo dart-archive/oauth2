@@ -1,3 +1,7 @@
+# 1.6.3
+
+* Added optional `codeVerifier` parameter to `AuthorizationCodeGrant` constructor.
+
 # 1.6.2-dev
 
 # 1.6.1
