@@ -356,8 +356,8 @@ class AuthorizationCodeGrant {
       Uri.parse(json['authorization_endpoint']),
       Uri.parse(json['token_endpoint']),
       secret: json['secret'],
+      codeVerifier: json['code_verifier'],
     );
-    grant._codeVerifier = json['code_verifier'];
     grant._redirectEndpoint = Uri.parse(json['redirect_uri']);
     grant._scopes = json['scopes'].cast<String>();
     grant._state = _State(json['state']);
