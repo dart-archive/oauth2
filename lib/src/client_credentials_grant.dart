@@ -40,13 +40,16 @@ import 'utils.dart';
 /// its body as a UTF-8-decoded string. It should return a map in the same
 /// format as the [standard JSON response](https://tools.ietf.org/html/rfc6749#section-5.1)
 Future<Client> clientCredentialsGrant(
-    Uri authorizationEndpoint, String identifier, String secret,
-    {Iterable<String> scopes,
-    bool basicAuth = true,
-    http.Client httpClient,
-    String delimiter,
-    Map<String, dynamic> Function(MediaType contentType, String body)
-        getParameters}) async {
+  Uri authorizationEndpoint,
+  String identifier,
+  String secret, {
+  required Iterable<String> scopes,
+  bool basicAuth = true,
+  http.Client? httpClient,
+  String? delimiter,
+  Map<String, dynamic> Function(MediaType? contentType, String body)?
+      getParameters,
+}) async {
   delimiter ??= ' ';
   var startTime = DateTime.now();
 
@@ -54,16 +57,14 @@ Future<Client> clientCredentialsGrant(
 
   var headers = <String, String>{};
 
-  if (identifier != null) {
-    if (basicAuth) {
-      headers['Authorization'] = basicAuthHeader(identifier, secret);
-    } else {
-      body['client_id'] = identifier;
-      if (secret != null) body['client_secret'] = secret;
-    }
+  if (basicAuth) {
+    headers['Authorization'] = basicAuthHeader(identifier, secret);
+  } else {
+    body['client_id'] = identifier;
+    body['client_secret'] = secret;
   }
 
-  if (scopes != null && scopes.isNotEmpty) {
+  if (scopes.isNotEmpty) {
     body['scope'] = scopes.join(delimiter);
   }
 
@@ -72,7 +73,7 @@ Future<Client> clientCredentialsGrant(
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, scopes, delimiter,
+      response, authorizationEndpoint, startTime, delimiter,
       getParameters: getParameters);
   return Client(credentials,
       identifier: identifier, secret: secret, httpClient: httpClient);

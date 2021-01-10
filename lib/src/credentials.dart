@@ -52,7 +52,7 @@ class Credentials {
   /// requested (or not supported).
   ///
   /// [spec]: https://openid.net/specs/openid-connect-core-1_0.html#IDToken
-  final String idToken;
+  final String? idToken;
 
   /// The URL of the authorization server endpoint that's used to refresh the
   /// credentials.
@@ -70,7 +70,7 @@ class Credentials {
   ///
   /// This is likely to be a few seconds earlier than the server's idea of the
   /// expiration date.
-  final DateTime expiration;
+  final DateTime? expiration;
 
   /// The function used to parse parameters from a host's response.
   final GetParameters _getParameters;
@@ -81,7 +81,7 @@ class Credentials {
   /// called. However, since the client's expiration date is kept a few seconds
   /// earlier than the server's, there should be enough leeway to rely on this.
   bool get isExpired =>
-      expiration != null && DateTime.now().isAfter(expiration);
+      expiration != null && DateTime.now().isAfter(expiration!);
 
   /// Whether it's possible to refresh these credentials.
   bool get canRefresh => refreshToken != null && tokenEndpoint != null;
@@ -106,19 +106,17 @@ class Credentials {
   /// format as the [standard JSON response][].
   ///
   /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
-  Credentials(this.accessToken,
-      {this.refreshToken,
-      this.idToken,
-      this.tokenEndpoint,
-      Iterable<String> scopes,
-      this.expiration,
-      String delimiter,
-      Map<String, dynamic> Function(MediaType mediaType, String body)
-          getParameters})
-      : scopes = UnmodifiableListView(
-            // Explicitly type-annotate the list literal to work around
-            // sdk#24202.
-            scopes == null ? <String>[] : scopes.toList()),
+  Credentials(
+    this.accessToken, {
+    required this.refreshToken,
+    this.idToken,
+    required this.tokenEndpoint,
+    required Iterable<String> scopes,
+    this.expiration,
+    String? delimiter,
+    Map<String, dynamic> Function(MediaType? mediaType, String body)?
+        getParameters,
+  })  : scopes = UnmodifiableListView(scopes.toList()),
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters;
 
@@ -183,11 +181,10 @@ class Credentials {
         'accessToken': accessToken,
         'refreshToken': refreshToken,
         'idToken': idToken,
-        'tokenEndpoint':
-            tokenEndpoint == null ? null : tokenEndpoint.toString(),
+        'tokenEndpoint': tokenEndpoint.toString(),
         'scopes': scopes,
         'expiration':
-            expiration == null ? null : expiration.millisecondsSinceEpoch
+            expiration == null ? null : expiration!.millisecondsSinceEpoch
       });
 
   /// Returns a new set of refreshed credentials.
@@ -202,56 +199,34 @@ class Credentials {
   /// a [StateError] if these credentials can't be refreshed, an
   /// [AuthorizationException] if refreshing the credentials fails, or a
   /// [FormatError] if the authorization server returns invalid responses.
-  Future<Credentials> refresh(
-      {String identifier,
-      String secret,
-      Iterable<String> newScopes,
-      bool basicAuth = true,
-      http.Client httpClient}) async {
+  Future<Credentials> refresh({
+    required String identifier,
+    String? secret,
+    Iterable<String>? newScopes,
+    bool basicAuth = true,
+    http.Client? httpClient,
+  }) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
-    scopes ??= [];
     httpClient ??= http.Client();
 
-    if (identifier == null && secret != null) {
-      throw ArgumentError('secret may not be passed without identifier.');
-    }
-
     var startTime = DateTime.now();
-    if (refreshToken == null) {
-      throw StateError("Can't refresh credentials without a refresh "
-          'token.');
-    } else if (tokenEndpoint == null) {
-      throw StateError("Can't refresh credentials without a token "
-          'endpoint.');
-    }
-
     var headers = <String, String>{};
 
     var body = {'grant_type': 'refresh_token', 'refresh_token': refreshToken};
     if (scopes.isNotEmpty) body['scope'] = scopes.join(_delimiter);
 
-    if (basicAuth && secret != null) {
-      headers['Authorization'] = basicAuthHeader(identifier, secret);
+    if (basicAuth) {
+      headers['Authorization'] = basicAuthHeader(identifier, secret ?? '');
     } else {
-      if (identifier != null) body['client_id'] = identifier;
+      body['client_id'] = identifier;
       if (secret != null) body['client_secret'] = secret;
     }
 
     var response =
         await httpClient.post(tokenEndpoint, headers: headers, body: body);
-    var credentials = await handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, scopes, _delimiter,
+    return handleAccessTokenResponse(
+        response, tokenEndpoint, startTime, _delimiter,
         getParameters: _getParameters);
-
-    // The authorization server may issue a new refresh token. If it doesn't,
-    // we should re-use the one we already have.
-    if (credentials.refreshToken != null) return credentials;
-    return Credentials(credentials.accessToken,
-        refreshToken: refreshToken,
-        idToken: credentials.idToken,
-        tokenEndpoint: credentials.tokenEndpoint,
-        scopes: credentials.scopes,
-        expiration: credentials.expiration);
   }
 }

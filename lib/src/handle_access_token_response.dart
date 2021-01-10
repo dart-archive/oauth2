@@ -31,8 +31,8 @@ const _expirationGrace = Duration(seconds: 10);
 ///
 /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
 Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
-    DateTime startTime, List<String> scopes, String delimiter,
-    {Map<String, dynamic> Function(MediaType contentType, String body)
+    DateTime startTime, String delimiter,
+    {Map<String, dynamic> Function(MediaType? contentType, String body)?
         getParameters}) {
   getParameters ??= parseJsonParameters;
 
@@ -81,7 +81,8 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
       }
     }
 
-    var scope = parameters['scope'] as String;
+    var scope = parameters['scope'] as String?;
+    var scopes = <String>[];
     if (scope != null) scopes = scope.split(delimiter);
 
     var expiration = expiresIn == null
@@ -109,7 +110,7 @@ void _handleErrorResponse(
   // off-spec.
   if (response.statusCode != 400 && response.statusCode != 401) {
     var reason = '';
-    if (response.reasonPhrase != null && response.reasonPhrase.isNotEmpty) {
+    if (response.reasonPhrase != null && response.reasonPhrase!.isNotEmpty) {
       ' ${response.reasonPhrase}';
     }
     throw FormatException('OAuth request for "$tokenEndpoint" failed '

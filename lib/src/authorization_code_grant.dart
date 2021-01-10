@@ -58,7 +58,7 @@ class AuthorizationCodeGrant {
   /// available may not be able to make sure the client secret is kept a secret.
   /// This is fine; OAuth2 servers generally won't rely on knowing with
   /// certainty that a client is who it claims to be.
-  final String secret;
+  final String? secret;
 
   /// A URL provided by the authorization server that serves as the base for the
   /// URL that the resource owner will be redirected to to authorize this
@@ -78,7 +78,7 @@ class AuthorizationCodeGrant {
   /// Callback to be invoked whenever the credentials are refreshed.
   ///
   /// This will be passed as-is to the constructed [Client].
-  final CredentialsRefreshedCallback _onCredentialsRefreshed;
+  final CredentialsRefreshedCallback? _onCredentialsRefreshed;
 
   /// Whether to use HTTP Basic authentication for authorizing the client.
   final bool _basicAuth;
@@ -87,18 +87,18 @@ class AuthorizationCodeGrant {
   final String _delimiter;
 
   /// The HTTP client used to make HTTP requests.
-  http.Client _httpClient;
+  http.Client? _httpClient;
 
   /// The URL to which the resource owner will be redirected after they
   /// authorize this client with the authorization server.
-  Uri _redirectEndpoint;
+  late final Uri _redirectEndpoint;
 
   /// The scopes that the client is requesting access to.
-  List<String> _scopes;
+  List<String>? _scopes;
 
   /// An opaque string that users of this library may specify that will be
   /// included in the response query parameters.
-  String _stateString;
+  String? _stateString;
 
   /// The current state of the grant object.
   _State _state = _State.initial;
@@ -148,13 +148,13 @@ class AuthorizationCodeGrant {
   AuthorizationCodeGrant(
       this.identifier, this.authorizationEndpoint, this.tokenEndpoint,
       {this.secret,
-      String delimiter,
+      String? delimiter,
       bool basicAuth = true,
-      http.Client httpClient,
-      CredentialsRefreshedCallback onCredentialsRefreshed,
-      Map<String, dynamic> Function(MediaType contentType, String body)
+      http.Client? httpClient,
+      CredentialsRefreshedCallback? onCredentialsRefreshed,
+      Map<String, dynamic> Function(MediaType? contentType, String body)?
           getParameters,
-      String codeVerifier})
+      String? codeVerifier})
       : _basicAuth = basicAuth,
         _httpClient = httpClient ?? http.Client(),
         _delimiter = delimiter ?? ' ',
@@ -182,7 +182,7 @@ class AuthorizationCodeGrant {
   ///
   /// It is a [StateError] to call this more than once.
   Uri getAuthorizationUrl(Uri redirect,
-      {Iterable<String> scopes, String state}) {
+      {Iterable<String>? scopes, String? state}) {
     if (_state != _State.initial) {
       throw StateError('The authorization URL has already been generated.');
     }
@@ -199,7 +199,7 @@ class AuthorizationCodeGrant {
         .replaceAll('=', '');
 
     _redirectEndpoint = redirect;
-    _scopes = scopes;
+    _scopes = scopes as List<String>;
     _stateString = state;
     var parameters = {
       'response_type': 'code',
@@ -257,14 +257,14 @@ class AuthorizationCodeGrant {
       var description = parameters['error_description'];
       var uriString = parameters['error_uri'];
       var uri = uriString == null ? null : Uri.parse(uriString);
-      throw AuthorizationException(parameters['error'], description, uri);
+      throw AuthorizationException(parameters['error']!, description, uri);
     } else if (!parameters.containsKey('code')) {
       throw FormatException('Invalid OAuth response for '
           '"$authorizationEndpoint": did not contain required parameter '
           '"code".');
     }
 
-    return await _handleAuthorizationCode(parameters['code']);
+    return await _handleAuthorizationCode(parameters['code']!);
   }
 
   /// Processes an authorization code directly.
@@ -308,26 +308,28 @@ class AuthorizationCodeGrant {
     };
 
     if (_basicAuth && secret != null) {
-      headers['Authorization'] = basicAuthHeader(identifier, secret);
+      headers['Authorization'] = basicAuthHeader(identifier, secret!);
     } else {
       // The ID is required for this request any time basic auth isn't being
       // used, even if there's no actual client authentication to be done.
       body['client_id'] = identifier;
-      if (secret != null) body['client_secret'] = secret;
+      if (secret != null) body['client_secret'] = secret!;
     }
 
     var response =
-        await _httpClient.post(tokenEndpoint, headers: headers, body: body);
+        await _httpClient!.post(tokenEndpoint, headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, _scopes, _delimiter,
+        response, tokenEndpoint, startTime, _delimiter,
         getParameters: _getParameters);
-    return Client(credentials,
-        identifier: identifier,
-        secret: secret,
-        basicAuth: _basicAuth,
-        httpClient: _httpClient,
-        onCredentialsRefreshed: _onCredentialsRefreshed);
+    return Client(
+      credentials,
+      identifier: identifier,
+      secret: secret,
+      basicAuth: _basicAuth,
+      httpClient: _httpClient,
+      onCredentialsRefreshed: _onCredentialsRefreshed,
+    );
   }
 
   /// Randomly generate a 128 character string to be used as the PKCE code verifier
@@ -342,7 +344,7 @@ class AuthorizationCodeGrant {
   /// [Client] created by this grant, so it's not safe to close the grant and
   /// continue using the client.
   void close() {
-    if (_httpClient != null) _httpClient.close();
+    if (_httpClient != null) _httpClient!.close();
     _httpClient = null;
   }
 }
