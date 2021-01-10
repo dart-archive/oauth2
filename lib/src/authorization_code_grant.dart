@@ -160,7 +160,7 @@ class AuthorizationCodeGrant {
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters,
         _onCredentialsRefreshed = onCredentialsRefreshed,
-        _codeVerifier = codeVerifier ?? _createCodeVerifier();
+        _codeVerifier = codeVerifier ?? createCodeVerifier();
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
@@ -333,7 +333,7 @@ class AuthorizationCodeGrant {
   }
 
   /// Randomly generate a 128 character string to be used as the PKCE code verifier
-  static String _createCodeVerifier() {
+  static String createCodeVerifier() {
     return List.generate(
         128, (i) => _charset[Random.secure().nextInt(_charset.length)]).join();
   }
