@@ -199,7 +199,7 @@ class Credentials {
   /// a [StateError] if these credentials can't be refreshed, an
   /// [AuthorizationException] if refreshing the credentials fails, or a
   /// [FormatError] if the authorization server returns invalid responses.
-  Future<Credentials> refresh({
+  Future<Credentials?> refresh({
     required String identifier,
     String? secret,
     Iterable<String>? newScopes,
