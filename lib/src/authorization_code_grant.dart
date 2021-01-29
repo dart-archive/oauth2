@@ -103,6 +103,9 @@ class AuthorizationCodeGrant {
   /// The current state of the grant object.
   _State _state = _State.initial;
 
+  /// Disables the the state check.
+  bool disableStateCheck = false;
+
   /// Allowed characters for generating the _codeVerifier
   static const String _charset =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
@@ -146,16 +149,19 @@ class AuthorizationCodeGrant {
   ///
   /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
   AuthorizationCodeGrant(
-      this.identifier, this.authorizationEndpoint, this.tokenEndpoint,
-      {this.secret,
-      String delimiter,
-      bool basicAuth = true,
-      http.Client httpClient,
-      CredentialsRefreshedCallback onCredentialsRefreshed,
-      Map<String, dynamic> Function(MediaType contentType, String body)
-          getParameters,
-      String codeVerifier})
-      : _basicAuth = basicAuth,
+    this.identifier,
+    this.authorizationEndpoint,
+    this.tokenEndpoint, {
+    this.secret,
+    String delimiter,
+    bool basicAuth = true,
+    http.Client httpClient,
+    CredentialsRefreshedCallback onCredentialsRefreshed,
+    Map<String, dynamic> Function(MediaType contentType, String body)
+        getParameters,
+    String codeVerifier,
+    this.disableStateCheck,
+  })  : _basicAuth = basicAuth,
         _httpClient = httpClient ?? http.Client(),
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters,
@@ -183,7 +189,7 @@ class AuthorizationCodeGrant {
   /// It is a [StateError] to call this more than once.
   Uri getAuthorizationUrl(Uri redirect,
       {Iterable<String> scopes, String state}) {
-    if (_state != _State.initial) {
+    if (_state != _State.initial && !disableStateCheck) {
       throw StateError('The authorization URL has already been generated.');
     }
     _state = _State.awaitingResponse;
@@ -234,9 +240,9 @@ class AuthorizationCodeGrant {
   /// Throws [AuthorizationException] if the authorization fails.
   Future<Client> handleAuthorizationResponse(
       Map<String, String> parameters) async {
-    if (_state == _State.initial) {
+    if (_state == _State.initial && !disableStateCheck) {
       throw StateError('The authorization URL has not yet been generated.');
-    } else if (_state == _State.finished) {
+    } else if (_state == _State.finished && !disableStateCheck) {
       throw StateError('The authorization code has already been received.');
     }
     _state = _State.finished;
@@ -283,9 +289,9 @@ class AuthorizationCodeGrant {
   ///
   /// Throws [AuthorizationException] if the authorization fails.
   Future<Client> handleAuthorizationCode(String authorizationCode) async {
-    if (_state == _State.initial) {
+    if (_state == _State.initial && !disableStateCheck) {
       throw StateError('The authorization URL has not yet been generated.');
-    } else if (_state == _State.finished) {
+    } else if (_state == _State.finished && !disableStateCheck) {
       throw StateError('The authorization code has already been received.');
     }
     _state = _State.finished;
