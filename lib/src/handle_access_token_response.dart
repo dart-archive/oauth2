@@ -30,8 +30,12 @@ const _expirationGrace = Duration(seconds: 10);
 /// format as the [standard JSON response][].
 ///
 /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
-Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
-    DateTime startTime, String delimiter,
+Credentials handleAccessTokenResponse(
+    http.Response response,
+    Uri? tokenEndpoint,
+    DateTime startTime,
+    Iterable<String>? scopes,
+    String delimiter,
     {Map<String, dynamic> Function(MediaType? contentType, String body)?
         getParameters}) {
   getParameters ??= parseJsonParameters;
@@ -82,7 +86,6 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
     }
 
     var scope = parameters['scope'] as String?;
-    var scopes = <String>[];
     if (scope != null) scopes = scope.split(delimiter);
 
     var expiration = expiresIn == null
@@ -93,7 +96,7 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
         refreshToken: parameters['refresh_token'],
         idToken: parameters['id_token'],
         tokenEndpoint: tokenEndpoint,
-        scopes: scopes,
+        scopes: scopes ?? [],
         expiration: expiration);
   } on FormatException catch (e) {
     throw FormatException('Invalid OAuth response for "$tokenEndpoint": '
@@ -104,7 +107,7 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
 /// Throws the appropriate exception for an error response from the
 /// authorization server.
 void _handleErrorResponse(
-    http.Response response, Uri tokenEndpoint, GetParameters getParameters) {
+    http.Response response, Uri? tokenEndpoint, GetParameters getParameters) {
   // OAuth2 mandates a 400 or 401 response code for access token error
   // responses. If it's not a 400 reponse, the server is either broken or
   // off-spec.

@@ -118,7 +118,9 @@ void main() {
 
       var client = await oauth2.resourceOwnerPasswordGrant(
           authEndpoint, 'username', 'userpass',
-          scopes: ['one', 'two'], httpClient: expectClient);
+          identifier: 'identifier',
+          scopes: ['one', 'two'],
+          httpClient: expectClient);
       expect(client.credentials, isNotNull);
       expect(client.credentials.accessToken, equals('2YotnFZFEjr1zCsicMWpAA'));
     });
@@ -135,7 +137,10 @@ void main() {
 
       await oauth2.resourceOwnerPasswordGrant(
           authEndpoint, 'username', 'userpass',
-          scopes: ['one', 'two'], httpClient: expectClient, delimiter: ',');
+          identifier: 'identifier',
+          scopes: ['one', 'two'],
+          httpClient: expectClient,
+          delimiter: ',');
     });
 
     test('merges with existing query parameters', () async {

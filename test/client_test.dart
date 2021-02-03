@@ -16,14 +16,14 @@ final Uri requestUri = Uri.parse('http://example.com/resource');
 final Uri tokenEndpoint = Uri.parse('http://example.com/token');
 
 void main() {
-  var httpClient;
+  late ExpectClient httpClient;
   setUp(() => httpClient = ExpectClient());
 
   group('with expired credentials', () {
     test("that can't be refreshed throws an ExpirationException on send", () {
       var expiration = DateTime.now().subtract(Duration(hours: 1));
-      var credentials =
-          oauth2.Credentials('access token', expiration: expiration);
+      var credentials = oauth2.Credentials('access token',
+          expiration: expiration, tokenEndpoint: requestUri);
       var client = oauth2.Client(credentials,
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
@@ -140,7 +140,8 @@ void main() {
 
   group('with valid credentials', () {
     test('sends a request with bearer authorization', () {
-      var credentials = oauth2.Credentials('access token');
+      var credentials =
+          oauth2.Credentials('access token', tokenEndpoint: requestUri);
       var client = oauth2.Client(credentials,
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
@@ -176,7 +177,8 @@ void main() {
     });
 
     test("without a refresh token can't manually refresh the credentials", () {
-      var credentials = oauth2.Credentials('access token');
+      var credentials =
+          oauth2.Credentials('access token', tokenEndpoint: requestUri);
       var client = oauth2.Client(credentials,
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
@@ -186,7 +188,8 @@ void main() {
 
   group('with invalid credentials', () {
     test('throws an AuthorizationException for a 401 response', () {
-      var credentials = oauth2.Credentials('access token');
+      var credentials =
+          oauth2.Credentials('access token', tokenEndpoint: requestUri);
       var client = oauth2.Client(credentials,
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
@@ -202,11 +205,12 @@ void main() {
       });
 
       expect(client.read(requestUri),
-          throwsA(const TypeMatcher<oauth2.AuthorizationException>()));
+          throwsA(isA<oauth2.AuthorizationException>()));
     });
 
     test('passes through a 401 response without www-authenticate', () async {
-      var credentials = oauth2.Credentials('access token');
+      var credentials =
+          oauth2.Credentials('access token', tokenEndpoint: requestUri);
       var client = oauth2.Client(credentials,
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
@@ -223,7 +227,8 @@ void main() {
 
     test('passes through a 401 response with invalid www-authenticate',
         () async {
-      var credentials = oauth2.Credentials('access token');
+      var credentials =
+          oauth2.Credentials('access token', tokenEndpoint: requestUri);
       var client = oauth2.Client(credentials,
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
@@ -243,7 +248,8 @@ void main() {
 
     test('passes through a 401 response with non-bearer www-authenticate',
         () async {
-      var credentials = oauth2.Credentials('access token');
+      var credentials =
+          oauth2.Credentials('access token', tokenEndpoint: requestUri);
       var client = oauth2.Client(credentials,
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 
@@ -261,7 +267,8 @@ void main() {
 
     test('passes through a 401 response with non-OAuth2 www-authenticate',
         () async {
-      var credentials = oauth2.Credentials('access token');
+      var credentials =
+          oauth2.Credentials('access token', tokenEndpoint: requestUri);
       var client = oauth2.Client(credentials,
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 

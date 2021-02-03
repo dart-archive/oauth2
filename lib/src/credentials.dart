@@ -42,7 +42,7 @@ class Credentials {
   /// credentials.
   ///
   /// This may be `null`, indicating that the credentials can't be refreshed.
-  final String refreshToken;
+  final String? refreshToken;
 
   /// The token that is received from the authorization server to enable
   /// End-Users to be Authenticated, contains Claims, represented as a
@@ -58,13 +58,13 @@ class Credentials {
   /// credentials.
   ///
   /// This may be `null`, indicating that the credentials can't be refreshed.
-  final Uri tokenEndpoint;
+  final Uri? tokenEndpoint;
 
   /// The specific permissions being requested from the authorization server.
   ///
   /// The scope strings are specific to the authorization server and may be
   /// found in its documentation.
-  final List<String> scopes;
+  final List<String>? scopes;
 
   /// The date at which these credentials will expire.
   ///
@@ -108,15 +108,18 @@ class Credentials {
   /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
   Credentials(
     this.accessToken, {
-    required this.refreshToken,
+    this.refreshToken,
     this.idToken,
-    required this.tokenEndpoint,
-    required Iterable<String> scopes,
+    this.tokenEndpoint,
+    Iterable<String>? scopes,
     this.expiration,
     String? delimiter,
     Map<String, dynamic> Function(MediaType? mediaType, String body)?
         getParameters,
-  })  : scopes = UnmodifiableListView(scopes.toList()),
+  })  : scopes = UnmodifiableListView(
+            // Explicitly type-annotate the list literal to work around
+            // sdk#24202.
+            scopes == null ? <String>[] : scopes.toList()),
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters;
 
@@ -181,7 +184,8 @@ class Credentials {
         'accessToken': accessToken,
         'refreshToken': refreshToken,
         'idToken': idToken,
-        'tokenEndpoint': tokenEndpoint.toString(),
+        'tokenEndpoint':
+            tokenEndpoint == null ? null : tokenEndpoint.toString(),
         'scopes': scopes,
         'expiration':
             expiration == null ? null : expiration!.millisecondsSinceEpoch
@@ -200,7 +204,7 @@ class Credentials {
   /// [AuthorizationException] if refreshing the credentials fails, or a
   /// [FormatError] if the authorization server returns invalid responses.
   Future<Credentials?> refresh({
-    required String identifier,
+    String? identifier,
     String? secret,
     Iterable<String>? newScopes,
     bool basicAuth = true,
@@ -208,25 +212,48 @@ class Credentials {
   }) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
+    scopes ??= [];
     httpClient ??= http.Client();
 
+    if (identifier == null && secret != null) {
+      throw ArgumentError('secret may not be passed without identifier.');
+    }
+
     var startTime = DateTime.now();
+    if (refreshToken == null) {
+      throw StateError("Can't refresh credentials without a refresh "
+          'token.');
+    } else if (tokenEndpoint == null) {
+      throw StateError("Can't refresh credentials without a token "
+          'endpoint.');
+    }
+
     var headers = <String, String>{};
 
     var body = {'grant_type': 'refresh_token', 'refresh_token': refreshToken};
     if (scopes.isNotEmpty) body['scope'] = scopes.join(_delimiter);
 
-    if (basicAuth) {
-      headers['Authorization'] = basicAuthHeader(identifier, secret ?? '');
+    if (basicAuth && secret != null) {
+      headers['Authorization'] = basicAuthHeader(identifier!, secret);
     } else {
-      body['client_id'] = identifier;
+      if (identifier != null) body['client_id'] = identifier;
       if (secret != null) body['client_secret'] = secret;
     }
 
     var response =
-        await httpClient.post(tokenEndpoint, headers: headers, body: body);
-    return handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, _delimiter,
+        await httpClient.post(tokenEndpoint!, headers: headers, body: body);
+    var credentials = await handleAccessTokenResponse(
+        response, tokenEndpoint, startTime, scopes, _delimiter,
         getParameters: _getParameters);
+
+    // The authorization server may issue a new refresh token. If it doesn't,
+    // we should re-use the one we already have.
+    if (credentials.refreshToken != null) return credentials;
+    return Credentials(credentials.accessToken,
+        refreshToken: refreshToken,
+        idToken: credentials.idToken,
+        tokenEndpoint: credentials.tokenEndpoint,
+        scopes: credentials.scopes,
+        expiration: credentials.expiration);
   }
 }

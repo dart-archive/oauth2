@@ -14,8 +14,8 @@ import 'utils.dart';
 final redirectUrl = Uri.parse('http://example.com/redirect');
 
 void main() {
-  ExpectClient client;
-  oauth2.AuthorizationCodeGrant grant;
+  late ExpectClient client;
+  late oauth2.AuthorizationCodeGrant grant;
   setUp(() {
     client = ExpectClient();
     grant = oauth2.AuthorizationCodeGrant(
@@ -250,7 +250,7 @@ void main() {
       });
 
       expect(grant.handleAuthorizationCode('auth code'),
-          completion(predicate((client) {
+          completion(predicate<oauth2.Client>((client) {
         expect(client.credentials.accessToken, equals('access token'));
         return true;
       })));
@@ -329,7 +329,7 @@ void main() {
       });
 
       expect(grant.handleAuthorizationCode('auth code'),
-          completion(predicate((client) {
+          completion(predicate<oauth2.Client>((client) {
         expect(client.credentials.accessToken, equals('access token'));
         return true;
       })));

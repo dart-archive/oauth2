@@ -117,23 +117,26 @@ class Client extends http.BaseClient {
       return response;
     }
 
-    var challenges;
+    List<AuthenticationChallenge> challenges;
     try {
       challenges = AuthenticationChallenge.parseHeader(wwwAuthenticate);
     } on FormatException {
       return response;
     }
 
-    var challenge = challenges.firstWhere(
-        (challenge) => challenge.scheme == 'bearer',
-        orElse: () => null);
-    if (challenge == null) return response;
+    AuthenticationChallenge? challenge;
+    try {
+      challenge =
+          challenges.firstWhere((challenge) => challenge.scheme == 'bearer');
+    } on StateError {
+      return response;
+    }
 
     var params = challenge.parameters;
     if (!params.containsKey('error')) return response;
 
-    throw AuthorizationException(params['error'], params['error_description'],
-        params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
+    throw AuthorizationException(params['error']!, params['error_description'],
+        params['error_uri'] == null ? null : Uri.parse(params['error_uri']!));
   }
 
   /// A [Future] used to track whether [refreshCredentials] is running.

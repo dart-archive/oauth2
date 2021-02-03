@@ -160,7 +160,7 @@ class AuthorizationCodeGrant {
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters,
         _onCredentialsRefreshed = onCredentialsRefreshed,
-        _codeVerifier = codeVerifier ?? createCodeVerifier();
+        _codeVerifier = codeVerifier ?? _createCodeVerifier();
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
@@ -320,20 +320,18 @@ class AuthorizationCodeGrant {
         await _httpClient!.post(tokenEndpoint, headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
-        response, tokenEndpoint, startTime, _delimiter,
+        response, tokenEndpoint, startTime, _scopes, _delimiter,
         getParameters: _getParameters);
-    return Client(
-      credentials,
-      identifier: identifier,
-      secret: secret,
-      basicAuth: _basicAuth,
-      httpClient: _httpClient,
-      onCredentialsRefreshed: _onCredentialsRefreshed,
-    );
+    return Client(credentials,
+        identifier: identifier,
+        secret: secret,
+        basicAuth: _basicAuth,
+        httpClient: _httpClient,
+        onCredentialsRefreshed: _onCredentialsRefreshed);
   }
 
   /// Randomly generate a 128 character string to be used as the PKCE code verifier
-  static String createCodeVerifier() {
+  static String _createCodeVerifier() {
     return List.generate(
         128, (i) => _charset[Random.secure().nextInt(_charset.length)]).join();
   }

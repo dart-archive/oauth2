@@ -10,29 +10,11 @@ environment:
   sdk: '>=2.12.0-0 <3.0.0'
 
 dependencies:
-  http:
-    git:
-      url: https://github.com/dart-lang/http.git
-      ref: stronger-types
+  http: ^0.13.0-nullsafety
   http_parser: ^4.0.0-nullsafety
   crypto: ^3.0.0-nullsafety.0
 
-dependency_overrides:
-  shelf:
-    git:
-      url: https://github.com/dart-lang/shelf.git
-  web_socket_channel:
-    git:
-      url: https://github.com/dart-lang/web_socket_channel.git
-  # test_core:
-  #   git:
-  #     url: https://github.com/dart-lang/test.git
-  #     path: pkgs/test_core
-
 dev_dependencies:
   pedantic: ^1.10.0-nullsafety.0
-  # test:
-  #   git:
-  #     url: https://github.com/dart-lang/test.git
-  #     path: pkgs/test
+  test: ^1.16.0-nullsafety.0
 

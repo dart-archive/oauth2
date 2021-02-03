@@ -50,7 +50,7 @@ Future<Client> resourceOwnerPasswordGrant(
   String password, {
   required String identifier,
   String? secret,
-  required Iterable<String> scopes,
+  Iterable<String>? scopes,
   bool basicAuth = true,
   CredentialsRefreshedCallback? onCredentialsRefreshed,
   http.Client? httpClient,
@@ -76,7 +76,7 @@ Future<Client> resourceOwnerPasswordGrant(
     if (secret != null) body['client_secret'] = secret;
   }
 
-  if (scopes.isNotEmpty) {
+  if (scopes != null && scopes.isNotEmpty) {
     body['scope'] = scopes.join(delimiter);
   }
 
@@ -85,7 +85,7 @@ Future<Client> resourceOwnerPasswordGrant(
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, delimiter,
+      response, authorizationEndpoint, startTime, scopes, delimiter,
       getParameters: getParameters);
 
   return Client(credentials,
