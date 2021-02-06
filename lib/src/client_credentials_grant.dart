@@ -40,7 +40,7 @@ import 'utils.dart';
 /// its body as a UTF-8-decoded string. It should return a map in the same
 /// format as the [standard JSON response](https://tools.ietf.org/html/rfc6749#section-5.1)
 Future<Client> clientCredentialsGrant(
-    Uri authorizationEndpoint, String identifier, String secret,
+    Uri authorizationEndpoint, String? identifier, String secret,
     {Iterable<String>? scopes,
     bool basicAuth = true,
     http.Client? httpClient,
@@ -54,11 +54,13 @@ Future<Client> clientCredentialsGrant(
 
   var headers = <String, String>{};
 
-  if (basicAuth) {
-    headers['Authorization'] = basicAuthHeader(identifier, secret);
-  } else {
-    body['client_id'] = identifier;
-    body['client_secret'] = secret;
+  if (identifier != null) {
+    if (basicAuth) {
+      headers['Authorization'] = basicAuthHeader(identifier, secret);
+    } else {
+      body['client_id'] = identifier;
+      body['client_secret'] = secret;
+    }
   }
 
   if (scopes != null && scopes.isNotEmpty) {

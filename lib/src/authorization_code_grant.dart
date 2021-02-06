@@ -307,8 +307,8 @@ class AuthorizationCodeGrant {
       'code_verifier': _codeVerifier
     };
 
-    if (_basicAuth) {
-      headers['Authorization'] = basicAuthHeader(identifier, secret ?? '');
+    if (_basicAuth && secret != null) {
+      headers['Authorization'] = basicAuthHeader(identifier, secret!);
     } else {
       // The ID is required for this request any time basic auth isn't being
       // used, even if there's no actual client authentication to be done.

@@ -40,7 +40,7 @@ class Client extends http.BaseClient {
   /// pair that any client may use.
   ///
   /// This is usually global to the program using this library.
-  final String identifier;
+  final String? identifier;
 
   /// The client secret for this client.
   ///
@@ -84,16 +84,19 @@ class Client extends http.BaseClient {
   /// adding authorization credentials to them.
   ///
   /// Throws an [ArgumentError] if [secret] is passed without [identifier].
-  Client(
-    this._credentials, {
-    required this.identifier,
-    this.secret,
-    CredentialsRefreshedCallback? onCredentialsRefreshed,
-    bool basicAuth = true,
-    http.Client? httpClient,
-  })  : _basicAuth = basicAuth,
+  Client(this._credentials,
+      {this.identifier,
+      this.secret,
+      CredentialsRefreshedCallback? onCredentialsRefreshed,
+      bool basicAuth = true,
+      http.Client? httpClient})
+      : _basicAuth = basicAuth,
         _onCredentialsRefreshed = onCredentialsRefreshed,
-        _httpClient = httpClient ?? http.Client();
+        _httpClient = httpClient ?? http.Client() {
+    if (identifier == null && secret != null) {
+      throw ArgumentError('secret may not be passed without identifier.');
+    }
+  }
 
   /// Sends an HTTP request with OAuth2 authorization credentials attached.
   ///
@@ -112,19 +115,15 @@ class Client extends http.BaseClient {
     if (response.statusCode != 401) return response;
     if (!response.headers.containsKey('www-authenticate')) return response;
 
-    final wwwAuthenticate = response.headers['www-authenticate'];
-    if (wwwAuthenticate == null) {
-      return response;
-    }
-
     List<AuthenticationChallenge> challenges;
     try {
-      challenges = AuthenticationChallenge.parseHeader(wwwAuthenticate);
+      challenges = AuthenticationChallenge.parseHeader(
+          response.headers['www-authenticate']!);
     } on FormatException {
       return response;
     }
 
-    AuthenticationChallenge? challenge;
+    AuthenticationChallenge challenge;
     try {
       challenge =
           challenges.firstWhere((challenge) => challenge.scheme == 'bearer');
