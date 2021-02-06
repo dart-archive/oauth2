@@ -48,7 +48,7 @@ Future<Client> resourceOwnerPasswordGrant(
   Uri authorizationEndpoint,
   String username,
   String password, {
-  required String identifier,
+  String? identifier,
   String? secret,
   Iterable<String>? scopes,
   bool basicAuth = true,
@@ -69,11 +69,13 @@ Future<Client> resourceOwnerPasswordGrant(
 
   var headers = <String, String>{};
 
-  if (basicAuth) {
-    headers['Authorization'] = basicAuthHeader(identifier, secret ?? '');
-  } else {
-    body['client_id'] = identifier;
-    if (secret != null) body['client_secret'] = secret;
+  if (identifier != null) {
+    if (basicAuth && secret != null) {
+      headers['Authorization'] = basicAuthHeader(identifier, secret);
+    } else {
+      body['client_id'] = identifier;
+      if (secret != null) body['client_secret'] = secret;
+    }
   }
 
   if (scopes != null && scopes.isNotEmpty) {
