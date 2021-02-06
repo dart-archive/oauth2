@@ -22,8 +22,8 @@ void main() {
   group('with expired credentials', () {
     test("that can't be refreshed throws an ExpirationException on send", () {
       var expiration = DateTime.now().subtract(Duration(hours: 1));
-      var credentials = oauth2.Credentials('access token',
-          expiration: expiration, tokenEndpoint: requestUri);
+      var credentials =
+          oauth2.Credentials('access token', expiration: expiration);
       var client = oauth2.Client(credentials,
           identifier: 'identifier', secret: 'secret', httpClient: httpClient);
 

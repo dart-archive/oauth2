@@ -25,15 +25,15 @@ void main() {
 
   test('is not expired if the expiration is in the future', () {
     var expiration = DateTime.now().add(Duration(hours: 1));
-    var credentials = oauth2.Credentials('access token',
-        expiration: expiration, tokenEndpoint: tokenEndpoint);
+    var credentials =
+        oauth2.Credentials('access token', expiration: expiration);
     expect(credentials.isExpired, isFalse);
   });
 
   test('is expired if the expiration is in the past', () {
     var expiration = DateTime.now().subtract(Duration(hours: 1));
-    var credentials = oauth2.Credentials('access token',
-        expiration: expiration, tokenEndpoint: tokenEndpoint);
+    var credentials =
+        oauth2.Credentials('access token', expiration: expiration);
     expect(credentials.isExpired, isTrue);
   });
 
