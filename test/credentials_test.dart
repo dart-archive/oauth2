@@ -93,8 +93,8 @@ void main() {
 
     credentials = await credentials.refresh(
         identifier: 'idëntīfier', secret: 'sëcret', httpClient: httpClient);
-    expect(credentials?.accessToken, equals('new access token'));
-    expect(credentials?.refreshToken, equals('new refresh token'));
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('new refresh token'));
   });
 
   test('sets proper scope string when using custom delimiter', () async {
@@ -149,8 +149,8 @@ void main() {
 
     credentials = await credentials.refresh(
         identifier: 'identifier', httpClient: httpClient);
-    expect(credentials?.accessToken, equals('new access token'));
-    expect(credentials?.refreshToken, equals('new refresh token'));
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('new refresh token'));
   });
 
   test('can refresh without client authentication', () async {
@@ -182,8 +182,8 @@ void main() {
     });
 
     credentials = await credentials.refresh(httpClient: httpClient);
-    expect(credentials?.accessToken, equals('new access token'));
-    expect(credentials?.refreshToken, equals('new refresh token'));
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('new refresh token'));
   });
 
   test("uses the old refresh token if a new one isn't provided", () async {
@@ -214,8 +214,8 @@ void main() {
 
     credentials = await credentials.refresh(
         identifier: 'idëntīfier', secret: 'sëcret', httpClient: httpClient);
-    expect(credentials?.accessToken, equals('new access token'));
-    expect(credentials?.refreshToken, equals('refresh token'));
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('refresh token'));
   });
 
   test('uses form-field authentication if basicAuth is false', () async {
@@ -253,8 +253,8 @@ void main() {
         secret: 'sëcret',
         basicAuth: false,
         httpClient: httpClient);
-    expect(credentials?.accessToken, equals('new access token'));
-    expect(credentials?.refreshToken, equals('new refresh token'));
+    expect(credentials.accessToken, equals('new access token'));
+    expect(credentials.refreshToken, equals('new refresh token'));
   });
 
   group('fromJson', () {

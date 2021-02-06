@@ -139,7 +139,7 @@ class Client extends http.BaseClient {
   }
 
   /// A [Future] used to track whether [refreshCredentials] is running.
-  Future<Credentials?>? _refreshingFuture;
+  Future<Credentials>? _refreshingFuture;
 
   /// Explicitly refreshes this client's credentials. Returns this client.
   ///
@@ -169,10 +169,7 @@ class Client extends http.BaseClient {
           basicAuth: _basicAuth,
           httpClient: _httpClient,
         );
-        final newCredentials = await _refreshingFuture!;
-        if (newCredentials != null) {
-          _credentials = newCredentials;
-        }
+        _credentials = await _refreshingFuture!;
         _onCredentialsRefreshed?.call(_credentials);
       } finally {
         _refreshingFuture = null;
