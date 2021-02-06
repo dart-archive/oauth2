@@ -10,17 +10,12 @@ import 'package:http/testing.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
 import 'package:test/test.dart';
 
-class ExpectClient extends MockClient {
+class ExpectClient extends http.BaseClient {
+  late final MockClient _internalClient;
   final Queue<MockClientHandler> _handlers;
 
-  ExpectClient._(MockClientHandler fn)
-      : _handlers = Queue<MockClientHandler>(),
-        super(fn);
-
-  factory ExpectClient() {
-    var client;
-    client = ExpectClient._((request) => client._handleRequest(request));
-    return client;
+  ExpectClient() : _handlers = Queue<MockClientHandler>() {
+    _internalClient = MockClient(_handleRequest);
   }
 
   void expectRequest(MockClientHandler fn) {
@@ -39,6 +34,11 @@ class ExpectClient extends MockClient {
     } else {
       return _handlers.removeFirst()(request);
     }
+  }
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    return _internalClient.send(request);
   }
 }
 
