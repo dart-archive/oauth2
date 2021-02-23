@@ -14,13 +14,13 @@ class AuthorizationException implements Exception {
   /// The description of the error, provided by the server.
   ///
   /// May be `null` if the server provided no description.
-  final String description;
+  final String? description;
 
   /// A URL for a page that describes the error in more detail, provided by the
   /// server.
   ///
   /// May be `null` if the server provided no URL.
-  final Uri uri;
+  final Uri? uri;
 
   /// Creates an AuthorizationException.
   AuthorizationException(this.error, this.description, this.uri);

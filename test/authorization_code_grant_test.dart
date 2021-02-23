@@ -14,8 +14,8 @@ import 'utils.dart';
 final redirectUrl = Uri.parse('http://example.com/redirect');
 
 void main() {
-  ExpectClient client;
-  oauth2.AuthorizationCodeGrant grant;
+  late ExpectClient client;
+  late oauth2.AuthorizationCodeGrant grant;
   setUp(() {
     client = ExpectClient();
     grant = oauth2.AuthorizationCodeGrant(
@@ -223,7 +223,7 @@ void main() {
       expect(grant.handleAuthorizationCode('auth code'), throwsStateError);
     });
 
-    test('sends an authorization code request', () {
+    test('sends an authorization code request', () async {
       grant.getAuthorizationUrl(redirectUrl);
       client.expectRequest((request) {
         expect(request.method, equals('POST'));
@@ -249,11 +249,10 @@ void main() {
             headers: {'content-type': 'application/json'}));
       });
 
-      expect(grant.handleAuthorizationCode('auth code'),
-          completion(predicate((client) {
-        expect(client.credentials.accessToken, equals('access token'));
-        return true;
-      })));
+      expect(
+          await grant.handleAuthorizationCode('auth code'),
+          isA<oauth2.Client>().having((c) => c.credentials.accessToken,
+              'credentials.accessToken', 'access token'));
     });
   });
 
@@ -302,7 +301,8 @@ void main() {
           completion(equals('access token')));
     });
 
-    test('.handleAuthorizationCode sends an authorization code request', () {
+    test('.handleAuthorizationCode sends an authorization code request',
+        () async {
       grant.getAuthorizationUrl(redirectUrl);
       client.expectRequest((request) {
         expect(request.method, equals('POST'));
@@ -328,11 +328,10 @@ void main() {
             headers: {'content-type': 'application/json'}));
       });
 
-      expect(grant.handleAuthorizationCode('auth code'),
-          completion(predicate((client) {
-        expect(client.credentials.accessToken, equals('access token'));
-        return true;
-      })));
+      expect(
+          await grant.handleAuthorizationCode('auth code'),
+          isA<oauth2.Client>().having((c) => c.credentials.accessToken,
+              'credentials.accessToken', 'access token'));
     });
   });
 

@@ -42,7 +42,7 @@ class Credentials {
   /// credentials.
   ///
   /// This may be `null`, indicating that the credentials can't be refreshed.
-  final String refreshToken;
+  final String? refreshToken;
 
   /// The token that is received from the authorization server to enable
   /// End-Users to be Authenticated, contains Claims, represented as a
@@ -52,25 +52,25 @@ class Credentials {
   /// requested (or not supported).
   ///
   /// [spec]: https://openid.net/specs/openid-connect-core-1_0.html#IDToken
-  final String idToken;
+  final String? idToken;
 
   /// The URL of the authorization server endpoint that's used to refresh the
   /// credentials.
   ///
   /// This may be `null`, indicating that the credentials can't be refreshed.
-  final Uri tokenEndpoint;
+  final Uri? tokenEndpoint;
 
   /// The specific permissions being requested from the authorization server.
   ///
   /// The scope strings are specific to the authorization server and may be
   /// found in its documentation.
-  final List<String> scopes;
+  final List<String>? scopes;
 
   /// The date at which these credentials will expire.
   ///
   /// This is likely to be a few seconds earlier than the server's idea of the
   /// expiration date.
-  final DateTime expiration;
+  final DateTime? expiration;
 
   /// The function used to parse parameters from a host's response.
   final GetParameters _getParameters;
@@ -80,8 +80,10 @@ class Credentials {
   /// Note that it's possible the credentials will expire shortly after this is
   /// called. However, since the client's expiration date is kept a few seconds
   /// earlier than the server's, there should be enough leeway to rely on this.
-  bool get isExpired =>
-      expiration != null && DateTime.now().isAfter(expiration);
+  bool get isExpired {
+    var expiration = this.expiration;
+    return expiration != null && DateTime.now().isAfter(expiration);
+  }
 
   /// Whether it's possible to refresh these credentials.
   bool get canRefresh => refreshToken != null && tokenEndpoint != null;
@@ -110,10 +112,10 @@ class Credentials {
       {this.refreshToken,
       this.idToken,
       this.tokenEndpoint,
-      Iterable<String> scopes,
+      Iterable<String>? scopes,
       this.expiration,
-      String delimiter,
-      Map<String, dynamic> Function(MediaType mediaType, String body)
+      String? delimiter,
+      Map<String, dynamic> Function(MediaType? mediaType, String body)?
           getParameters})
       : scopes = UnmodifiableListView(
             // Explicitly type-annotate the list literal to work around
@@ -183,11 +185,9 @@ class Credentials {
         'accessToken': accessToken,
         'refreshToken': refreshToken,
         'idToken': idToken,
-        'tokenEndpoint':
-            tokenEndpoint == null ? null : tokenEndpoint.toString(),
+        'tokenEndpoint': tokenEndpoint?.toString(),
         'scopes': scopes,
-        'expiration':
-            expiration == null ? null : expiration.millisecondsSinceEpoch
+        'expiration': expiration?.millisecondsSinceEpoch
       });
 
   /// Returns a new set of refreshed credentials.
@@ -203,11 +203,11 @@ class Credentials {
   /// [AuthorizationException] if refreshing the credentials fails, or a
   /// [FormatError] if the authorization server returns invalid responses.
   Future<Credentials> refresh(
-      {String identifier,
-      String secret,
-      Iterable<String> newScopes,
+      {String? identifier,
+      String? secret,
+      Iterable<String>? newScopes,
       bool basicAuth = true,
-      http.Client httpClient}) async {
+      http.Client? httpClient}) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
     scopes ??= [];
@@ -218,6 +218,7 @@ class Credentials {
     }
 
     var startTime = DateTime.now();
+    var tokenEndpoint = this.tokenEndpoint;
     if (refreshToken == null) {
       throw StateError("Can't refresh credentials without a refresh "
           'token.');
@@ -232,7 +233,7 @@ class Credentials {
     if (scopes.isNotEmpty) body['scope'] = scopes.join(_delimiter);
 
     if (basicAuth && secret != null) {
-      headers['Authorization'] = basicAuthHeader(identifier, secret);
+      headers['Authorization'] = basicAuthHeader(identifier!, secret);
     } else {
       if (identifier != null) body['client_id'] = identifier;
       if (secret != null) body['client_secret'] = secret;

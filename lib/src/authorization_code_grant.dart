@@ -58,7 +58,7 @@ class AuthorizationCodeGrant {
   /// available may not be able to make sure the client secret is kept a secret.
   /// This is fine; OAuth2 servers generally won't rely on knowing with
   /// certainty that a client is who it claims to be.
-  final String secret;
+  final String? secret;
 
   /// A URL provided by the authorization server that serves as the base for the
   /// URL that the resource owner will be redirected to to authorize this
@@ -78,7 +78,7 @@ class AuthorizationCodeGrant {
   /// Callback to be invoked whenever the credentials are refreshed.
   ///
   /// This will be passed as-is to the constructed [Client].
-  final CredentialsRefreshedCallback _onCredentialsRefreshed;
+  final CredentialsRefreshedCallback? _onCredentialsRefreshed;
 
   /// Whether to use HTTP Basic authentication for authorizing the client.
   final bool _basicAuth;
@@ -87,18 +87,18 @@ class AuthorizationCodeGrant {
   final String _delimiter;
 
   /// The HTTP client used to make HTTP requests.
-  http.Client _httpClient;
+  http.Client? _httpClient;
 
   /// The URL to which the resource owner will be redirected after they
   /// authorize this client with the authorization server.
-  Uri _redirectEndpoint;
+  Uri? _redirectEndpoint;
 
   /// The scopes that the client is requesting access to.
-  List<String> _scopes;
+  List<String>? _scopes;
 
   /// An opaque string that users of this library may specify that will be
   /// included in the response query parameters.
-  String _stateString;
+  String? _stateString;
 
   /// The current state of the grant object.
   _State _state = _State.initial;
@@ -148,13 +148,13 @@ class AuthorizationCodeGrant {
   AuthorizationCodeGrant(
       this.identifier, this.authorizationEndpoint, this.tokenEndpoint,
       {this.secret,
-      String delimiter,
+      String? delimiter,
       bool basicAuth = true,
-      http.Client httpClient,
-      CredentialsRefreshedCallback onCredentialsRefreshed,
-      Map<String, dynamic> Function(MediaType contentType, String body)
+      http.Client? httpClient,
+      CredentialsRefreshedCallback? onCredentialsRefreshed,
+      Map<String, dynamic> Function(MediaType? contentType, String body)?
           getParameters,
-      String codeVerifier})
+      String? codeVerifier})
       : _basicAuth = basicAuth,
         _httpClient = httpClient ?? http.Client(),
         _delimiter = delimiter ?? ' ',
@@ -182,24 +182,19 @@ class AuthorizationCodeGrant {
   ///
   /// It is a [StateError] to call this more than once.
   Uri getAuthorizationUrl(Uri redirect,
-      {Iterable<String> scopes, String state}) {
+      {Iterable<String>? scopes, String? state}) {
     if (_state != _State.initial) {
       throw StateError('The authorization URL has already been generated.');
     }
     _state = _State.awaitingResponse;
 
-    if (scopes == null) {
-      scopes = [];
-    } else {
-      scopes = scopes.toList();
-    }
-
+    var scopeList = scopes?.toList() ?? <String>[];
     var codeChallenge = base64Url
         .encode(sha256.convert(ascii.encode(_codeVerifier)).bytes)
         .replaceAll('=', '');
 
     _redirectEndpoint = redirect;
-    _scopes = scopes;
+    _scopes = scopeList;
     _stateString = state;
     var parameters = {
       'response_type': 'code',
@@ -210,7 +205,7 @@ class AuthorizationCodeGrant {
     };
 
     if (state != null) parameters['state'] = state;
-    if (scopes.isNotEmpty) parameters['scope'] = scopes.join(_delimiter);
+    if (scopeList.isNotEmpty) parameters['scope'] = scopeList.join(_delimiter);
 
     return addQueryParameters(authorizationEndpoint, parameters);
   }
@@ -257,7 +252,7 @@ class AuthorizationCodeGrant {
       var description = parameters['error_description'];
       var uriString = parameters['error_uri'];
       var uri = uriString == null ? null : Uri.parse(uriString);
-      throw AuthorizationException(parameters['error'], description, uri);
+      throw AuthorizationException(parameters['error']!, description, uri);
     } else if (!parameters.containsKey('code')) {
       throw FormatException('Invalid OAuth response for '
           '"$authorizationEndpoint": did not contain required parameter '
@@ -295,7 +290,7 @@ class AuthorizationCodeGrant {
 
   /// This works just like [handleAuthorizationCode], except it doesn't validate
   /// the state beforehand.
-  Future<Client> _handleAuthorizationCode(String authorizationCode) async {
+  Future<Client> _handleAuthorizationCode(String? authorizationCode) async {
     var startTime = DateTime.now();
 
     var headers = <String, String>{};
@@ -307,6 +302,7 @@ class AuthorizationCodeGrant {
       'code_verifier': _codeVerifier
     };
 
+    var secret = this.secret;
     if (_basicAuth && secret != null) {
       headers['Authorization'] = basicAuthHeader(identifier, secret);
     } else {
@@ -317,7 +313,7 @@ class AuthorizationCodeGrant {
     }
 
     var response =
-        await _httpClient.post(tokenEndpoint, headers: headers, body: body);
+        await _httpClient!.post(tokenEndpoint, headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, _scopes, _delimiter,
@@ -342,7 +338,7 @@ class AuthorizationCodeGrant {
   /// [Client] created by this grant, so it's not safe to close the grant and
   /// continue using the client.
   void close() {
-    if (_httpClient != null) _httpClient.close();
+    _httpClient?.close();
     _httpClient = null;
   }
 }
