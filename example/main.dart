@@ -91,5 +91,5 @@ Future<void> redirect(Uri url) async {
 
 Future<Uri> listen(Uri url) async {
   // Client implementation detail
-  return url;
+  return Uri();
 }
