@@ -18,7 +18,7 @@ final Uri tokenEndpoint = Uri.parse('https://example.com/token');
 final DateTime startTime = DateTime.now();
 
 oauth2.Credentials handle(http.Response response,
-        {GetParameters getParameters}) =>
+        {GetParameters? getParameters}) =>
     handleAccessTokenResponse(
         response, tokenEndpoint, startTime, ['scope'], ' ',
         getParameters: getParameters);
@@ -141,7 +141,7 @@ void main() {
     });
 
     test('with no content-type causes a FormatException', () {
-      expect(() => handleSuccess(contentType: null), throwsFormatException);
+      expect(() => handleSuccess(contentType: ''), throwsFormatException);
     });
 
     test('with a non-JSON content-type causes a FormatException', () {
@@ -221,7 +221,7 @@ void main() {
         'with expires-in sets the expiration to ten seconds earlier than the '
         'server says', () {
       var credentials = handleSuccess(expiresIn: 100);
-      expect(credentials.expiration.millisecondsSinceEpoch,
+      expect(credentials.expiration?.millisecondsSinceEpoch,
           startTime.millisecondsSinceEpoch + 90 * 1000);
     });
 

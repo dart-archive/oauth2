@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
@@ -40,7 +41,7 @@ class Client extends http.BaseClient {
   /// pair that any client may use.
   ///
   /// This is usually global to the program using this library.
-  final String identifier;
+  final String? identifier;
 
   /// The client secret for this client.
   ///
@@ -55,7 +56,7 @@ class Client extends http.BaseClient {
   /// available may not be able to make sure the client secret is kept a secret.
   /// This is fine; OAuth2 servers generally won't rely on knowing with
   /// certainty that a client is who it claims to be.
-  final String secret;
+  final String? secret;
 
   /// The credentials this client uses to prove to the resource server that it's
   /// authorized.
@@ -66,13 +67,13 @@ class Client extends http.BaseClient {
   Credentials _credentials;
 
   /// Callback to be invoked whenever the credentials refreshed.
-  final CredentialsRefreshedCallback _onCredentialsRefreshed;
+  final CredentialsRefreshedCallback? _onCredentialsRefreshed;
 
   /// Whether to use HTTP Basic authentication for authorizing the client.
   final bool _basicAuth;
 
   /// The underlying HTTP client.
-  http.Client _httpClient;
+  http.Client? _httpClient;
 
   /// Creates a new client from a pre-existing set of credentials.
   ///
@@ -87,9 +88,9 @@ class Client extends http.BaseClient {
   Client(this._credentials,
       {this.identifier,
       this.secret,
-      CredentialsRefreshedCallback onCredentialsRefreshed,
+      CredentialsRefreshedCallback? onCredentialsRefreshed,
       bool basicAuth = true,
-      http.Client httpClient})
+      http.Client? httpClient})
       : _basicAuth = basicAuth,
         _onCredentialsRefreshed = onCredentialsRefreshed,
         _httpClient = httpClient ?? http.Client() {
@@ -110,33 +111,32 @@ class Client extends http.BaseClient {
     }
 
     request.headers['authorization'] = 'Bearer ${credentials.accessToken}';
-    var response = await _httpClient.send(request);
+    var response = await _httpClient!.send(request);
 
     if (response.statusCode != 401) return response;
     if (!response.headers.containsKey('www-authenticate')) return response;
 
-    var challenges;
+    List<AuthenticationChallenge> challenges;
     try {
       challenges = AuthenticationChallenge.parseHeader(
-          response.headers['www-authenticate']);
+          response.headers['www-authenticate']!);
     } on FormatException {
       return response;
     }
 
-    var challenge = challenges.firstWhere(
-        (challenge) => challenge.scheme == 'bearer',
-        orElse: () => null);
+    var challenge = challenges
+        .firstWhereOrNull((challenge) => challenge.scheme == 'bearer');
     if (challenge == null) return response;
 
     var params = challenge.parameters;
     if (!params.containsKey('error')) return response;
 
-    throw AuthorizationException(params['error'], params['error_description'],
-        params['error_uri'] == null ? null : Uri.parse(params['error_uri']));
+    throw AuthorizationException(params['error']!, params['error_description'],
+        params['error_uri'] == null ? null : Uri.parse(params['error_uri']!));
   }
 
   /// A [Future] used to track whether [refreshCredentials] is running.
-  Future<Credentials> _refreshingFuture;
+  Future<Credentials>? _refreshingFuture;
 
   /// Explicitly refreshes this client's credentials. Returns this client.
   ///
@@ -147,7 +147,7 @@ class Client extends http.BaseClient {
   /// You may request different scopes than the default by passing in
   /// [newScopes]. These must be a subset of the scopes in the
   /// [Credentials.scopes] field of [Client.credentials].
-  Future<Client> refreshCredentials([List<String> newScopes]) async {
+  Future<Client> refreshCredentials([List<String>? newScopes]) async {
     if (!credentials.canRefresh) {
       var prefix = 'OAuth credentials';
       if (credentials.isExpired) prefix = '$prefix have expired and';
@@ -166,7 +166,7 @@ class Client extends http.BaseClient {
           basicAuth: _basicAuth,
           httpClient: _httpClient,
         );
-        _credentials = await _refreshingFuture;
+        _credentials = await _refreshingFuture!;
         _onCredentialsRefreshed?.call(_credentials);
       } finally {
         _refreshingFuture = null;
@@ -181,7 +181,7 @@ class Client extends http.BaseClient {
   /// Closes this client and its underlying HTTP client.
   @override
   void close() {
-    if (_httpClient != null) _httpClient.close();
+    _httpClient?.close();
     _httpClient = null;
   }
 }

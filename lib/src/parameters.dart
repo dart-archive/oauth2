@@ -8,13 +8,13 @@ import 'package:http_parser/http_parser.dart';
 
 /// The type of a callback that parses parameters from an HTTP response.
 typedef GetParameters = Map<String, dynamic> Function(
-    MediaType contentType, String body);
+    MediaType? contentType, String body);
 
 /// Parses parameters from a response with a JSON body, as per the [OAuth2
 /// spec][].
 ///
 /// [OAuth2 spec]: https://tools.ietf.org/html/rfc6749#section-5.1
-Map<String, dynamic> parseJsonParameters(MediaType contentType, String body) {
+Map<String, dynamic> parseJsonParameters(MediaType? contentType, String body) {
   // The spec requires a content-type of application/json, but some endpoints
   // (e.g. Dropbox) serve it as text/javascript instead.
   if (contentType == null ||

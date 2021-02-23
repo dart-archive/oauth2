@@ -46,14 +46,14 @@ import 'credentials.dart';
 /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
 Future<Client> resourceOwnerPasswordGrant(
     Uri authorizationEndpoint, String username, String password,
-    {String identifier,
-    String secret,
-    Iterable<String> scopes,
+    {String? identifier,
+    String? secret,
+    Iterable<String>? scopes,
     bool basicAuth = true,
-    CredentialsRefreshedCallback onCredentialsRefreshed,
-    http.Client httpClient,
-    String delimiter,
-    Map<String, dynamic> Function(MediaType contentType, String body)
+    CredentialsRefreshedCallback? onCredentialsRefreshed,
+    http.Client? httpClient,
+    String? delimiter,
+    Map<String, dynamic> Function(MediaType? contentType, String body)?
         getParameters}) async {
   delimiter ??= ' ';
   var startTime = DateTime.now();
@@ -68,7 +68,7 @@ Future<Client> resourceOwnerPasswordGrant(
 
   if (identifier != null) {
     if (basicAuth) {
-      headers['Authorization'] = basicAuthHeader(identifier, secret);
+      headers['Authorization'] = basicAuthHeader(identifier, secret!);
     } else {
       body['client_id'] = identifier;
       if (secret != null) body['client_secret'] = secret;
@@ -84,7 +84,7 @@ Future<Client> resourceOwnerPasswordGrant(
       headers: headers, body: body);
 
   var credentials = await handleAccessTokenResponse(
-      response, authorizationEndpoint, startTime, scopes, delimiter,
+      response, authorizationEndpoint, startTime, scopes?.toList(), delimiter,
       getParameters: getParameters);
   return Client(credentials,
       identifier: identifier,

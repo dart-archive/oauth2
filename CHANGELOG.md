@@ -1,3 +1,7 @@
+# 2.0.0-dev
+
+* Migrate to null safety.
+
 # 1.6.3
 
 * Added optional `codeVerifier` parameter to `AuthorizationCodeGrant` constructor.
