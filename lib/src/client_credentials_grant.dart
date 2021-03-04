@@ -71,7 +71,7 @@ Future<Client> clientCredentialsGrant(
   var response = await httpClient.post(authorizationEndpoint,
       headers: headers, body: body);
 
-  var credentials = await handleAccessTokenResponse(response,
+  var credentials = handleAccessTokenResponse(response,
       authorizationEndpoint, startTime, scopes?.toList() ?? [], delimiter,
       getParameters: getParameters);
   return Client(credentials,
