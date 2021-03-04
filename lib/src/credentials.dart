@@ -241,7 +241,7 @@ class Credentials {
 
     var response =
         await httpClient.post(tokenEndpoint, headers: headers, body: body);
-    var credentials = await handleAccessTokenResponse(
+    var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, scopes, _delimiter,
         getParameters: _getParameters);
 
