@@ -83,7 +83,7 @@ Future<Client> resourceOwnerPasswordGrant(
   var response = await httpClient.post(authorizationEndpoint,
       headers: headers, body: body);
 
-  var credentials = await handleAccessTokenResponse(
+  var credentials = handleAccessTokenResponse(
       response, authorizationEndpoint, startTime, scopes?.toList(), delimiter,
       getParameters: getParameters);
   return Client(credentials,
