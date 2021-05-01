@@ -240,6 +240,49 @@ var result = await client.read('http://example.com/protected-resources.txt');
 File('~/.myapp/credentials.json').writeAsString(client.credentials.toJson());
 ```
 
+## Custom Grant Type
+
+```dart
+// This URL is an endpoint that's provided by the authorization server. It's
+// usually included in the server's documentation of its OAuth2 API.
+final authorizationEndpoint =
+    Uri.parse('http://example.com/oauth2/authorization');
+
+// The grant type provided by the authorization server.
+// It's usually included in the server's documentation of its OAuth2 API.
+final grantType = {
+  'grant_type': 'installed_client',
+  'device_id': 'device_id'
+};
+
+// The authorization server may issue each client a separate client
+// identifier and secret, which allows the server to tell which client
+// is accessing it. Some servers may also have an anonymous
+// identifier/secret pair that any client may use.
+//
+// Some servers don't require the client to authenticate itself, in which case
+// these should be omitted.
+final identifier = 'my client identifier';
+final secret = 'my client secret';
+
+// Calling the top-level `customGrant` function will return a
+// [Client] instead.
+var client = await oauth2.customGrant(authorizationEndpoint, grantType,
+      identifier: identifier, secret: secret);
+
+// With an authenticated client, you can make requests, and the `Bearer` token
+// returned by the server during the client credentials grant will be attached
+// to any request you make.
+var response =
+    await client.read('https://example.com/api/some_resource.json');
+
+// You can save the client's credentials, which consists of an access token, and
+// potentially a refresh token and expiry date, to a file. This way, subsequent runs
+// do not need to reauthenticate, and you can avoid saving the client identifier and
+// secret.
+await credentialsFile.writeAsString(client.credentials.toJson());
+```
+
 [authorizationCodeGrantDocs]: https://oauth.net/2/grant-types/authorization-code/
 [authorizationCodeGrantMethod]: https://pub.dev/documentation/oauth2/latest/oauth2/AuthorizationCodeGrant-class.html
 [authorizationCodeGrantSection]: #authorization-code-grant
