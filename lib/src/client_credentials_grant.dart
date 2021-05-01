@@ -8,8 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 import 'client.dart';
-import 'handle_access_token_response.dart';
-import 'utils.dart';
+import 'custom_grant.dart';
 
 /// Obtains credentials using a [client credentials grant](https://tools.ietf.org/html/rfc6749#section-1.3.4).
 ///
@@ -47,33 +46,14 @@ Future<Client> clientCredentialsGrant(
     String? delimiter,
     Map<String, dynamic> Function(MediaType? contentType, String body)?
         getParameters}) async {
-  delimiter ??= ' ';
-  var startTime = DateTime.now();
+  final grantType = {'grant_type': 'client_credentials'};
 
-  var body = {'grant_type': 'client_credentials'};
-
-  var headers = <String, String>{};
-
-  if (identifier != null) {
-    if (basicAuth) {
-      headers['Authorization'] = basicAuthHeader(identifier, secret!);
-    } else {
-      body['client_id'] = identifier;
-      if (secret != null) body['client_secret'] = secret;
-    }
-  }
-
-  if (scopes != null && scopes.isNotEmpty) {
-    body['scope'] = scopes.join(delimiter);
-  }
-
-  httpClient ??= http.Client();
-  var response = await httpClient.post(authorizationEndpoint,
-      headers: headers, body: body);
-
-  var credentials = handleAccessTokenResponse(response, authorizationEndpoint,
-      startTime, scopes?.toList() ?? [], delimiter,
+  return await customGrant(authorizationEndpoint, grantType,
+      identifier: identifier,
+      secret: secret,
+      scopes: scopes,
+      basicAuth: basicAuth,
+      httpClient: httpClient,
+      delimiter: delimiter,
       getParameters: getParameters);
-  return Client(credentials,
-      identifier: identifier, secret: secret, httpClient: httpClient);
 }
