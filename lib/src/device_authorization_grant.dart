@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:html';
-
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
 
@@ -96,7 +94,7 @@ class DeviceAuthorizationGrant {
   _State _state = _State.initial;
 
   /// The deviceId
-  String _deviceCode;
+  String? _deviceCode;
 
   /// Creates a new grant.
   ///
@@ -195,7 +193,7 @@ class DeviceAuthorizationGrant {
     var headers = <String, String>{};
     var body = {
       'device_code': _deviceCode,
-      'grant_type': 'urn:ietf:params:oauth:grant-tape:device_code',
+      'grant_type': 'urn:ietf:params:oauth:grant-type:device_code',
     };
 
     var secret = this.secret;
@@ -250,8 +248,7 @@ class DeviceAuthorizationGrant {
       for (var requiredParameter in [
         'device_code',
         'user_code',
-        'verification_uri',
-        'expires_in'
+        'verification_uri'
       ]) {
         if (!parameters.containsKey(requiredParameter)) {
           throw FormatException(
@@ -264,7 +261,8 @@ class DeviceAuthorizationGrant {
       }
 
       var expiresIn = parameters['expires_in'];
-      if (expiresIn != null && expiresIn is! int) {
+      if (expiresIn == null || expiresIn is! int) {
+        print(expiresIn is String);
         throw FormatException(
             'parameter "expires_in" was not an int, was "$expiresIn"');
       }
