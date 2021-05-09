@@ -10,3 +10,4 @@ export 'src/credentials.dart';
 export 'src/authorization_exception.dart';
 export 'src/expiration_exception.dart';
 export 'src/device_authorization_grant.dart';
+export 'src/device_code_exception.dart';

@@ -4,9 +4,9 @@
 
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
+import 'package:oauth2/src/device_code_exception.dart';
 
-import '../oauth2.dart';
-import '../oauth2.dart';
+import 'client.dart';
 import 'credentials.dart';
 import 'handle_access_token_response.dart';
 import 'parameters.dart';
@@ -16,18 +16,15 @@ const _expirationGrace = Duration(seconds: 10);
 
 /// A class for obtaining credentials via an [device authorization grant][].
 ///
-/// FIXME update
-/// This method of authorization involves sending the resource owner to the
-/// authorization server where they will authorize the client. They're then
-/// redirected back to your server, along with an authorization code. This is
-/// used to obtain [Credentials] and create a fully-authorized [Client].
+/// With this method of authorization, the device requests a device code.
+/// Afterwards, a user must authorize the device. The device being authorized
+/// attempts to retrieve tokens at a defined interval. This is used to obtain
+/// [Credentials] and create a fully authorized [Client].
 ///
-/// FIXME update
-/// To use this class, you must first call [getAuthorizationUrl] to get the URL
-/// to which to redirect the resource owner. Then once they've been redirected
-/// back to your application, call [handleAuthorizationResponse] or
-/// [handleAuthorizationCode] to process the authorization server's response and
-/// construct a [Client].
+/// To use this class, you must first call [getDeviceCode] to get the user code
+/// and confirmation url, which the resource owner can then use to confirm the
+/// device.The device polls the authorization server for an access token at a
+/// defined interval using [pollForToken], and creates a [Client] if successful.
 ///
 /// [device code grant]: https://tools.ietf.org/html/rfc8628#section-1
 class DeviceAuthorizationGrant {
@@ -142,7 +139,7 @@ class DeviceAuthorizationGrant {
         _getParameters = getParameters ?? parseJsonParameters,
         _onCredentialsRefreshed = onCredentialsRefreshed;
 
-  /// FIXME documentation
+  /// starts the Flow and returns [DeviceProperties]
   Future<DeviceProperties> getDeviceCode({Iterable<String>? scopes}) async {
     if (_state != _State.initial) {
       throw StateError('The device_code has already been generated.');
@@ -233,7 +230,41 @@ class DeviceAuthorizationGrant {
 
     try {
       if (response.statusCode != 200) {
-        // TODO handle ErrorResponse
+        if(response.statusCode != 400 && response.statusCode != 401) {
+          var reason = '';
+          var reasonPhrase = response.reasonPhrase;
+          if (reasonPhrase != null && reasonPhrase.isNotEmpty) {
+            reason = ' $reasonPhrase';
+          }
+          throw FormatException('OAuth request for "$deviceEndpoint" failed '
+              'with status ${response.statusCode}$reason.\n\n${response.body}');
+        }
+
+        var contentTypeString = response.headers['content-type'];
+        var contentType =
+        contentTypeString == null ? null : MediaType.parse(contentTypeString);
+
+        var parameters = getParameters(contentType, response.body);
+
+        if (!parameters.containsKey('error')) {
+          throw FormatException('did not contain required parameter "error"');
+        } else if (parameters['error'] is! String) {
+          throw FormatException('required parameter "error" was not a string, was '
+              '"${parameters["error"]}"');
+        }
+
+        for (var name in ['error_description', 'error_uri']) {
+          var value = parameters[name];
+
+          if (value != null && value is! String) {
+            throw FormatException('parameter "$name" was not a string, was "$value"');
+          }
+        }
+
+        var description = parameters['error_description'];
+        var uriString = parameters['error_uri'];
+        var uri = uriString == null ? null : Uri.parse(uriString);
+        throw DeviceException(parameters['error'], description, uri);
       }
 
       var contentTypeString = response.headers['content-type'];
