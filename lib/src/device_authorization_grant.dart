@@ -8,7 +8,9 @@ import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
 
 import '../oauth2.dart';
+import '../oauth2.dart';
 import 'credentials.dart';
+import 'handle_access_token_response.dart';
 import 'parameters.dart';
 import 'utils.dart';
 
@@ -92,6 +94,9 @@ class DeviceAuthorizationGrant {
 
   /// The current state of the grant object.
   _State _state = _State.initial;
+
+  /// The deviceId
+  String _deviceCode;
 
   /// Creates a new grant.
   ///
@@ -177,6 +182,51 @@ class DeviceAuthorizationGrant {
     return device_properties;
   }
 
+  /// Check if the user has confirmed the device and then return a [Client]
+  Future<Client> pollForToken() async {
+    if (_state == _State.initial) {
+      throw StateError('The device_code has not yet been generated.');
+    } else if (_state == _State.finished) {
+      throw StateError('The device has already been authorized.');
+    }
+
+    var startTime = DateTime.now();
+
+    var headers = <String, String>{};
+    var body = {
+      'device_code': _deviceCode,
+      'grant_type': 'urn:ietf:params:oauth:grant-tape:device_code',
+    };
+
+    var secret = this.secret;
+    if (_basicAuth && secret != null) {
+      headers['Authorization'] = basicAuthHeader(identifier, secret);
+    } else {
+      // The ID is required for this request any time basic auth isn't being
+      // used, even if there's no actual client authentication to be done.
+      body['client_id'] = identifier;
+      if (secret != null) body['client_secret'] = secret;
+    }
+
+    var response =
+        await _httpClient!.post(tokenEndpoint, headers: headers, body: body);
+
+    var credentials = handleAccessTokenResponse(
+        response, tokenEndpoint, startTime, _scopes, _delimiter,
+        getParameters: _getParameters);
+
+    _state = _State.finished;
+
+    return Client(
+      credentials,
+      identifier: identifier,
+      secret: secret,
+      basicAuth: _basicAuth,
+      httpClient: _httpClient,
+      onCredentialsRefreshed: _onCredentialsRefreshed,
+    );
+  }
+
   DeviceProperties _handleDeviceCodeResponse(
       http.Response response, DateTime startTime, List<String>? scopes,
       {Map<String, dynamic> Function(MediaType? contentType, String body)?
@@ -237,6 +287,7 @@ class DeviceAuthorizationGrant {
         }
       }
 
+      _deviceCode = parameters['device_code'];
       return DeviceProperties(
           parameters['device_code'],
           parameters['user_code'],
@@ -250,9 +301,19 @@ class DeviceAuthorizationGrant {
           '${e.message}.\n\n${response.body}');
     }
   }
+
+  /// Closes the grant and frees its resources.
+  ///
+  /// This will close the underlying HTTP client, which is shared by the
+  /// [Client] created by this grant, so it's not safe to close the grant and
+  /// continue using the client.
+  void close() {
+    _httpClient?.close();
+    _httpClient = null;
+  }
 }
 
-/// TODO documentation
+/// Response values of the device_code request
 class DeviceProperties {
   final String device_code;
   final String user_code;
