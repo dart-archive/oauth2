@@ -240,6 +240,90 @@ var result = await client.read('http://example.com/protected-resources.txt');
 File('~/.myapp/credentials.json').writeAsString(client.credentials.toJson());
 ```
 
+## Deivce Code Grant
+
+**Resources:** [Method summary][deviceCodeGrantMethod],
+[OAuth documentation][deviceCodeGrantDocs]
+
+```dart
+// This URL is an endpoint that's provided by the authorization server. It's
+// usually included in the server's documentation of its OAuth2 API.
+final deviceEndpoint = Uri.parse('https://oauth2.googleapis.com/device/code');
+final tokenEndpoint = Uri.parse('https://oauth2.googleapis.com/token');
+
+// The authorization server may issue each client a separate client
+// identifier and secret, which allows the server to tell which client
+// is accessing it. Some servers may also have an anonymous
+// identifier/secret pair that any client may use.
+//
+// Some servers don't require the client to authenticate itself, in which case
+// these should be omitted.
+final identifier = 'my client identifier';
+final secret = 'my client secret';
+
+/// A file in which the users credentials are stored persistently. If the server
+/// issues a refresh token allowing the client to refresh outdated credentials,
+/// these may be valid indefinitely, meaning the user never has to
+/// re-authenticate.
+final credentialsFile = File('~/.myapp/credentials.json');
+
+/// Either load an OAuth2 client from saved credentials or authenticate a new
+/// one.
+Future<oauth2.Client> createClient() async {
+  var exists = await credentialsFile.exists();
+
+  // If the OAuth2 credentials have already been saved from a previous run, we
+  // just want to reload them.
+  if (exists) {
+    var credentials =
+        oauth2.Credentials.fromJson(await credentialsFile.readAsString());
+    return oauth2.Client(credentials, identifier: identifier, secret: secret);
+  }
+
+  // If we don't have OAuth2 credentials yet, we need to get the resource owner
+  // to authorize us. We're assuming here that we're a command-line application.
+  var grant = oauth2.DeviceAuthorizationGrant(
+    identifier,
+    deviceEndpoint,
+    tokenEndpoint,
+    secret: secret,
+  );
+
+  // A URL on the authorization server (authorizationEndpoint with some additional
+  // query parameters). Scopes and state can optionally be passed into this method.
+  var device_code = await grant.getDeviceCode(scopes: ['profile']);
+
+  print(
+      'open yout browser at ${device_code.verification_uri} and enter the user_code: ${device_code.user_code}');
+
+  // Poll for an accesstoken with an default intervall of 10 seconds if the
+  // authorization doesn't returned an interval.
+  while (true) {
+    try {
+      return await grant.pollForToken();
+    } catch (e) {
+      print(e);
+      sleep(Duration(seconds: device_code.interval ?? 10));
+    }
+  }
+}
+
+void main() async {
+  var client = await createClient();
+
+  print('successfull authorized');
+
+  // Once you have a Client, you can use it just like any other HTTP client.
+  print(await client.read(Uri.http('example.com', 'protected-resources.txt')));
+
+  // Once we're done with the client, save the credentials file. This ensures
+  // that if the credentials were automatically refreshed while using the
+  // client, the new credentials are available for the next run of the
+  // program.
+  await credentialsFile.writeAsString(client.credentials.toJson());
+}
+```
+
 [authorizationCodeGrantDocs]: https://oauth.net/2/grant-types/authorization-code/
 [authorizationCodeGrantMethod]: https://pub.dev/documentation/oauth2/latest/oauth2/AuthorizationCodeGrant-class.html
 [authorizationCodeGrantSection]: #authorization-code-grant
@@ -249,6 +333,9 @@ File('~/.myapp/credentials.json').writeAsString(client.credentials.toJson());
 [resourceOwnerPasswordGrantDocs]: https://oauth.net/2/grant-types/password/
 [resourceOwnerPasswordGrantMethod]: https://pub.dev/documentation/oauth2/latest/oauth2/resourceOwnerPasswordGrant.html
 [resourceOwnerPasswordGrantSection]: #resource-owner-password-grant
+[deviceCodeGrantDocs]: https://oauth.net/2/grant-types/device-code/
+[deviceCodeGrantMethod]: https://pub.dev/documentation/oauth2/latest/oauth2/deviceAuthorizationGrant.html
+[deviceCodeGrantSection]: #device-code-grant
 [uni_links]: https://pub.dev/packages/uni_links
 [url_launcher]: https://pub.dev/packages/url_launcher
 [webview_flutter]: https://pub.dev/packages/webview_flutter

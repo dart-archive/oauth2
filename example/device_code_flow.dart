@@ -1,3 +1,7 @@
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 import 'dart:async';
 import 'dart:io';
 
@@ -6,8 +10,8 @@ import 'package:oauth2/oauth2.dart' as oauth2;
 // These URLs are endpoints that are provided by the authorization
 // server. They're usually included in the server's documentation of its
 // OAuth2 API.
-final deviceEndpoint = Uri.parse('http://example.com/oauth2/device');
-final tokenEndpoint = Uri.parse('http://example.com/oauth2/token');
+final deviceEndpoint = Uri.parse('https://oauth2.googleapis.com/device/code');
+final tokenEndpoint = Uri.parse('https://oauth2.googleapis.com/token');
 
 // The authorization server will issue each client a separate client
 // identifier and secret, which allows the server to tell which client
@@ -51,10 +55,10 @@ Future<oauth2.Client> createClient() async {
 
   // A URL on the authorization server (authorizationEndpoint with some additional
   // query parameters). Scopes and state can optionally be passed into this method.
-  var device_code =
-      await grant.getDeviceCode(scopes: ['offline_access', 'profile']);
+  var device_code = await grant.getDeviceCode(scopes: ['profile']);
 
-  print('open yout browser at ${device_code.verification_uri} and enter the user_code: ${device_code.user_code}');
+  print(
+      'open yout browser at ${device_code.verification_uri} and enter the user_code: ${device_code.user_code}');
 
   // Poll for an accesstoken with an default intervall of 10 seconds if the
   // authorization doesn't returned an interval.
@@ -63,11 +67,7 @@ Future<oauth2.Client> createClient() async {
       return await grant.pollForToken();
     } catch (e) {
       print(e);
-      if (device_code.interval != null) {
-        sleep(Duration(seconds: device_code.interval!));
-      } else {
-        sleep(Duration(seconds: 10));
-      }
+      sleep(Duration(seconds: device_code.interval ?? 10));
     }
   }
 }

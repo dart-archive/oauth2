@@ -2,8 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:oauth2/src/device_code_exception.dart';
 
 import 'client.dart';
@@ -82,7 +82,7 @@ class DeviceAuthorizationGrant {
   final String _delimiter;
 
   /// The HTTP client used to make HTTP requests.
-  http.Client? _httpClient;
+  final http.Client _httpClient;
 
   /// The scopes that the client is requesting access to.
   List<String>? _scopes;
@@ -140,7 +140,9 @@ class DeviceAuthorizationGrant {
         _onCredentialsRefreshed = onCredentialsRefreshed;
 
   /// starts the Flow and returns [DeviceProperties]
-  Future<DeviceProperties> getDeviceCode({Iterable<String>? scopes}) async {
+  /// [useSecret] whether to use the clientSecret for the token-request or not
+  Future<DeviceProperties> getDeviceCode(
+      {Iterable<String>? scopes, bool useSecret = false}) async {
     if (_state != _State.initial) {
       throw StateError('The device_code has already been generated.');
     }
@@ -152,13 +154,13 @@ class DeviceAuthorizationGrant {
     var body = <String, String>{};
 
     var secret = this.secret;
-    if (_basicAuth && secret != null) {
+    if (_basicAuth && secret != null && useSecret) {
       headers['Authorization'] = basicAuthHeader(identifier, secret);
     } else {
       // The ID is required for this request any time basic auth isn't being
       // used, even if there's no actual client authentication to be done.
       body['client_id'] = identifier;
-      if (secret != null) body['client_secret'] = secret;
+      if (secret != null && useSecret) body['client_secret'] = secret;
     }
 
     if (scopeList.isNotEmpty) body['scope'] = scopeList.join(_delimiter);
@@ -166,7 +168,7 @@ class DeviceAuthorizationGrant {
     var startTime = DateTime.now();
 
     var response =
-        await _httpClient!.post(deviceEndpoint, headers: headers, body: body);
+        await _httpClient.post(deviceEndpoint, headers: headers, body: body);
 
     var device_properties = _handleDeviceCodeResponse(
         response, startTime, _scopes,
@@ -178,7 +180,8 @@ class DeviceAuthorizationGrant {
   }
 
   /// Check if the user has confirmed the device and then return a [Client]
-  Future<Client> pollForToken() async {
+  /// [useSecret] whether to use the clientSecret for the token-request or not
+  Future<Client> pollForToken({bool useSecret = true}) async {
     if (_state == _State.initial) {
       throw StateError('The device_code has not yet been generated.');
     } else if (_state == _State.finished) {
@@ -194,17 +197,17 @@ class DeviceAuthorizationGrant {
     };
 
     var secret = this.secret;
-    if (_basicAuth && secret != null) {
+    if (_basicAuth && secret != null && useSecret) {
       headers['Authorization'] = basicAuthHeader(identifier, secret);
     } else {
       // The ID is required for this request any time basic auth isn't being
       // used, even if there's no actual client authentication to be done.
       body['client_id'] = identifier;
-      if (secret != null) body['client_secret'] = secret;
+      if (secret != null && useSecret) body['client_secret'] = secret;
     }
 
     var response =
-        await _httpClient!.post(tokenEndpoint, headers: headers, body: body);
+        await _httpClient.post(tokenEndpoint, headers: headers, body: body);
 
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, _scopes, _delimiter,
@@ -230,7 +233,7 @@ class DeviceAuthorizationGrant {
 
     try {
       if (response.statusCode != 200) {
-        if(response.statusCode != 400 && response.statusCode != 401) {
+        if (response.statusCode != 400 && response.statusCode != 401) {
           var reason = '';
           var reasonPhrase = response.reasonPhrase;
           if (reasonPhrase != null && reasonPhrase.isNotEmpty) {
@@ -241,15 +244,17 @@ class DeviceAuthorizationGrant {
         }
 
         var contentTypeString = response.headers['content-type'];
-        var contentType =
-        contentTypeString == null ? null : MediaType.parse(contentTypeString);
+        var contentType = contentTypeString == null
+            ? null
+            : MediaType.parse(contentTypeString);
 
         var parameters = getParameters(contentType, response.body);
 
         if (!parameters.containsKey('error')) {
           throw FormatException('did not contain required parameter "error"');
         } else if (parameters['error'] is! String) {
-          throw FormatException('required parameter "error" was not a string, was '
+          throw FormatException(
+              'required parameter "error" was not a string, was '
               '"${parameters["error"]}"');
         }
 
@@ -257,7 +262,8 @@ class DeviceAuthorizationGrant {
           var value = parameters[name];
 
           if (value != null && value is! String) {
-            throw FormatException('parameter "$name" was not a string, was "$value"');
+            throw FormatException(
+                'parameter "$name" was not a string, was "$value"');
           }
         }
 
@@ -276,11 +282,7 @@ class DeviceAuthorizationGrant {
           getParameters(MediaType.parse(contentTypeString), response.body);
 
       /// Required parameters according to https://tools.ietf.org/html/rfc8628#section-3.2
-      for (var requiredParameter in [
-        'device_code',
-        'user_code',
-        'verification_uri'
-      ]) {
+      for (var requiredParameter in ['device_code', 'user_code']) {
         if (!parameters.containsKey(requiredParameter)) {
           throw FormatException(
               'did not contain required parameter "$requiredParameter"');
@@ -289,6 +291,22 @@ class DeviceAuthorizationGrant {
               'required parameter "$requiredParameter" was not a string, was '
               '"${parameters[requiredParameter]}"');
         }
+      }
+
+      var verification_uri;
+      if (parameters.containsKey('verification_url')) {
+        verification_uri = parameters['verification_url'];
+      } else if (parameters.containsKey('verification_uri')) {
+        verification_uri = parameters['verification_uri'];
+      } else {
+        throw FormatException(
+            'did not contain required parameter "verification_url" or "verification_uri"');
+      }
+
+      if (verification_uri is! String) {
+        throw FormatException(
+            'required parameter "verification_url" or "verification_uri" was not a string, was '
+            '"$verification_uri"');
       }
 
       var expiresIn = parameters['expires_in'];
@@ -306,13 +324,12 @@ class DeviceAuthorizationGrant {
         }
       }
 
-      var verificationUri = parameters['verification_uri'];
-      if (verificationUri != null) {
+      if (verification_uri != null) {
         try {
-          Uri.parse(verificationUri);
+          Uri.parse(verification_uri);
         } on FormatException {
           throw FormatException(
-              'parameter "verification_uri" was not a string, was "$verificationUri"');
+              'parameter "verification_uri" or "verification_url" was not a Uri, was "$verification_uri"');
         }
       }
 
@@ -320,7 +337,7 @@ class DeviceAuthorizationGrant {
       return DeviceProperties(
           parameters['device_code'],
           parameters['user_code'],
-          parameters['verification_uri'],
+          verification_uri,
           parameters['verification_uri_complete'],
           parameters['expires_in'],
           startTime.add(Duration(seconds: parameters['expires_in'])),
@@ -337,8 +354,7 @@ class DeviceAuthorizationGrant {
   /// [Client] created by this grant, so it's not safe to close the grant and
   /// continue using the client.
   void close() {
-    _httpClient?.close();
-    _httpClient = null;
+    _httpClient.close();
   }
 }
 
