@@ -1,3 +1,7 @@
+# 2.1.0
+
+* Added support for `DeviceAuthorizationGrant`.
+
 # 2.0.0
 
 * Migrate to null safety.
