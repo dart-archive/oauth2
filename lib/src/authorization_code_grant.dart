@@ -338,8 +338,6 @@ class AuthorizationCodeGrant {
 
   Map<String, dynamic> toJson() {
     return {
-      'identifier': identifier,
-      'secret': secret,
       'authorization_endpoint': authorizationEndpoint.toString(),
       'token_endpoint': tokenEndpoint.toString(),
       'code_verifier': _codeVerifier,
