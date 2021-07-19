@@ -71,14 +71,14 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
     if (expiresIn != null) {
       if (expiresIn is String) {
         try {
-          expiresIn = double.tryParse(expiresIn)!.toInt();
-        } catch (e) {
+          expiresIn = double.parse(expiresIn).toInt();
+        } on FormatException {
           throw FormatException(
-              'parameter "expires_in" was not an int, and given string cant not be parsed to int : "$expiresIn"');
+              'parameter "expires_in" could not be parsed as in, was: "$expiresIn"');
         }
       } else if (expiresIn is! int) {
         throw FormatException(
-            'parameter "expires_in" was not an int, was of type ${expiresIn.runtimeType.toString()} value : "$expiresIn"');
+            'parameter "expires_in" was not an int, was: "$expiresIn"');
       }
     }
 
