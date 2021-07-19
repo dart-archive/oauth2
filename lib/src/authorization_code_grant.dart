@@ -221,10 +221,10 @@ class AuthorizationCodeGrant {
   /// [getAuthorizationUrl] is called, or to call it after
   /// [handleAuthorizationCode] is called.
   ///
-  /// Throws [FormatError] if [parameters] is invalid according to the OAuth2
+  /// Throws [FormatException] if [parameters] is invalid according to the OAuth2
   /// spec or if the authorization server otherwise provides invalid responses.
   /// If `state` was passed to [getAuthorizationUrl], this will throw a
-  /// [FormatError] if the `state` parameter doesn't match the original value.
+  /// [FormatException] if the `state` parameter doesn't match the original value.
   ///
   /// Throws [AuthorizationException] if the authorization fails.
   Future<Client> handleAuthorizationResponse(
@@ -273,7 +273,7 @@ class AuthorizationCodeGrant {
   /// [getAuthorizationUrl] is called, or to call it after
   /// [handleAuthorizationCode] is called.
   ///
-  /// Throws [FormatError] if the authorization server provides invalid
+  /// Throws [FormatException] if the authorization server provides invalid
   /// responses while retrieving credentials.
   ///
   /// Throws [AuthorizationException] if the authorization fails.

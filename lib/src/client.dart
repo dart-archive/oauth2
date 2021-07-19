@@ -142,7 +142,7 @@ class Client extends http.BaseClient {
   ///
   /// This will throw a [StateError] if the [Credentials] can't be refreshed, an
   /// [AuthorizationException] if refreshing the credentials fails, or a
-  /// [FormatError] if the authorization server returns invalid responses.
+  /// [FormatException] if the authorization server returns invalid responses.
   ///
   /// You may request different scopes than the default by passing in
   /// [newScopes]. These must be a subset of the scopes in the
