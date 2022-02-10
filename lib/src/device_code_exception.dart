@@ -2,7 +2,9 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-/// An exception raised when OAuth2 device fails.
+/// An exception raised when [DeviceAuthorizationGrant] fails.
+/// This exception is thrown when the client cannot get a device code from the
+/// server for several reasons
 class DeviceException implements Exception {
   /// The name of the error.
   ///

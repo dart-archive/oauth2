@@ -60,16 +60,12 @@ Future<oauth2.Client> createClient() async {
   print(
       'open yout browser at ${device_code.verification_uri} and enter the user_code: ${device_code.user_code}');
 
-  // Poll for an accesstoken with an default intervall of 10 seconds if the
+  // Poll for an accesstoken with an default intervall of 5 seconds if the
   // authorization doesn't returned an interval.
-  while (true) {
-    try {
-      return await grant.pollForToken();
-    } catch (e) {
-      print(e);
-      sleep(Duration(seconds: device_code.interval ?? 10));
-    }
-  }
+
+  return await grant
+      .pollForToken(retryInterval: Duration(seconds: device_code.interval ?? 5))
+      .timeout(Duration(minutes: 5));
 }
 
 void main() async {

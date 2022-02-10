@@ -4,6 +4,7 @@
 
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:oauth2/oauth2.dart';
 import 'package:oauth2/src/device_code_exception.dart';
 
 import 'client.dart';
@@ -11,8 +12,6 @@ import 'credentials.dart';
 import 'handle_access_token_response.dart';
 import 'parameters.dart';
 import 'utils.dart';
-
-const _expirationGrace = Duration(seconds: 10);
 
 /// A class for obtaining credentials via an [device authorization grant][].
 ///
@@ -180,14 +179,36 @@ class DeviceAuthorizationGrant {
   }
 
   /// Check if the user has confirmed the device and then return a [Client]
-  /// [useSecret] whether to use the clientSecret for the token-request or not
-  Future<Client> pollForToken({bool useSecret = true}) async {
+  /// [useSecret] whether to use the clientSecret for the token-request or not.
+  /// The [retryInterval] specifies after how many seconds a token should be
+  /// requested again. If [retryInterval] is Duration.zero, a token is requested
+  /// only once, if the device has not yet been confirmed by the user an
+  /// [AuthorizationException] is thrown.
+  Future<Client> pollForToken({
+    bool useSecret = true,
+    Duration retryInterval = const Duration(seconds: 5),
+  }) async {
     if (_state == _State.initial) {
       throw StateError('The device_code has not yet been generated.');
     } else if (_state == _State.finished) {
       throw StateError('The device has already been authorized.');
     }
 
+    if (retryInterval == Duration.zero){
+      return _pollForToken(useSecret);
+    }
+    while (true) {
+      try {
+        return _pollForToken(useSecret);
+      } on AuthorizationException catch (_) {
+        await Future.delayed(retryInterval);
+      } catch (exception) {
+        rethrow;
+      }
+    }
+  }
+
+  Future<Client> _pollForToken(bool useSecret) async {
     var startTime = DateTime.now();
 
     var headers = <String, String>{};
@@ -269,7 +290,8 @@ class DeviceAuthorizationGrant {
 
         var description = parameters['error_description'];
         var uriString = parameters['error_uri'];
-        var uri = uriString == null ? null : Uri.parse(uriString);
+
+        var uri = uriString == null ? null : Uri.tryParse(uriString);
         throw DeviceException(parameters['error'], description, uri);
       }
 
