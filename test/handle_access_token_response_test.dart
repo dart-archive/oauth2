@@ -225,6 +225,12 @@ void main() {
           startTime.millisecondsSinceEpoch + 90 * 1000);
     });
 
+    test('with expires-in encoded as string', () {
+      var credentials = handleSuccess(expiresIn: '110');
+      expect(credentials.expiration?.millisecondsSinceEpoch,
+          startTime.millisecondsSinceEpoch + 100 * 1000);
+    });
+
     test('with a non-string refresh token throws a FormatException', () {
       expect(() => handleSuccess(refreshToken: 12), throwsFormatException);
     });

@@ -68,9 +68,18 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
     }
 
     var expiresIn = parameters['expires_in'];
-    if (expiresIn != null && expiresIn is! int) {
-      throw FormatException(
-          'parameter "expires_in" was not an int, was "$expiresIn"');
+    if (expiresIn != null) {
+      if (expiresIn is String) {
+        try {
+          expiresIn = double.parse(expiresIn).toInt();
+        } on FormatException {
+          throw FormatException(
+              'parameter "expires_in" could not be parsed as in, was: "$expiresIn"');
+        }
+      } else if (expiresIn is! int) {
+        throw FormatException(
+            'parameter "expires_in" was not an int, was: "$expiresIn"');
+      }
     }
 
     for (var name in ['refresh_token', 'id_token', 'scope']) {
