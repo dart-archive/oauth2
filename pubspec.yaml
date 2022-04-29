@@ -1,5 +1,5 @@
 name: oauth2
-version: 2.0.0
+version: 2.0.1-dev
 description: >-
   A client library for authenticating with a remote service via OAuth2 on
   behalf of a user, and making authorized HTTP requests with the user's
