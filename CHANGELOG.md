@@ -1,3 +1,8 @@
+# 2.0.1-dev
+
+* Handle `expires_in` when encoded as string.
+* Populate the pubspec `repository` field.
+
 # 2.0.0
 
 * Migrate to null safety.
