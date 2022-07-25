@@ -33,7 +33,8 @@ const _expirationGrace = Duration(seconds: 10);
 Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
     DateTime startTime, List<String>? scopes, String delimiter,
     {Map<String, dynamic> Function(MediaType? contentType, String body)?
-        getParameters}) {
+        getParameters,
+    Iterable<String> allowedTokenTypes = const ['Bearer']}) {
   getParameters ??= parseJsonParameters;
 
   try {
@@ -62,7 +63,13 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
 
     // TODO(nweiz): support the "mac" token type
     // (http://tools.ietf.org/html/draft-ietf-oauth-v2-http-mac-01)
-    if (parameters['token_type'].toLowerCase() != 'bearer') {
+    var isTokenTypeAllowed = allowedTokenTypes
+      .where((String allowedTokenType) => 
+        allowedTokenType.toLowerCase() == parameters['token_type'].toLowerCase()
+      )
+      .isNotEmpty
+    ;
+    if (!isTokenTypeAllowed) {
       throw FormatException(
           '"$tokenEndpoint": unknown token type "${parameters['token_type']}"');
     }

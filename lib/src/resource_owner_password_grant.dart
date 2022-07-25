@@ -54,7 +54,8 @@ Future<Client> resourceOwnerPasswordGrant(
     http.Client? httpClient,
     String? delimiter,
     Map<String, dynamic> Function(MediaType? contentType, String body)?
-        getParameters}) async {
+        getParameters,
+    Iterable<String> allowedTokenTypes = const ['Bearer']}) async {
   delimiter ??= ' ';
   var startTime = DateTime.now();
 
@@ -85,7 +86,8 @@ Future<Client> resourceOwnerPasswordGrant(
 
   var credentials = handleAccessTokenResponse(
       response, authorizationEndpoint, startTime, scopes?.toList(), delimiter,
-      getParameters: getParameters);
+      getParameters: getParameters,
+      allowedTokenTypes: allowedTokenTypes);
   return Client(credentials,
       identifier: identifier,
       secret: secret,

@@ -164,7 +164,7 @@ class Client extends http.BaseClient {
           secret: secret,
           newScopes: newScopes,
           basicAuth: _basicAuth,
-          httpClient: _httpClient,
+          httpClient: _httpClient
         );
         _credentials = await _refreshingFuture!;
         _onCredentialsRefreshed?.call(_credentials);

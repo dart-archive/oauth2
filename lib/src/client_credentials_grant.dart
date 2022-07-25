@@ -35,6 +35,8 @@ import 'utils.dart';
 /// By default, this follows the OAuth2 spec and requires the server's responses
 /// to be in JSON format. However, some servers return non-standard response
 /// formats, which can be parsed using the [getParameters] function.
+/// 
+/// Check the validity of supported token types by [allowedTokenTypes] list.
 ///
 /// This function is passed the `Content-Type` header of the response as well as
 /// its body as a UTF-8-decoded string. It should return a map in the same
@@ -46,7 +48,8 @@ Future<Client> clientCredentialsGrant(
     http.Client? httpClient,
     String? delimiter,
     Map<String, dynamic> Function(MediaType? contentType, String body)?
-        getParameters}) async {
+        getParameters,
+    Iterable<String> allowedTokenTypes = const ['Bearer']}) async {
   delimiter ??= ' ';
   var startTime = DateTime.now();
 
@@ -73,7 +76,8 @@ Future<Client> clientCredentialsGrant(
 
   var credentials = handleAccessTokenResponse(response, authorizationEndpoint,
       startTime, scopes?.toList() ?? [], delimiter,
-      getParameters: getParameters);
+      getParameters: getParameters,
+      allowedTokenTypes: allowedTokenTypes);
   return Client(credentials,
       identifier: identifier, secret: secret, httpClient: httpClient);
 }

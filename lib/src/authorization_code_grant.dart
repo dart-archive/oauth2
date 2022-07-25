@@ -110,6 +110,9 @@ class AuthorizationCodeGrant {
   /// The PKCE code verifier. Will be generated if one is not provided in the constructor.
   final String _codeVerifier;
 
+  /// List of allowed token type
+  final Iterable<String> _allowedTokenTypes;
+
   /// Creates a new grant.
   ///
   /// If [basicAuth] is `true` (the default), the client credentials are sent to
@@ -129,6 +132,9 @@ class AuthorizationCodeGrant {
   /// [codeVerifier] String to be used as PKCE code verifier. If none is provided a
   /// random codeVerifier will be generated.
   /// The codeVerifier must meet requirements specified in [RFC 7636].
+  /// 
+  /// [allowedTokenType] List of allowed token type to check the response of
+  /// OAuth2 autentication.
   ///
   /// [RFC 7636]: https://tools.ietf.org/html/rfc7636#section-4.1
   ///
@@ -154,13 +160,16 @@ class AuthorizationCodeGrant {
       CredentialsRefreshedCallback? onCredentialsRefreshed,
       Map<String, dynamic> Function(MediaType? contentType, String body)?
           getParameters,
-      String? codeVerifier})
+      String? codeVerifier,
+      Iterable<String> allowedTokenTypes = const ['Bearer']
+    })
       : _basicAuth = basicAuth,
         _httpClient = httpClient ?? http.Client(),
         _delimiter = delimiter ?? ' ',
         _getParameters = getParameters ?? parseJsonParameters,
         _onCredentialsRefreshed = onCredentialsRefreshed,
-        _codeVerifier = codeVerifier ?? _createCodeVerifier();
+        _codeVerifier = codeVerifier ?? _createCodeVerifier(),
+        _allowedTokenTypes = allowedTokenTypes;
 
   /// Returns the URL to which the resource owner should be redirected to
   /// authorize this client.
@@ -285,7 +294,9 @@ class AuthorizationCodeGrant {
     }
     _state = _State.finished;
 
-    return await _handleAuthorizationCode(authorizationCode);
+    return await _handleAuthorizationCode(
+      authorizationCode
+    );
   }
 
   /// This works just like [handleAuthorizationCode], except it doesn't validate
@@ -317,7 +328,8 @@ class AuthorizationCodeGrant {
 
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, _scopes, _delimiter,
-        getParameters: _getParameters);
+        getParameters: _getParameters,
+        allowedTokenTypes: _allowedTokenTypes);
     return Client(credentials,
         identifier: identifier,
         secret: secret,

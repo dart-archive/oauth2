@@ -44,6 +44,9 @@ class Credentials {
   /// This may be `null`, indicating that the credentials can't be refreshed.
   final String? refreshToken;
 
+  /// The type of [accessToken] token.
+  final String tokenType;
+
   /// The token that is received from the authorization server to enable
   /// End-Users to be Authenticated, contains Claims, represented as a
   /// JSON Web Token (JWT).
@@ -109,7 +112,8 @@ class Credentials {
   ///
   /// [standard JSON response]: https://tools.ietf.org/html/rfc6749#section-5.1
   Credentials(this.accessToken,
-      {this.refreshToken,
+      {this.tokenType = 'Bearer',
+      this.refreshToken,
       this.idToken,
       this.tokenEndpoint,
       Iterable<String>? scopes,
@@ -170,6 +174,7 @@ class Credentials {
     }
 
     return Credentials(parsed['accessToken'],
+        tokenType: parsed['tokenType'],
         refreshToken: parsed['refreshToken'],
         idToken: parsed['idToken'],
         tokenEndpoint: tokenEndpoint,
@@ -183,6 +188,7 @@ class Credentials {
   /// compatible with [Credentials.toJson].
   String toJson() => jsonEncode({
         'accessToken': accessToken,
+        'tokenType': tokenType,
         'refreshToken': refreshToken,
         'idToken': idToken,
         'tokenEndpoint': tokenEndpoint?.toString(),
@@ -227,9 +233,17 @@ class Credentials {
           'endpoint.');
     }
 
+    if (tokenType == null) {
+      throw StateError("Can't refresh credentials without a token type.");
+    }
+
     var headers = <String, String>{};
 
-    var body = {'grant_type': 'refresh_token', 'refresh_token': refreshToken};
+    var body = {
+      'grant_type': 'refresh_token',
+      'refresh_token': refreshToken,
+      'token_type': tokenType
+    };
     if (scopes.isNotEmpty) body['scope'] = scopes.join(_delimiter);
 
     if (basicAuth && secret != null) {
@@ -243,12 +257,14 @@ class Credentials {
         await httpClient.post(tokenEndpoint, headers: headers, body: body);
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, scopes, _delimiter,
-        getParameters: _getParameters);
+        getParameters: _getParameters,
+        allowedTokenTypes: [tokenType!]);
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.
     if (credentials.refreshToken != null) return credentials;
     return Credentials(credentials.accessToken,
+        tokenType: tokenType,
         refreshToken: refreshToken,
         idToken: credentials.idToken,
         tokenEndpoint: credentials.tokenEndpoint,
