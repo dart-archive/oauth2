@@ -233,7 +233,7 @@ class Credentials {
           'endpoint.');
     }
 
-    if (tokenType == null) {
+    if (tokenType.isEmpty) {
       throw StateError("Can't refresh credentials without a token type.");
     }
 
@@ -258,7 +258,7 @@ class Credentials {
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, scopes, _delimiter,
         getParameters: _getParameters,
-        allowedTokenTypes: [tokenType!]);
+        allowedTokenTypes: [tokenType]);
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.
