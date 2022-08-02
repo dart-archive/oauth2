@@ -108,7 +108,10 @@ class AuthorizationCodeGrant {
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
 
   /// The PKCE code verifier. Will be generated if one is not provided in the constructor.
-  final String _codeVerifier;
+  String _codeVerifier;
+
+  /// User defined of random generated PKCE code verifier.
+  final bool _isCodeVerifierGenerated;
 
   /// List of allowed token type
   final Iterable<String> _allowedTokenTypes;
@@ -169,6 +172,7 @@ class AuthorizationCodeGrant {
         _getParameters = getParameters ?? parseJsonParameters,
         _onCredentialsRefreshed = onCredentialsRefreshed,
         _codeVerifier = codeVerifier ?? _createCodeVerifier(),
+        _isCodeVerifierGenerated = codeVerifier == null,
         _allowedTokenTypes = allowedTokenTypes;
 
   /// Returns the URL to which the resource owner should be redirected to
@@ -196,6 +200,11 @@ class AuthorizationCodeGrant {
       throw StateError('The authorization URL has already been generated.');
     }
     _state = _State.awaitingResponse;
+
+    // If generated, recalculate PKCE code verifier
+    if (_isCodeVerifierGenerated) {
+      _codeVerifier = _createCodeVerifier();
+    }
 
     var scopeList = scopes?.toList() ?? <String>[];
     var codeChallenge = base64Url
@@ -353,6 +362,39 @@ class AuthorizationCodeGrant {
     _httpClient?.close();
     _httpClient = null;
   }
+
+  /// Return authentication step configuration.
+  /// 
+  /// [AuthorizationCodeGrantAuthStep] can used in [authenticationStepLoad] to
+  /// restore current step.
+  AuthorizationCodeGrantAuthStep authenticationStep() {
+    return AuthorizationCodeGrantAuthStep(
+      _state.toString(),
+      _stateString,
+      _redirectEndpoint.toString(),
+      _codeVerifier
+    );
+  }
+
+  /// Restore Authentication step.
+  void authenticationStepLoad(
+    AuthorizationCodeGrantAuthStep authStep
+  ) {
+    _state = authStep.state == null
+      ? _state : _State(authStep.state!);
+    _redirectEndpoint = authStep.redirectEndpoint == null
+      ? _redirectEndpoint : Uri.parse(authStep.redirectEndpoint!);
+    _codeVerifier = authStep.codeVerifier == null
+      ? _codeVerifier : authStep.codeVerifier!;
+  }
+
+  /// Reset Authentication step to initial data.
+  void authenticationStepReset() {
+    _state = _State.initial;
+    if (_isCodeVerifierGenerated) {
+      _codeVerifier = _createCodeVerifier();
+    }
+  }
 }
 
 /// States that [AuthorizationCodeGrant] can be in.
@@ -377,4 +419,34 @@ class _State {
 
   @override
   String toString() => _name;
+}
+
+/// Cuttente authentcation step of [AuthorizationCodeGrant].
+/// 
+/// It can be used to save step of authentication for application than close
+/// and restart during authentication cycle.
+class AuthorizationCodeGrantAuthStep {
+  final String? state;
+  final String? stateString;
+  final String? redirectEndpoint;
+  final String? codeVerifier;
+
+  AuthorizationCodeGrantAuthStep(this.state, this.stateString,
+    this.redirectEndpoint, this.codeVerifier);
+
+  /// Convert JSON to instance
+  AuthorizationCodeGrantAuthStep.fromJson(Map<String, dynamic> json):
+    state = json['state'],
+    stateString = json['stateString'],
+    redirectEndpoint = json['redirectEndpoint'],
+    codeVerifier = json['codeVerifier'];
+
+    
+  /// Convert instance to JSON
+  Map<String, dynamic> toJson() => {
+    'state': state,
+    'stateString': stateString,
+    'redirectEndpoint': redirectEndpoint,
+    'codeVerifier': codeVerifier
+  };
 }
