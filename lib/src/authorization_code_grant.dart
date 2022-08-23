@@ -421,7 +421,7 @@ class _State {
   String toString() => _name;
 }
 
-/// Current authentcation step of [AuthorizationCodeGrant].
+/// Cuttente authentcation step of [AuthorizationCodeGrant].
 /// 
 /// It can be used to save step of authentication for application than close
 /// and restart during authentication cycle.
