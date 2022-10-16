@@ -46,11 +46,13 @@ Future<Client> clientCredentialsGrant(
     http.Client? httpClient,
     String? delimiter,
     Map<String, dynamic> Function(MediaType? contentType, String body)?
-        getParameters}) async {
+        getParameters,
+    Map<String, String> body = const {}}) async {
   delimiter ??= ' ';
   var startTime = DateTime.now();
 
-  var body = {'grant_type': 'client_credentials'};
+  body = Map.from(body);
+  body['grant_type'] = 'client_credentials';
 
   var headers = <String, String>{};
 
