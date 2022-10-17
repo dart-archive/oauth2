@@ -213,8 +213,7 @@ class Credentials {
       String? secret,
       Iterable<String>? newScopes,
       bool basicAuth = true,
-      http.Client? httpClient,
-      Iterable<String>? allowedTokenTypes}) async {
+      http.Client? httpClient}) async {
     var scopes = this.scopes;
     if (newScopes != null) scopes = newScopes.toList();
     scopes ??= [];
@@ -254,14 +253,12 @@ class Credentials {
       if (secret != null) body['client_secret'] = secret;
     }
 
-    allowedTokenTypes ??= [tokenType];
-
     var response =
         await httpClient.post(tokenEndpoint, headers: headers, body: body);
     var credentials = handleAccessTokenResponse(
         response, tokenEndpoint, startTime, scopes, _delimiter,
         getParameters: _getParameters,
-        allowedTokenTypes: allowedTokenTypes);
+        allowedTokenTypes: [tokenType]);
 
     // The authorization server may issue a new refresh token. If it doesn't,
     // we should re-use the one we already have.
