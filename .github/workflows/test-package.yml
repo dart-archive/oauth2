@@ -22,8 +22,8 @@ jobs:
       matrix:
         sdk: [2.12.0, dev]
     steps:
-      - uses: actions/checkout@v3
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: dart-lang/setup-dart@6a218f2413a3e78e9087f638a238f6b40893203d
         with:
           sdk: ${{ matrix.sdk }}
       - id: install
@@ -35,9 +35,6 @@ jobs:
       - name: Analyze code
         run: dart analyze --fatal-infos
         if: matrix.sdk == 'dev' && steps.install.outcome == 'success'
-      - name: Analyze code
-        run: dart analyze
-        if: matrix.sdk != 'dev' && steps.install.outcome == 'success'
 
   # Run tests on a matrix consisting of two dimensions:
   # 1. OS: ubuntu-latest, (macos-latest, windows-latest)
@@ -52,8 +49,8 @@ jobs:
         os: [ubuntu-latest]
         sdk: [2.12.0, dev]
     steps:
-      - uses: actions/checkout@v3
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - uses: dart-lang/setup-dart@6a218f2413a3e78e9087f638a238f6b40893203d
         with:
           sdk: ${{ matrix.sdk }}
       - id: install

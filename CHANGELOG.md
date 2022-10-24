@@ -1,4 +1,4 @@
-# 2.0.1-dev
+# 2.0.1
 
 * Handle `expires_in` when encoded as string.
 * Populate the pubspec `repository` field.

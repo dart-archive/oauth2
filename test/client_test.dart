@@ -16,12 +16,13 @@ final Uri requestUri = Uri.parse('http://example.com/resource');
 final Uri tokenEndpoint = Uri.parse('http://example.com/token');
 
 void main() {
-  var httpClient;
+  late ExpectClient httpClient;
+
   setUp(() => httpClient = ExpectClient());
 
   group('with expired credentials', () {
     test("that can't be refreshed throws an ExpirationException on send", () {
-      var expiration = DateTime.now().subtract(Duration(hours: 1));
+      var expiration = DateTime.now().subtract(const Duration(hours: 1));
       var credentials =
           oauth2.Credentials('access token', expiration: expiration);
       var client = oauth2.Client(credentials,
@@ -34,7 +35,7 @@ void main() {
     test(
         'that can be refreshed refreshes the credentials and sends the '
         'request', () async {
-      var expiration = DateTime.now().subtract(Duration(hours: 1));
+      var expiration = DateTime.now().subtract(const Duration(hours: 1));
       var credentials = oauth2.Credentials('access token',
           refreshToken: 'refresh token',
           tokenEndpoint: tokenEndpoint,
@@ -68,7 +69,7 @@ void main() {
     test(
         'that can be refreshed refreshes only once if multiple requests are made',
         () async {
-      var expiration = DateTime.now().subtract(Duration(hours: 1));
+      var expiration = DateTime.now().subtract(const Duration(hours: 1));
       var credentials = oauth2.Credentials('access token',
           refreshToken: 'refresh token',
           tokenEndpoint: tokenEndpoint,
@@ -86,7 +87,7 @@ void main() {
             headers: {'content-type': 'application/json'}));
       });
 
-      final numCalls = 2;
+      const numCalls = 2;
 
       for (var i = 0; i < numCalls; i++) {
         httpClient.expectRequest((request) {
@@ -100,7 +101,8 @@ void main() {
       }
 
       await Future.wait(
-          List<Future>.generate(numCalls, (_) => client.read(requestUri)));
+        List<Future<String>>.generate(numCalls, (_) => client.read(requestUri)),
+      );
 
       expect(client.credentials.accessToken, equals('new access token'));
     });
@@ -108,7 +110,7 @@ void main() {
     test('that onCredentialsRefreshed is called', () async {
       var callbackCalled = false;
 
-      var expiration = DateTime.now().subtract(Duration(hours: 1));
+      var expiration = DateTime.now().subtract(const Duration(hours: 1));
       var credentials = oauth2.Credentials('access token',
           refreshToken: 'refresh token',
           tokenEndpoint: tokenEndpoint,
@@ -121,17 +123,20 @@ void main() {
         expect(credentials.accessToken, equals('new access token'));
       });
 
-      httpClient.expectRequest((request) {
-        return Future.value(http.Response(
+      httpClient.expectRequest(
+        (request) => Future.value(
+          http.Response(
             jsonEncode(
-                {'access_token': 'new access token', 'token_type': 'bearer'}),
+              {'access_token': 'new access token', 'token_type': 'bearer'},
+            ),
             200,
-            headers: {'content-type': 'application/json'}));
-      });
+            headers: {'content-type': 'application/json'},
+          ),
+        ),
+      );
 
-      httpClient.expectRequest((request) {
-        return Future.value(http.Response('good job', 200));
-      });
+      httpClient.expectRequest(
+          (request) => Future.value(http.Response('good job', 200)));
 
       await client.read(requestUri);
       expect(callbackCalled, equals(true));

@@ -10,8 +10,8 @@ import 'package:http_parser/http_parser.dart';
 typedef GetParameters = Map<String, dynamic> Function(
     MediaType? contentType, String body);
 
-/// Parses parameters from a response with a JSON body, as per the [OAuth2
-/// spec][].
+/// Parses parameters from a response with a JSON body, as per the
+/// [OAuth2 spec][].
 ///
 /// [OAuth2 spec]: https://tools.ietf.org/html/rfc6749#section-5.1
 Map<String, dynamic> parseJsonParameters(MediaType? contentType, String body) {

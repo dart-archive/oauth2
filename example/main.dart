@@ -19,8 +19,8 @@ final tokenEndpoint = Uri.parse('http://example.com/oauth2/token');
 // available may not be able to make sure the client secret is kept a
 // secret. This is fine; OAuth2 servers generally won't rely on knowing
 // with certainty that a client is who it claims to be.
-final identifier = 'my client identifier';
-final secret = 'my client secret';
+const identifier = 'my client identifier';
+const secret = 'my client secret';
 
 // This is a URL on your application's server. The authorization server
 // will redirect the resource owner here once they've authorized the
@@ -53,8 +53,9 @@ Future<oauth2.Client> createClient() async {
       identifier, authorizationEndpoint, tokenEndpoint,
       secret: secret);
 
-  // A URL on the authorization server (authorizationEndpoint with some additional
-  // query parameters). Scopes and state can optionally be passed into this method.
+  // A URL on the authorization server (authorizationEndpoint with some
+  // additional query parameters). Scopes and state can optionally be passed
+  // into this method.
   var authorizationUrl = grant.getAuthorizationUrl(redirectUrl);
 
   // Redirect the resource owner to the authorization URL. Once the resource
@@ -69,7 +70,7 @@ Future<oauth2.Client> createClient() async {
   // Once the user is redirected to `redirectUrl`, pass the query parameters to
   // the AuthorizationCodeGrant. It will validate them and extract the
   // authorization code to create a new Client.
-  return await grant.handleAuthorizationResponse(responseUrl.queryParameters);
+  return grant.handleAuthorizationResponse(responseUrl.queryParameters);
 }
 
 void main() async {

@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 @TestOn('vm')
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:oauth2/oauth2.dart' as oauth2;
@@ -19,11 +19,12 @@ final success = jsonEncode({
   'refresh_token': 'tGzv3JOkF0XG5Qx2TlKWIA',
 });
 
-var auth = 'Basic Y2xpZW50OnNlY3JldA==';
-var authEndpoint = Uri.parse('https://example.com');
+String auth = 'Basic Y2xpZW50OnNlY3JldA==';
+Uri authEndpoint = Uri.parse('https://example.com');
 
 void main() {
-  var expectClient;
+  late ExpectClient expectClient;
+
   setUp(() => expectClient = ExpectClient());
 
   group('basic', () {
