@@ -162,8 +162,10 @@ void main() {
     });
 
     test('with custom getParameters() returns the correct credentials', () {
-      var body = '_' +
-          jsonEncode({'token_type': 'bearer', 'access_token': 'access token'});
+      var body = '_${jsonEncode({
+            'token_type': 'bearer',
+            'access_token': 'access token'
+          })}';
       var credentials = handle(
         http.Response(body, 200, headers: {'content-type': 'text/plain'}),
         getParameters: (contentType, body) =>

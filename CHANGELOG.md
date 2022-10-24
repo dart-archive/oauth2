@@ -2,6 +2,7 @@
 
 * Handle `expires_in` when encoded as string.
 * Populate the pubspec `repository` field.
+* Increase the minimum Dart SDK to `2.17.0`.
 
 # 2.0.0
 
