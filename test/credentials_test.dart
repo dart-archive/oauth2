@@ -14,7 +14,8 @@ import 'utils.dart';
 final Uri tokenEndpoint = Uri.parse('http://example.com/token');
 
 void main() {
-  var httpClient;
+  late ExpectClient httpClient;
+
   setUp(() => httpClient = ExpectClient());
 
   test('is not expired if no expiration exists', () {
@@ -23,14 +24,14 @@ void main() {
   });
 
   test('is not expired if the expiration is in the future', () {
-    var expiration = DateTime.now().add(Duration(hours: 1));
+    var expiration = DateTime.now().add(const Duration(hours: 1));
     var credentials =
         oauth2.Credentials('access token', expiration: expiration);
     expect(credentials.isExpired, isFalse);
   });
 
   test('is expired if the expiration is in the past', () {
-    var expiration = DateTime.now().subtract(Duration(hours: 1));
+    var expiration = DateTime.now().subtract(const Duration(hours: 1));
     var credentials =
         oauth2.Credentials('access token', expiration: expiration);
     expect(credentials.isExpired, isTrue);
@@ -257,14 +258,14 @@ void main() {
   });
 
   group('fromJson', () {
-    oauth2.Credentials fromMap(Map map) =>
+    oauth2.Credentials fromMap(Map<String, dynamic> map) =>
         oauth2.Credentials.fromJson(jsonEncode(map));
 
     test('should load the same credentials from toJson', () {
       // Round the expiration down to milliseconds since epoch, since that's
       // what the credentials file stores. Otherwise sub-millisecond time gets
       // in the way.
-      var expiration = DateTime.now().subtract(Duration(hours: 1));
+      var expiration = DateTime.now().subtract(const Duration(hours: 1));
       expiration = DateTime.fromMillisecondsSinceEpoch(
           expiration.millisecondsSinceEpoch);
 

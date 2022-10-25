@@ -1,6 +1,12 @@
+[![Dart CI](https://github.com/dart-lang/oauth2/actions/workflows/test-package.yml/badge.svg)](https://github.com/dart-lang/oauth2/actions/workflows/test-package.yml)
+[![pub package](https://img.shields.io/pub/v/oauth2.svg)](https://pub.dev/packages/oauth2)
+[![package publisher](https://img.shields.io/pub/publisher/oauth2.svg)](https://pub.dev/packages/oauth2/publisher)
+
 A client library for authenticating with a remote service via OAuth2 on behalf
 of a user, and making authorized HTTP requests with the user's OAuth2
 credentials.
+
+## About OAuth2
 
 OAuth2 allows a client (the program using this library) to access and manipulate
 a resource that's owned by a resource owner (the end user) and lives on a remote
