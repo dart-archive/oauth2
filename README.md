@@ -240,7 +240,7 @@ var result = await client.read('http://example.com/protected-resources.txt');
 File('~/.myapp/credentials.json').writeAsString(client.credentials.toJson());
 ```
 
-## Deivce Code Grant
+## Device Code Grant
 
 **Resources:** [Method summary][deviceCodeGrantMethod],
 [OAuth documentation][deviceCodeGrantDocs]
