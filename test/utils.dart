@@ -13,9 +13,7 @@ import 'package:test/test.dart';
 class ExpectClient extends MockClient {
   final Queue<MockClientHandler> _handlers;
 
-  ExpectClient._(MockClientHandler fn)
-      : _handlers = Queue<MockClientHandler>(),
-        super(fn);
+  ExpectClient._(super.fn) : _handlers = Queue<MockClientHandler>();
 
   factory ExpectClient() {
     late ExpectClient client;

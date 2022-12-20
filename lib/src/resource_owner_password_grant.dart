@@ -8,9 +8,9 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 import 'client.dart';
+import 'credentials.dart';
 import 'handle_access_token_response.dart';
 import 'utils.dart';
-import 'credentials.dart';
 
 /// Obtains credentials using a [resource owner password grant](https://tools.ietf.org/html/rfc6749#section-1.3.3).
 ///

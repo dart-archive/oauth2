@@ -5,9 +5,9 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:test/test.dart';
 import 'package:http/http.dart' as http;
 import 'package:oauth2/oauth2.dart' as oauth2;
+import 'package:test/test.dart';
 
 import 'utils.dart';
 
@@ -55,9 +55,10 @@ void main() {
     });
 
     test('builds the correct URL with passed in code verifier', () {
-      final codeVerifier =
-          'it1shei7LooGoh3looxaa4sieveijeib2zecauz2oo8aebae5aehee0ahPirewoh5Bo6Maexooqui3uL2si6ahweiv7shauc1shahxooveoB3aeyahsaiye0Egh3raix';
-      final expectedCodeChallenge =
+      const codeVerifier =
+          'it1shei7LooGoh3looxaa4sieveijeib2zecauz2oo8aebae5aehee0ahPirewoh'
+          '5Bo6Maexooqui3uL2si6ahweiv7shauc1shahxooveoB3aeyahsaiye0Egh3raix';
+      const expectedCodeChallenge =
           'EjfFMv8TFPd3GuNxAn5COhlWBGpfZLimHett7ypJfJ0';
       var grant = oauth2.AuthorizationCodeGrant(
           'identifier',
@@ -349,8 +350,9 @@ void main() {
       });
 
       grant.getAuthorizationUrl(redirectUrl);
-      client.expectRequest((request) {
-        return Future.value(http.Response(
+      client.expectRequest(
+        (request) => Future.value(
+          http.Response(
             jsonEncode({
               'access_token': 'access token',
               'token_type': 'bearer',
@@ -358,22 +360,28 @@ void main() {
               'refresh_token': 'refresh token',
             }),
             200,
-            headers: {'content-type': 'application/json'}));
-      });
+            headers: {'content-type': 'application/json'},
+          ),
+        ),
+      );
 
       var oauth2Client = await grant.handleAuthorizationCode('auth code');
 
-      client.expectRequest((request) {
-        return Future.value(http.Response(
-            jsonEncode(
-                {'access_token': 'new access token', 'token_type': 'bearer'}),
+      client.expectRequest(
+        (request) => Future.value(
+          http.Response(
+            jsonEncode({
+              'access_token': 'new access token',
+              'token_type': 'bearer',
+            }),
             200,
-            headers: {'content-type': 'application/json'}));
-      });
+            headers: {'content-type': 'application/json'},
+          ),
+        ),
+      );
 
-      client.expectRequest((request) {
-        return Future.value(http.Response('good job', 200));
-      });
+      client.expectRequest(
+          (request) => Future.value(http.Response('good job', 200)));
 
       await oauth2Client.read(Uri.parse('http://example.com/resource'));
 

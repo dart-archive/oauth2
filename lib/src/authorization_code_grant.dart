@@ -10,8 +10,8 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
-import 'client.dart';
 import 'authorization_exception.dart';
+import 'client.dart';
 import 'credentials.dart';
 import 'handle_access_token_response.dart';
 import 'parameters.dart';
@@ -107,7 +107,8 @@ class AuthorizationCodeGrant {
   static const String _charset =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
 
-  /// The PKCE code verifier. Will be generated if one is not provided in the constructor.
+  /// The PKCE code verifier. Will be generated if one is not provided in the
+  /// constructor.
   String _codeVerifier;
 
   /// User defined of random generated PKCE code verifier.
@@ -132,10 +133,10 @@ class AuthorizationCodeGrant {
   /// [onCredentialsRefreshed] will be called by the constructed [Client]
   /// whenever the credentials are refreshed.
   ///
-  /// [codeVerifier] String to be used as PKCE code verifier. If none is provided a
-  /// random codeVerifier will be generated.
+  /// [codeVerifier] String to be used as PKCE code verifier. If none is
+  /// provided a random codeVerifier will be generated.
   /// The codeVerifier must meet requirements specified in [RFC 7636].
-  /// 
+  ///
   /// [allowedTokenType] List of allowed token type to check the response of
   /// OAuth2 autentication.
   ///
@@ -239,10 +240,11 @@ class AuthorizationCodeGrant {
   /// [getAuthorizationUrl] is called, or to call it after
   /// [handleAuthorizationCode] is called.
   ///
-  /// Throws [FormatException] if [parameters] is invalid according to the OAuth2
-  /// spec or if the authorization server otherwise provides invalid responses.
-  /// If `state` was passed to [getAuthorizationUrl], this will throw a
-  /// [FormatException] if the `state` parameter doesn't match the original value.
+  /// Throws [FormatException] if [parameters] is invalid according to the
+  /// OAuth2 spec or if the authorization server otherwise provides invalid
+  /// responses. If `state` was passed to [getAuthorizationUrl], this will throw
+  /// a [FormatException] if the `state` parameter doesn't match the original
+  /// value.
   ///
   /// Throws [AuthorizationException] if the authorization fails.
   Future<Client> handleAuthorizationResponse(
@@ -277,7 +279,7 @@ class AuthorizationCodeGrant {
           '"code".');
     }
 
-    return await _handleAuthorizationCode(parameters['code']);
+    return _handleAuthorizationCode(parameters['code']);
   }
 
   /// Processes an authorization code directly.
@@ -303,9 +305,7 @@ class AuthorizationCodeGrant {
     }
     _state = _State.finished;
 
-    return await _handleAuthorizationCode(
-      authorizationCode
-    );
+    return _handleAuthorizationCode(authorizationCode);
   }
 
   /// This works just like [handleAuthorizationCode], except it doesn't validate
@@ -347,11 +347,12 @@ class AuthorizationCodeGrant {
         onCredentialsRefreshed: _onCredentialsRefreshed);
   }
 
-  /// Randomly generate a 128 character string to be used as the PKCE code verifier
-  static String _createCodeVerifier() {
-    return List.generate(
-        128, (i) => _charset[Random.secure().nextInt(_charset.length)]).join();
-  }
+  // Randomly generate a 128 character string to be used as the PKCE code
+  // verifier.
+  static String _createCodeVerifier() => List.generate(
+        128,
+        (i) => _charset[Random.secure().nextInt(_charset.length)],
+      ).join();
 
   /// Closes the grant and frees its resources.
   ///
@@ -364,7 +365,7 @@ class AuthorizationCodeGrant {
   }
 
   /// Return authentication step configuration.
-  /// 
+  ///
   /// [AuthorizationCodeGrantAuthStep] can used in [authenticationStepLoad] to
   /// restore current step.
   AuthorizationCodeGrantAuthStep authenticationStep() {
@@ -422,7 +423,7 @@ class _State {
 }
 
 /// Cuttente authentcation step of [AuthorizationCodeGrant].
-/// 
+///
 /// It can be used to save step of authentication for application than close
 /// and restart during authentication cycle.
 class AuthorizationCodeGrantAuthStep {
@@ -436,12 +437,11 @@ class AuthorizationCodeGrantAuthStep {
 
   /// Convert JSON to instance
   AuthorizationCodeGrantAuthStep.fromJson(Map<String, dynamic> json):
-    state = json['state'],
-    stateString = json['stateString'],
-    redirectEndpoint = json['redirectEndpoint'],
-    codeVerifier = json['codeVerifier'];
+    state = json['state'] as String?,
+    stateString = json['stateString'] as String?,
+    redirectEndpoint = json['redirectEndpoint'] as String?,
+    codeVerifier = json['codeVerifier'] as String?;
 
-    
   /// Convert instance to JSON
   Map<String, dynamic> toJson() => {
     'state': state,

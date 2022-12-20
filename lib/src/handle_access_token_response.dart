@@ -5,8 +5,8 @@
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
-import 'credentials.dart';
 import 'authorization_exception.dart';
+import 'credentials.dart';
 import 'parameters.dart';
 
 /// The amount of time to add as a "grace period" for credential expiration.
@@ -44,7 +44,7 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
 
     var contentTypeString = response.headers['content-type'];
     if (contentTypeString == null) {
-      throw FormatException('Missing Content-Type string.');
+      throw const FormatException('Missing Content-Type string.');
     }
 
     var parameters =
@@ -64,7 +64,7 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
     // TODO(nweiz): support the "mac" token type
     // (http://tools.ietf.org/html/draft-ietf-oauth-v2-http-mac-01)
     var isTokenTypeAllowed = allowedTokenTypes
-      .where((String allowedTokenType) => 
+      .where((String allowedTokenType) =>
         allowedTokenType.toLowerCase() == parameters['token_type'].toLowerCase()
       )
       .isNotEmpty
@@ -102,14 +102,16 @@ Credentials handleAccessTokenResponse(http.Response response, Uri tokenEndpoint,
 
     var expiration = expiresIn == null
         ? null
-        : startTime.add(Duration(seconds: expiresIn) - _expirationGrace);
+        : startTime.add(Duration(seconds: expiresIn as int) - _expirationGrace);
 
-    return Credentials(parameters['access_token'],
-        refreshToken: parameters['refresh_token'],
-        idToken: parameters['id_token'],
-        tokenEndpoint: tokenEndpoint,
-        scopes: scopes,
-        expiration: expiration);
+    return Credentials(
+      parameters['access_token'] as String,
+      refreshToken: parameters['refresh_token'] as String?,
+      idToken: parameters['id_token'] as String?,
+      tokenEndpoint: tokenEndpoint,
+      scopes: scopes,
+      expiration: expiration,
+    );
   } on FormatException catch (e) {
     throw FormatException('Invalid OAuth response for "$tokenEndpoint": '
         '${e.message}.\n\n${response.body}');
@@ -140,7 +142,7 @@ void _handleErrorResponse(
   var parameters = getParameters(contentType, response.body);
 
   if (!parameters.containsKey('error')) {
-    throw FormatException('did not contain required parameter "error"');
+    throw const FormatException('did not contain required parameter "error"');
   } else if (parameters['error'] is! String) {
     throw FormatException('required parameter "error" was not a string, was '
         '"${parameters["error"]}"');
@@ -154,8 +156,8 @@ void _handleErrorResponse(
     }
   }
 
-  var description = parameters['error_description'];
-  var uriString = parameters['error_uri'];
+  var uriString = parameters['error_uri'] as String?;
   var uri = uriString == null ? null : Uri.parse(uriString);
-  throw AuthorizationException(parameters['error'], description, uri);
+  var description = parameters['error_description'] as String?;
+  throw AuthorizationException(parameters['error'] as String, description, uri);
 }
