@@ -128,7 +128,7 @@ class Credentials {
   ///
   /// Throws a [FormatException] if the JSON is incorrectly formatted.
   factory Credentials.fromJson(String json) {
-    void validate(bool condition, message) {
+    void validate(bool condition, String message) {
       if (condition) return;
       throw FormatException('Failed to load credentials: $message.\n\n$json');
     }
