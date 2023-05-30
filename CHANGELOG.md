@@ -1,7 +1,7 @@
 ## 2.0.2
 
 * Require Dart 3.0.
-* Support `package:http` 2.0.0.
+* Support `package:http` 1.0.0.
 
 ## 2.0.1
 
