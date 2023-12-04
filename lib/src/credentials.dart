@@ -24,9 +24,9 @@ typedef CredentialsRefreshedCallback = void Function(Credentials);
 ///
 /// Many authorization servers will attach an expiration date to a set of
 /// credentials, along with a token that can be used to refresh the credentials
-/// once they've expired. The [Client] will automatically refresh its
+/// once they've expired. The [http.Client] will automatically refresh its
 /// credentials when necessary. It's also possible to explicitly refresh them
-/// via [Client.refreshCredentials] or [Credentials.refresh].
+/// via [http.Client.refreshCredentials] or [Credentials.refresh].
 ///
 /// Note that a given set of credentials can only be refreshed once, so be sure
 /// to save the refreshed credentials for future use.

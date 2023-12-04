@@ -177,7 +177,7 @@ void main() {
     test('with an error parameter throws an AuthorizationException', () {
       grant.getAuthorizationUrl(redirectUrl);
       expect(grant.handleAuthorizationResponse({'error': 'invalid_request'}),
-          throwsA((e) => e is oauth2.AuthorizationException));
+          throwsA(isA<oauth2.AuthorizationException>()));
     });
 
     test('sends an authorization code request', () {
