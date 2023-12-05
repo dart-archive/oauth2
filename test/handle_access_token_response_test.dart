@@ -115,11 +115,11 @@ void main() {
   group('a success response', () {
     oauth2.Credentials handleSuccess(
         {String contentType = 'application/json',
-        accessToken = 'access token',
-        tokenType = 'bearer',
-        expiresIn,
-        refreshToken,
-        scope}) {
+        Object? accessToken = 'access token',
+        Object? tokenType = 'bearer',
+        Object? expiresIn,
+        Object? refreshToken,
+        Object? scope}) {
       return handle(http.Response(
           jsonEncode({
             'access_token': accessToken,
@@ -272,11 +272,11 @@ void main() {
   group('a success response with a id_token', () {
     oauth2.Credentials handleSuccess(
         {String contentType = 'application/json',
-        accessToken = 'access token',
-        tokenType = 'bearer',
-        expiresIn,
-        idToken = 'decode me',
-        scope}) {
+        Object? accessToken = 'access token',
+        Object? tokenType = 'bearer',
+        Object? expiresIn,
+        Object? idToken = 'decode me',
+        Object? scope}) {
       return handle(http.Response(
           jsonEncode({
             'access_token': accessToken,

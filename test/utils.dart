@@ -22,7 +22,7 @@ class ExpectClient extends MockClient {
   }
 
   void expectRequest(MockClientHandler fn) {
-    var completer = Completer();
+    var completer = Completer<void>();
     expect(completer.future, completes);
 
     _handlers.add((request) {
