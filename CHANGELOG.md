@@ -1,3 +1,6 @@
+# 2.1.0
+* Bump `http`.
+
 # 2.0.1
 
 * Handle `expires_in` when encoded as string.
