@@ -5,7 +5,7 @@
 build/
 packages
 .packages
-*idea
+.idea/
 
 # Or the files created by dart2js.
 *.dart.js
