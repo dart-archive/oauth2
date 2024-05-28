@@ -131,14 +131,14 @@ class AuthorizationCodeGrant {
   /// whenever the credentials are refreshed.
   ///
   /// If [enablePKCE] is `true` (the default), the authorization code flow will
-  /// use PKCE as defined in 
+  /// use PKCE as defined in
   /// [RFC 7636](https://tools.ietf.org/html/rfc7636#section-4). Otherwise, the
-  /// [Authorization Request] will not include the added `code_challenge` and 
-  /// `code_challenge_method` parameters, and the [Access Token Request] will 
+  /// [Authorization Request] will not include the added `code_challenge` and
+  /// `code_challenge_method` parameters, and the [Access Token Request] will
   /// not include the added `code_verifier` parameter. This is not recommended,
-  /// and should only be used if the server doesn't support the 
+  /// and should only be used if the server doesn't support the
   /// [RFC 7636](https://tools.ietf.org/html/rfc7636#section-4) extension.
-  /// 
+  ///
   /// [Access Token Request]: https://tools.ietf.org/html/rfc7636#section-4.5
   /// [Authorization Request]: https://tools.ietf.org/html/rfc7636#section-4.3
   ///
