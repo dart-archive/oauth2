@@ -1,3 +1,7 @@
+> [!IMPORTANT]  
+> This repo has moved to https://github.com/dart-lang/tools/tree/main/pkgs/oauth2
+
+
 [![Dart CI](https://github.com/dart-lang/oauth2/actions/workflows/test-package.yml/badge.svg)](https://github.com/dart-lang/oauth2/actions/workflows/test-package.yml)
 [![pub package](https://img.shields.io/pub/v/oauth2.svg)](https://pub.dev/packages/oauth2)
 [![package publisher](https://img.shields.io/pub/publisher/oauth2.svg)](https://pub.dev/packages/oauth2/publisher)
